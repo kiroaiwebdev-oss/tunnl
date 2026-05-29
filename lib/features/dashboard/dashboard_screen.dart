@@ -204,10 +204,12 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  void _goToPremium() {
-    Navigator.of(context).push(
+  void _goToPremium() async {
+    await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const PremiumScreen()),
     );
+    // User came back — refresh in case they upgraded.
+    if (mounted) await _loadAll();
   }
 
   // ── Dashboard item tap ────────────────────────────

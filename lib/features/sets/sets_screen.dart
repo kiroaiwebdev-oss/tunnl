@@ -331,9 +331,10 @@ class _SetsScreenState extends State<SetsScreen>
           progress: isCompleted ? 1.0 : 0.0,
           onTap: () async {
             if (premiumBlocked) {
-              Navigator.of(context).push(
+              await Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const PremiumScreen()),
               );
+              if (mounted) _loadAll();
               return;
             }
             if (!available) {

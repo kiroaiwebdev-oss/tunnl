@@ -140,11 +140,12 @@ class _TestListScreenState extends State<TestListScreen>
                                     isCompleted: isCompleted,
                                     onTap: () async {
                                       if (premiumBlocked) {
-                                        Navigator.of(context).push(
+                                        await Navigator.of(context).push(
                                           MaterialPageRoute(
                                               builder: (_) =>
                                                   const PremiumScreen()),
                                         );
+                                        if (mounted) _loadAll();
                                         return;
                                       }
                                       if (isLocked) {

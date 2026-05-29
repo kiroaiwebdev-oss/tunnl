@@ -159,13 +159,14 @@ class _TricksScreenState extends State<TricksScreen>
                                     trick: t,
                                     diffColor: _difficultyColor(t.difficulty),
                                     isLocked: locked,
-                                    onTap: () {
+                                    onTap: () async {
                                       if (locked) {
-                                        Navigator.of(context).push(
+                                        await Navigator.of(context).push(
                                           MaterialPageRoute(
                                               builder: (_) =>
                                                   const PremiumScreen()),
                                         );
+                                        if (mounted) _loadTricks();
                                       } else {
                                         Navigator.of(context).push(
                                           MaterialPageRoute(
@@ -192,9 +193,12 @@ class _TricksScreenState extends State<TricksScreen>
 
   Widget _buildFreeBanner() {
     return GestureDetector(
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const PremiumScreen()),
-      ),
+      onTap: () async {
+        await Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const PremiumScreen()),
+        );
+        if (mounted) _loadTricks();
+      },
       child: Container(
         margin: const EdgeInsets.fromLTRB(20, 8, 20, 4),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),

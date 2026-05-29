@@ -11,6 +11,7 @@ import '../../core/services/user_service.dart';
 import '../hub/hub_screen.dart';
 import '../history/history_screen.dart';
 import '../premium/premium_screen.dart';
+import 'edit_profile_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -179,220 +180,21 @@ Future<void> _loadFromApi() async {
     );
   }
 
-  // ── Edit profile sheet (name + class/exam) ────────
-  void _showNameChangeDialog() {
-    _showEditProfileSheet();
-  }
-
-  void _showEditProfileSheet() {
-    final nameCtrl = TextEditingController(text: _name);
-    String? selectedStandard = _standard.isNotEmpty ? _standard : null;
-    bool isSaving = false;
-
-    const standards = [
-      'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10',
-      'Class 11', 'Class 12',
-      'SSC / Railway', 'Banking', 'UPSC', 'Other Competitive',
-    ];
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.darkCard,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setS) {
-          return Padding(
-            padding: EdgeInsets.fromLTRB(
-              24, 20, 24,
-              MediaQuery.of(ctx).viewInsets.bottom + 24,
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: AppColors.textMuted.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text('Edit Profile',
-                      style: GoogleFonts.poppins(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white)),
-                  const SizedBox(height: 4),
-                  Text('Update your name & class/exam',
-                      style: GoogleFonts.poppins(
-                          fontSize: 12, color: AppColors.textSecondary)),
-                  const SizedBox(height: 20),
-                  Text('Your Name',
-                      style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
-                          letterSpacing: 1)),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: nameCtrl,
-                    autofocus: true,
-                    style: GoogleFonts.poppins(color: Colors.white),
-                    cursorColor: AppColors.neonCyan,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: InputDecoration(
-                      hintText: 'Enter your name',
-                      hintStyle: GoogleFonts.poppins(color: AppColors.textMuted),
-                      prefixIcon: const Icon(Icons.person_rounded,
-                          color: AppColors.neonCyan, size: 18),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                            color: AppColors.neonCyan.withOpacity(0.2)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                            color: AppColors.neonCyan, width: 1.5),
-                      ),
-                      filled: true,
-                      fillColor: AppColors.darkBg,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  Text('Class / Exam',
-                      style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
-                          letterSpacing: 1)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: standards.map((s) {
-                      final selected = selectedStandard == s;
-                      return GestureDetector(
-                        onTap: () => setS(() => selectedStandard = s),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 150),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: selected
-                                ? AppColors.neonCyan.withOpacity(0.15)
-                                : AppColors.darkBg,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: selected
-                                  ? AppColors.neonCyan
-                                  : AppColors.neonCyan.withOpacity(0.1),
-                              width: selected ? 1.5 : 1,
-                            ),
-                          ),
-                          child: Text(s,
-                              style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: selected
-                                      ? FontWeight.w600
-                                      : FontWeight.w400,
-                                  color: selected
-                                      ? AppColors.neonCyan
-                                      : AppColors.textSecondary)),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextButton(
-                          onPressed: isSaving ? null : () => Navigator.pop(ctx),
-                          style: TextButton.styleFrom(
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 14),
-                            backgroundColor: AppColors.darkBg,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: Text('Cancel',
-                              style: GoogleFonts.poppins(
-                                  color: AppColors.textSecondary,
-                                  fontWeight: FontWeight.w600)),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        flex: 2,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.neonCyan,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 14),
-                          ),
-                          onPressed: isSaving
-                              ? null
-                              : () async {
-                                  final newName = nameCtrl.text.trim();
-                                  if (newName.isEmpty) {
-                                    _showSnack('Please enter your name',
-                                        color: AppColors.error);
-                                    return;
-                                  }
-                                  setS(() => isSaving = true);
-
-                                  final ok = await UserService.updateProfile(
-                                    name: newName,
-                                    standard: selectedStandard,
-                                  );
-
-                                  if (!mounted) return;
-                                  Navigator.pop(ctx);
-
-                                  if (ok) {
-                                    setState(() {
-                                      _name = newName;
-                                      _standard = selectedStandard ?? '';
-                                    });
-                                    _showSnack('Profile updated!');
-                                  } else {
-                                    _showSnack(
-                                        'Failed to update. Try again.',
-                                        color: AppColors.error);
-                                  }
-                                },
-                          child: isSaving
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 2, color: Colors.white))
-                              : Text('Save',
-                                  style: GoogleFonts.poppins(
-                                      color: AppColors.darkBg,
-                                      fontWeight: FontWeight.w700)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
+  // ── Open full-page editor ─────────────────────────
+  Future<void> _openEditProfile() async {
+    final updated = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => EditProfileScreen(
+          initialName:     _name,
+          initialStandard: _standard,
+          phone:           _phone,
+        ),
       ),
     );
+    // EditProfileScreen pops `true` on a successful save.
+    if (updated == true && mounted) {
+      await _loadFromApi();
+    }
   }
 
   // ── Notification settings ─────────────────────────
@@ -725,7 +527,7 @@ Future<void> _loadFromApi() async {
               color: AppColors.neonCyan, letterSpacing: 2)),
           const Spacer(),
           GestureDetector(
-            onTap: _showNameChangeDialog,
+            onTap: _openEditProfile,
             child: Container(
               width: 36, height: 36,
               decoration: BoxDecoration(
@@ -996,9 +798,14 @@ Future<void> _loadFromApi() async {
   // ── PREMIUM CARD ──────────────────────────────────
   Widget _buildPremiumCard() {
     return GestureDetector(
-      onTap: _isPremium ? null : () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const PremiumScreen()),
-      ),
+      onTap: _isPremium ? null : () async {
+        await Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const PremiumScreen()),
+        );
+        // Came back from premium screen — refresh profile so the
+        // "Unlock Premium" card flips to "TUNNEL PREMIUM" if upgrade succeeded.
+        if (mounted) await _loadFromApi();
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         decoration: BoxDecoration(

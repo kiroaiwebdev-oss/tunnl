@@ -113,12 +113,13 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
     }
   }
 
-  void _openExam(Map<String, dynamic> exam) {
+  void _openExam(Map<String, dynamic> exam) async {
     final canAccess = exam['can_access'] == true;
     if (!canAccess) {
-      Navigator.of(context).push(
+      await Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => const PremiumScreen()),
       );
+      if (mounted) _loadExams();
       return;
     }
     final examId = (exam['id'] as num?)?.toInt() ?? 0;
@@ -234,9 +235,12 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
 
   Widget _buildFreeBanner() {
     return GestureDetector(
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const PremiumScreen()),
-      ),
+      onTap: () async {
+        await Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const PremiumScreen()),
+        );
+        if (mounted) _loadExams();
+      },
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),

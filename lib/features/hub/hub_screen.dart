@@ -195,7 +195,9 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
         break;
       case 'premium':
         Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => const PremiumScreen()));
+          builder: (_) => const PremiumScreen())).then((_) {
+            if (mounted) _loadAll();
+          });
         break;
       case 'mcq':
         Navigator.of(context).push(MaterialPageRoute(
@@ -685,7 +687,9 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
                 () {
                   Navigator.pop(context);
                   Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => const PremiumScreen()));
+                    builder: (_) => const PremiumScreen())).then((_) {
+                      if (mounted) _loadAll();
+                    });
                 },
                 color: AppColors.orange,
               ),
