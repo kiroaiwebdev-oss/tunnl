@@ -270,7 +270,7 @@ class _PremiumScreenState extends State<PremiumScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              'Welcome to TUNNEL Premium!\nAll features unlocked 🎉',
+              'Welcome to Tunnl Premium!\nAll features unlocked 🎉',
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 13,
@@ -399,7 +399,7 @@ class _PremiumScreenState extends State<PremiumScreen>
                           const SizedBox(height: 20),
 
                           _buildSectionHeader(
-                            label: 'TICKET TO TUNNEL',
+                            label: 'TICKET TO TUNNL',
                             sublabel: 'Premium — ₹$_priceRupees one time',
                             color: AppColors.yellow,
                             icon: Icons.workspace_premium_rounded,
@@ -443,7 +443,7 @@ class _PremiumScreenState extends State<PremiumScreen>
           ),
           const SizedBox(width: 12),
           Text(
-            'TICKET TO TUNNEL',
+            'TICKET TO TUNNL',
             style: GoogleFonts.orbitron(
               fontSize: 15,
               fontWeight: FontWeight.w700,

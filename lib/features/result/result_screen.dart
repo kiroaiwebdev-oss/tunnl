@@ -245,7 +245,7 @@ class _ResultScreenState extends State<ResultScreen>
             child: const Icon(Icons.arrow_back_ios_new_rounded,
               color: AppColors.neonCyan, size: 20),
           ),
-          Text('TUNNEL',
+          Text('Tunnl',
             style: GoogleFonts.orbitron(
               fontSize: 16, fontWeight: FontWeight.w700,
               color: AppColors.neonCyan, letterSpacing: 3)),

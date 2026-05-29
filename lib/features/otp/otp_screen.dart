@@ -318,7 +318,7 @@ Future<void> _verifyOtp() async {
           Expanded(
             child: Center(
               child: Text(
-                'TUNNEL',
+                'Tunnl',
                 style: GoogleFonts.orbitron(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -382,7 +382,7 @@ Future<void> _verifyOtp() async {
         const SizedBox(height: 10),
         Text(
           _isVerified
-              ? 'Welcome to TUNNEL!'
+              ? 'Welcome to Tunnl!'
               : 'Enter the code sent to your mobile\nnumber',
           textAlign: TextAlign.center,
           style: GoogleFonts.poppins(

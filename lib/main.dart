@@ -68,7 +68,7 @@ class _TunnelAppState extends State<TunnelApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final themeController = context.watch<ThemeController>();
     return MaterialApp(
-      title: 'TUNNEL',
+      title: 'Tunnl',
       debugShowCheckedModeBanner: false,
       themeMode: themeController.themeMode,
       theme: AppTheme.lightTheme,

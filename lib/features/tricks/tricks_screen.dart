@@ -270,7 +270,7 @@ class _TricksScreenState extends State<TricksScreen>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('TUNNEL TRICKS',
+              Text('TUNNL TRICKS',
                   style: GoogleFonts.orbitron(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,

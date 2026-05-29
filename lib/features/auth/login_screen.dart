@@ -343,7 +343,7 @@ class _LoginScreenState extends State<LoginScreen>
           alignment: Alignment.center,
           children: [
             Text(
-              'TUNNEL',
+              'Tunnl',
               style: GoogleFonts.orbitron(
                 fontSize: 44,
                 fontWeight: FontWeight.w700,
@@ -579,7 +579,7 @@ class _LoginScreenState extends State<LoginScreen>
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text('New to TUNNEL?  ',
+        Text('New to Tunnl?  ',
           style: GoogleFonts.poppins(
             fontSize: 13, color: AppColors.textSecondary,
           )),

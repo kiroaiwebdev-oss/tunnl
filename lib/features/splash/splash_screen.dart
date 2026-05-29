@@ -263,7 +263,7 @@ class _SplashScreenState extends State<SplashScreen>
           ),
         ),
         content: const Text(
-          'A new version of TUNNEL is available. Please update to continue.',
+          'A new version of Tunnl is available. Please update to continue.',
           style: TextStyle(
             color: AppColors.textSecondary,
             fontFamily: 'Poppins',
@@ -605,7 +605,7 @@ class _MaintenanceScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 16),
                 Text(
-                  'We are improving TUNNEL for you.\nPlease check back shortly.',
+                  'We are improving Tunnl for you.\nPlease check back shortly.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'Poppins',

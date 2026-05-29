@@ -309,7 +309,7 @@ Future<void> _loadFromApi() async {
                   color: Colors.white)),
               const SizedBox(height: 16),
               Text(
-                'TUNNEL collects minimal user data including phone number and '
+                'Tunnl collects minimal user data including phone number and '
                 'test performance to provide a personalized learning experience.\n\n'
                 'Your data is never shared with third parties without your '
                 'consent. All test history and scores are stored securely.\n\n'
@@ -363,7 +363,7 @@ Future<void> _loadFromApi() async {
                 final uri = Uri(
                   scheme: 'mailto',
                   path: 'support@tunnel.app',
-                  query: 'subject=TUNNEL App Support',
+                  query: 'subject=Tunnl App Support',
                 );
                 if (await canLaunchUrl(uri)) launchUrl(uri);
               },
@@ -394,7 +394,7 @@ Future<void> _loadFromApi() async {
                 final uri = Uri(
                   scheme: 'mailto',
                   path: 'support@tunnel.app',
-                  query: 'subject=Bug Report — TUNNEL App',
+                  query: 'subject=Bug Report — Tunnl App',
                 );
                 if (await canLaunchUrl(uri)) launchUrl(uri);
                 _showSnack('Thank you! Bug reported.');
@@ -803,7 +803,7 @@ Future<void> _loadFromApi() async {
           MaterialPageRoute(builder: (_) => const PremiumScreen()),
         );
         // Came back from premium screen — refresh profile so the
-        // "Unlock Premium" card flips to "TUNNEL PREMIUM" if upgrade succeeded.
+        // "Unlock Premium" card flips to "TUNNL PREMIUM" if upgrade succeeded.
         if (mounted) await _loadFromApi();
       },
       child: Container(
@@ -847,7 +847,7 @@ Future<void> _loadFromApi() async {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _isPremium ? 'TUNNEL PREMIUM' : 'Unlock Premium',
+                    _isPremium ? 'TUNNL PREMIUM' : 'Unlock Premium',
                     style: GoogleFonts.poppins(
                       fontSize: 14, fontWeight: FontWeight.w700,
                       color: _isPremium ? AppColors.yellow : Colors.white)),

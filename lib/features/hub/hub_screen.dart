@@ -58,7 +58,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
       'actionValue': 'previous_year',
     },
     {
-      'title':       'TUNNEL TRICKS',
+      'title':       'TUNNL TRICKS',
       'subtitle':    '8 powerful math shortcuts added',
       'gradient':    [const Color(0xFF1A1040), const Color(0xFF2A1A60)],
       'borderColor': const Color(0xFF9C6FFF),
@@ -277,7 +277,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
                           ),
                           const SizedBox(height: 12),
                           _HubCard(
-                            title:       'Ticket to TUNNEL',
+                            title:       'Ticket to Tunnl',
                             subtitle:    'Unlock full access & advanced features',
                             borderColor: AppColors.orange,
                             iconBgColor: AppColors.orange,
@@ -327,7 +327,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
             child: const Icon(Icons.menu_rounded, color: Colors.white, size: 26),
           ),
           Text(
-            'TUNNEL',
+            'Tunnl',
             style: GoogleFonts.orbitron(
               fontSize: 18, fontWeight: FontWeight.w700,
               color: AppColors.neonCyan, letterSpacing: 4,
@@ -617,7 +617,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 4),
-              child: Text('TUNNEL',
+              child: Text('Tunnl',
                 style: GoogleFonts.orbitron(
                   fontSize: 22, fontWeight: FontWeight.w700,
                   color: AppColors.neonCyan, letterSpacing: 4)),

@@ -51,7 +51,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   final List<Map<String, dynamic>> _coreItems = [
     {
-      'title':       'TUNNEL TRICKS',
+      'title':       'TUNNL TRICKS',
       'subtitle':    'Learn powerful strategies & tricks',
       'icon':        Icons.layers_rounded,
       'iconBg':      const Color(0xFF0D2233),
@@ -570,7 +570,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               color: Colors.white, size: 26),
           ),
           Text(
-            'TUNNEL',
+            'Tunnl',
             style: GoogleFonts.orbitron(
               fontSize: 16, fontWeight: FontWeight.w700,
               color: AppColors.neonCyan, letterSpacing: 3,
@@ -622,7 +622,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 4),
               child: Text(
-                'TUNNEL',
+                'Tunnl',
                 style: GoogleFonts.orbitron(
                   fontSize: 22, fontWeight: FontWeight.w700,
                   color: AppColors.neonCyan, letterSpacing: 4,
