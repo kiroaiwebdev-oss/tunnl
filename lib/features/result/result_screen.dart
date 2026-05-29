@@ -1,0 +1,960 @@
+// lib/features/result/result_screen.dart
+
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/services/result_service.dart';
+import '../../core/services/auth_service.dart';
+import '../question/question_screen.dart';
+import '../leaderboard/leaderboard_screen.dart';
+import '../dashboard/dashboard_screen.dart';
+import '../premium/premium_screen.dart';
+
+class ResultScreen extends StatefulWidget {
+  final String mode;
+  final String category;
+  final int    totalQuestions;
+  final int    correct;
+  final int    wrong;
+  final int    skipped;
+  final double accuracy;
+  final double avgSpeedSeconds;
+  final List<Map<String, dynamic>> summary;
+  final int setNumber;
+
+  const ResultScreen({
+    super.key,
+    required this.mode,
+    required this.category,
+    required this.totalQuestions,
+    required this.correct,
+    required this.wrong,
+    required this.skipped,
+    required this.accuracy,
+    required this.avgSpeedSeconds,
+    required this.summary,
+    this.setNumber = 1,
+  });
+
+  @override
+  State<ResultScreen> createState() => _ResultScreenState();
+}
+
+class _ResultScreenState extends State<ResultScreen>
+    with TickerProviderStateMixin {
+
+  // ── Tab ───────────────────────────────────────────
+  int _activeTab = 0; // 0 = Result, 1 = Review
+
+  // ── Animations ─────────────────────────────────────
+  late AnimationController        _entryCtrl;
+  late Animation<double>          _fadeAnim;
+  late Animation<Offset>          _slideAnim;
+  late AnimationController        _scoreCtrl;
+  late Animation<double>          _scoreAnim;
+  late AnimationController        _statsCtrl;
+  late List<Animation<double>>    _statsFadeAnims;
+  late AnimationController        _xpCtrl;
+  late Animation<double>          _xpScaleAnim;
+
+  // ── Computed ───────────────────────────────────────
+  late double _scoreOutOf10;
+  late int    _xpEarned;
+  late String _performanceMsg;
+  late Color  _scoreColor;
+
+  // ── State ──────────────────────────────────────────
+  bool   _isSaving    = false;
+  bool   _savedOk     = false;
+  bool   _isPremium   = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _computeResults();
+    _setupAnimations();
+    _saveResultAndCheckPremium();
+  }
+
+  // ─────────────────────────────────────────────────
+  // Compute
+  // ─────────────────────────────────────────────────
+  void _computeResults() {
+    _scoreOutOf10 = widget.totalQuestions > 0
+        ? (widget.correct / widget.totalQuestions) * 10
+        : 0;
+
+    _xpEarned = (widget.correct * 10) +
+        (widget.accuracy > 80 ? 20 : 0) +
+        (widget.avgSpeedSeconds < 5 ? 15 : 0);
+
+    _scoreColor = _scoreOutOf10 >= 8
+        ? AppColors.success
+        : _scoreOutOf10 >= 5
+            ? AppColors.yellow
+            : AppColors.error;
+
+    _performanceMsg = widget.accuracy >= 80
+        ? 'Excellent! You are in the top tier 🔥'
+        : widget.accuracy >= 60
+            ? 'Good effort! Keep pushing!'
+            : 'Keep practicing to improve!';
+  }
+
+  // ─────────────────────────────────────────────────
+  // Save result to API + check premium
+  // ─────────────────────────────────────────────────
+  Future<void> _saveResultAndCheckPremium() async {
+    setState(() => _isSaving = true);
+
+    // Parallel
+    await Future.wait([
+      _saveResult(),
+      _checkPremium(),
+    ]);
+
+    if (mounted) setState(() => _isSaving = false);
+  }
+
+  Future<void> _saveResult() async {
+    try {
+      final ok = await ResultService.saveResult(
+        category:        widget.category,
+        setNumber:       widget.setNumber,
+        mode:            widget.mode,
+        totalQuestions:  widget.totalQuestions,
+        correct:         widget.correct,
+        wrong:           widget.wrong,
+        skipped:         widget.skipped,
+        accuracy:        widget.accuracy,
+        avgSpeedSeconds: widget.avgSpeedSeconds,
+        xpEarned:        _xpEarned,
+      );
+      if (mounted) setState(() => _savedOk = ok);
+    } catch (_) {
+      // Silent fail — result still shown to user
+    }
+  }
+
+  Future<void> _checkPremium() async {
+    final isPremium = await AuthService.isPremium();
+    if (mounted) setState(() => _isPremium = isPremium);
+  }
+
+  // ─────────────────────────────────────────────────
+  // Animations
+  // ─────────────────────────────────────────────────
+  void _setupAnimations() {
+    _entryCtrl = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 600));
+    _fadeAnim  = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _entryCtrl, curve: Curves.easeOut));
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.06), end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _entryCtrl, curve: Curves.easeOut));
+
+    _scoreCtrl = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 1200));
+    _scoreAnim = Tween<double>(begin: 0.0, end: _scoreOutOf10).animate(
+      CurvedAnimation(parent: _scoreCtrl, curve: Curves.easeOutCubic));
+
+    _statsCtrl = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 900));
+    _statsFadeAnims = List.generate(3, (i) =>
+      Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(
+        parent: _statsCtrl,
+        curve: Interval(i * 0.15, 0.6 + i * 0.15, curve: Curves.easeOut),
+      )));
+
+    _xpCtrl = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 600));
+    _xpScaleAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _xpCtrl, curve: Curves.elasticOut));
+
+    _entryCtrl.forward();
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) { _scoreCtrl.forward(); _statsCtrl.forward(); }
+    });
+    Future.delayed(const Duration(milliseconds: 700), () {
+      if (mounted) _xpCtrl.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _entryCtrl.dispose();
+    _scoreCtrl.dispose();
+    _statsCtrl.dispose();
+    _xpCtrl.dispose();
+    super.dispose();
+  }
+
+  // ─────────────────────────────────────────────────
+  // BUILD
+  // ─────────────────────────────────────────────────
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.darkBg,
+      body: Container(
+        decoration: const BoxDecoration(gradient: AppColors.splashBg),
+        child: SafeArea(
+          child: FadeTransition(
+            opacity: _fadeAnim,
+            child: SlideTransition(
+              position: _slideAnim,
+              child: Column(
+                children: [
+                  _buildAppBar(),
+                  _buildTabBar(),
+                  Expanded(
+                    child: _activeTab == 0
+                        ? _buildResultTab()
+                        : _buildReviewTab(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── APP BAR ───────────────────────────────────────
+  Widget _buildAppBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(builder: (_) => const DashboardScreen()),
+              (r) => false),
+            child: const Icon(Icons.arrow_back_ios_new_rounded,
+              color: AppColors.neonCyan, size: 20),
+          ),
+          Text('TUNNEL',
+            style: GoogleFonts.orbitron(
+              fontSize: 16, fontWeight: FontWeight.w700,
+              color: AppColors.neonCyan, letterSpacing: 3)),
+          // Save status indicator
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: _isSaving
+                ? const SizedBox(
+                    key: ValueKey('saving'),
+                    width: 18, height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2, color: AppColors.neonCyan))
+                : Icon(
+                    key: const ValueKey('saved'),
+                    _savedOk ? Icons.cloud_done_rounded : Icons.cloud_off_rounded,
+                    color: _savedOk
+                        ? AppColors.success
+                        : AppColors.textMuted,
+                    size: 22),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── TAB BAR ───────────────────────────────────────
+  Widget _buildTabBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      child: Row(
+        children: [
+          _TabChip(
+            label: 'RESULT',
+            icon: Icons.bar_chart_rounded,
+            active: _activeTab == 0,
+            onTap: () => setState(() => _activeTab = 0),
+          ),
+          const SizedBox(width: 10),
+          _TabChip(
+            label: 'REVIEW (${widget.summary.length})',
+            icon: Icons.rate_review_rounded,
+            active: _activeTab == 1,
+            onTap: () => setState(() => _activeTab = 1),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────
+  // RESULT TAB
+  // ─────────────────────────────────────────────────
+  Widget _buildResultTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: [
+          const SizedBox(height: 16),
+          _buildResultsHeading(),
+          const SizedBox(height: 20),
+          _buildStatsCard(),
+          const SizedBox(height: 16),
+          _buildBreakdownRow(),
+          const SizedBox(height: 16),
+          _buildPerformanceCard(),
+          const SizedBox(height: 24),
+          _buildRetryButton(),
+          const SizedBox(height: 12),
+          _buildDashboardButton(),
+          const SizedBox(height: 12),
+          if (widget.mode != 'simplification') _buildLeaderboardButton(),
+          if (widget.mode != 'simplification') const SizedBox(height: 12),
+          if (!_isPremium) _buildPremiumCard(),
+          if (!_isPremium) const SizedBox(height: 30),
+          if (_isPremium) const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResultsHeading() {
+    return Column(
+      children: [
+        ShaderMask(
+          shaderCallback: (b) => const LinearGradient(
+            colors: [AppColors.neonCyan, Color(0xFF0091EA)],
+          ).createShader(b),
+          child: Text('RESULTS',
+            style: GoogleFonts.orbitron(
+              fontSize: 42, fontWeight: FontWeight.w700,
+              color: Colors.white, letterSpacing: 6)),
+        ),
+        const SizedBox(height: 6),
+        Text('SET ${widget.setNumber.toString().padLeft(2, '0')} • ${widget.category.toUpperCase()}',
+          style: GoogleFonts.poppins(
+            fontSize: 11, fontWeight: FontWeight.w500,
+            color: AppColors.textSecondary, letterSpacing: 2.5)),
+      ],
+    );
+  }
+
+  Widget _buildStatsCard() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 22),
+      decoration: BoxDecoration(
+        color: AppColors.darkCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.neonCyan.withOpacity(0.1)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          FadeTransition(
+            opacity: _statsFadeAnims[0],
+            child: _StatItem(
+              icon: Icons.star_rounded,
+              label: 'SCORE',
+              valueWidget: AnimatedBuilder(
+                animation: _scoreAnim,
+                builder: (_, __) => Text(
+                  '${_scoreAnim.value.toStringAsFixed(1)}/10',
+                  style: GoogleFonts.orbitron(
+                    fontSize: 22, fontWeight: FontWeight.w700,
+                    color: _scoreColor)),
+              ),
+            ),
+          ),
+          Container(width: 1, height: 60,
+            color: AppColors.textMuted.withOpacity(0.3)),
+          FadeTransition(
+            opacity: _statsFadeAnims[1],
+            child: _StatItem(
+              icon: Icons.track_changes_rounded,
+              label: 'ACCURACY',
+              valueWidget: Text(
+                '${widget.accuracy.toStringAsFixed(0)}%',
+                style: GoogleFonts.orbitron(
+                  fontSize: 22, fontWeight: FontWeight.w700,
+                  color: AppColors.neonCyan)),
+            ),
+          ),
+          Container(width: 1, height: 60,
+            color: AppColors.textMuted.withOpacity(0.3)),
+          FadeTransition(
+            opacity: _statsFadeAnims[2],
+            child: _StatItem(
+              icon: Icons.timer_rounded,
+              label: 'AVG SPEED',
+              valueWidget: Text(
+                '${widget.avgSpeedSeconds.toStringAsFixed(1)}s',
+                style: GoogleFonts.orbitron(
+                  fontSize: 22, fontWeight: FontWeight.w700,
+                  color: AppColors.neonCyan)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Correct / Wrong / Skipped breakdown ───────────
+  Widget _buildBreakdownRow() {
+    return Row(
+      children: [
+        _BreakdownChip(
+          value: widget.correct,
+          label: 'Correct',
+          color: AppColors.success,
+          icon: Icons.check_circle_rounded,
+        ),
+        const SizedBox(width: 10),
+        _BreakdownChip(
+          value: widget.wrong,
+          label: 'Wrong',
+          color: AppColors.error,
+          icon: Icons.cancel_rounded,
+        ),
+        const SizedBox(width: 10),
+        _BreakdownChip(
+          value: widget.skipped,
+          label: 'Skipped',
+          color: AppColors.textMuted,
+          icon: Icons.remove_circle_rounded,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPerformanceCard() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      decoration: BoxDecoration(
+        color: AppColors.darkCard,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: AppColors.neonCyan.withOpacity(0.25), width: 1.2),
+        boxShadow: [BoxShadow(
+          color: AppColors.neonCyan.withOpacity(0.05),
+          blurRadius: 16, spreadRadius: 2)],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 3, height: 50,
+            decoration: BoxDecoration(
+              color: AppColors.neonCyan,
+              borderRadius: BorderRadius.circular(2)),
+          ),
+          const SizedBox(width: 14),
+          Container(
+            width: 44, height: 44,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.neonCyan.withOpacity(0.1)),
+            child: const Icon(Icons.emoji_events_rounded,
+              color: AppColors.neonCyan, size: 22),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(_performanceMsg,
+                  style: GoogleFonts.poppins(
+                    fontSize: 13, fontWeight: FontWeight.w700,
+                    color: Colors.white)),
+                const SizedBox(height: 3),
+                Text('${widget.totalQuestions - widget.correct} more correct → reach Top 20!',
+                  style: GoogleFonts.poppins(
+                    fontSize: 11, color: AppColors.textSecondary)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          ScaleTransition(
+            scale: _xpScaleAnim,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.neonCyan.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppColors.neonCyan.withOpacity(0.3))),
+              child: Column(
+                children: [
+                  Text('+$_xpEarned',
+                    style: GoogleFonts.orbitron(
+                      fontSize: 14, fontWeight: FontWeight.w700,
+                      color: AppColors.neonCyan)),
+                  Text('XP',
+                    style: GoogleFonts.poppins(
+                      fontSize: 9, color: AppColors.neonCyan,
+                      letterSpacing: 1)),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Buttons ───────────────────────────────────────
+  Widget _buildRetryButton() {
+    return GestureDetector(
+      onTap: () => Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => QuestionScreen(
+          mode:           widget.mode,
+          category:       widget.category,
+          setNumber:      widget.setNumber,
+          totalQuestions: widget.totalQuestions,
+        )),
+      ),
+      child: Container(
+        height: 56, width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF00E5FF), Color(0xFF00ACC1)],
+            begin: Alignment.centerLeft, end: Alignment.centerRight),
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [BoxShadow(
+            color: AppColors.neonCyan.withOpacity(0.35),
+            blurRadius: 20, spreadRadius: 2, offset: const Offset(0, 4))],
+        ),
+        child: Center(child: Text('RETRY TEST',
+          style: GoogleFonts.poppins(
+            fontSize: 14, fontWeight: FontWeight.w700,
+            color: AppColors.darkBg, letterSpacing: 2))),
+      ),
+    );
+  }
+
+  Widget _buildDashboardButton() {
+    return GestureDetector(
+      onTap: () => Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const DashboardScreen()),
+        (r) => false),
+      child: Container(
+        height: 56, width: double.infinity,
+        decoration: BoxDecoration(
+          color: AppColors.darkCard,
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: AppColors.textMuted.withOpacity(0.3)),
+        ),
+        child: Center(child: Text('DASHBOARD',
+          style: GoogleFonts.poppins(
+            fontSize: 14, fontWeight: FontWeight.w700,
+            color: Colors.white, letterSpacing: 2))),
+      ),
+    );
+  }
+
+  Widget _buildLeaderboardButton() {
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const LeaderboardScreen())),
+      child: Container(
+        height: 56, width: double.infinity,
+        decoration: BoxDecoration(
+          color: AppColors.orange,
+          borderRadius: BorderRadius.circular(30),
+          boxShadow: [BoxShadow(
+            color: AppColors.orange.withOpacity(0.35),
+            blurRadius: 20, spreadRadius: 2, offset: const Offset(0, 4))],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.emoji_events_rounded,
+              color: Colors.white, size: 20),
+            const SizedBox(width: 10),
+            Text('LEADERBOARD',
+              style: GoogleFonts.poppins(
+                fontSize: 14, fontWeight: FontWeight.w700,
+                color: Colors.white, letterSpacing: 2)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPremiumCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.darkCard,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.neonCyan.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Unlock Premium\nContent',
+                style: GoogleFonts.poppins(
+                  fontSize: 18, fontWeight: FontWeight.w700,
+                  color: Colors.white, height: 1.3)),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.darkSurface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.neonCyan.withOpacity(0.3))),
+                child: Text('ELITE\nACCESS',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 9, fontWeight: FontWeight.w700,
+                    color: AppColors.neonCyan, letterSpacing: 1.5)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const _PremiumFeature(text: '5000+ Advanced Mathematics MCQs'),
+          const SizedBox(height: 10),
+          const _PremiumFeature(text: 'Vedic Math Shortcuts & Tricks'),
+          const SizedBox(height: 10),
+          const _PremiumFeature(text: 'Elite Speed Solving Methods'),
+          const SizedBox(height: 20),
+          GestureDetector(
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const PremiumScreen())),
+            child: Container(
+              height: 52, width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: AppColors.premiumGradient,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [BoxShadow(
+                  color: AppColors.purple.withOpacity(0.4),
+                  blurRadius: 20, spreadRadius: 2,
+                  offset: const Offset(0, 4))],
+              ),
+              child: Center(child: Text('UNLOCK NOW',
+                style: GoogleFonts.poppins(
+                  fontSize: 14, fontWeight: FontWeight.w700,
+                  color: Colors.white, letterSpacing: 2))),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────
+  // REVIEW TAB
+  // ─────────────────────────────────────────────────
+  Widget _buildReviewTab() {
+    if (widget.summary.isEmpty) {
+      return Center(
+        child: Text('No review data available.',
+          style: GoogleFonts.poppins(
+            fontSize: 13, color: AppColors.textSecondary)),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      itemCount: widget.summary.length,
+      itemBuilder: (_, i) {
+        final item      = widget.summary[i];
+        final isCorrect = item['isCorrect'] == true;
+        final skipped   = (item['selected'] as int?) == -1;
+        final options   = List<String>.from(item['options'] ?? []);
+        final correct   = (item['correct'] as int?) ?? 0;
+        final selected  = (item['selected'] as int?) ?? -1;
+
+        Color headerColor = skipped
+            ? AppColors.textMuted
+            : isCorrect ? AppColors.success : AppColors.error;
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 14),
+          decoration: BoxDecoration(
+            color: AppColors.darkCard,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: headerColor.withOpacity(0.3), width: 1),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Question header
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: headerColor.withOpacity(0.08),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(15)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: headerColor.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(6)),
+                      child: Text(
+                        'Q${i + 1}',
+                        style: GoogleFonts.orbitron(
+                          fontSize: 10, fontWeight: FontWeight.w700,
+                          color: headerColor)),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(item['question'] ?? '',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14, fontWeight: FontWeight.w600,
+                          color: Colors.white)),
+                    ),
+                    Icon(
+                      skipped
+                          ? Icons.remove_circle_rounded
+                          : isCorrect
+                              ? Icons.check_circle_rounded
+                              : Icons.cancel_rounded,
+                      color: headerColor, size: 20),
+                  ],
+                ),
+              ),
+
+              // Options
+              if (options.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    children: List.generate(options.length, (oi) {
+                      final isC = oi == correct;
+                      final isS = oi == selected;
+                      Color bg        = Colors.transparent;
+                      Color border    = AppColors.textMuted.withOpacity(0.15);
+                      Color textColor = AppColors.textSecondary;
+
+                      if (isC) {
+                        bg        = AppColors.success.withOpacity(0.1);
+                        border    = AppColors.success.withOpacity(0.4);
+                        textColor = AppColors.success;
+                      } else if (isS && !isC) {
+                        bg        = AppColors.error.withOpacity(0.1);
+                        border    = AppColors.error.withOpacity(0.4);
+                        textColor = AppColors.error;
+                      }
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: bg,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: border),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              ['A', 'B', 'C', 'D'][oi],
+                              style: GoogleFonts.poppins(
+                                fontSize: 12, fontWeight: FontWeight.w700,
+                                color: textColor)),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(options[oi],
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13, color: textColor))),
+                            if (isC)
+                              const Icon(Icons.check_rounded,
+                                color: AppColors.success, size: 16),
+                            if (isS && !isC)
+                              const Icon(Icons.close_rounded,
+                                color: AppColors.error, size: 16),
+                          ],
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+
+              // Time taken
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+                child: Row(
+                  children: [
+                    const Icon(Icons.timer_outlined,
+                      size: 13, color: AppColors.textMuted),
+                    const SizedBox(width: 4),
+                    Text(
+                      skipped
+                          ? 'Timed out'
+                          : 'Answered in ${item['timeTaken']}s',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11, color: AppColors.textMuted)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ── ResultService — banao ─────────────────────────────
+// lib/core/services/result_service.dart
+//
+// class ResultService {
+//   static Future<bool> saveResult({...}) async {
+//     final token = await AuthService.getToken();
+//     final res = await http.post(
+//       Uri.parse('${AppConstants.baseUrl}/user/save-result'),
+//       headers: {'Authorization': 'Bearer $token', 'Content-Type': 'application/json'},
+//       body: jsonEncode({...}),
+//     );
+//     return jsonDecode(res.body)['status'] == true;
+//   }
+// }
+
+// ─────────────────────────────────────────────────────
+// HELPER WIDGETS
+// ─────────────────────────────────────────────────────
+class _TabChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool active;
+  final VoidCallback onTap;
+
+  const _TabChip({
+    required this.label, required this.icon,
+    required this.active, required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: active
+              ? AppColors.neonCyan.withOpacity(0.15)
+              : AppColors.darkCard,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: active
+                ? AppColors.neonCyan.withOpacity(0.5)
+                : AppColors.textMuted.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon,
+              color: active ? AppColors.neonCyan : AppColors.textMuted,
+              size: 14),
+            const SizedBox(width: 6),
+            Text(label,
+              style: GoogleFonts.poppins(
+                fontSize: 11, fontWeight: FontWeight.w600,
+                color: active ? AppColors.neonCyan : AppColors.textMuted)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BreakdownChip extends StatelessWidget {
+  final int value;
+  final String label;
+  final Color color;
+  final IconData icon;
+
+  const _BreakdownChip({
+    required this.value, required this.label,
+    required this.color, required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withOpacity(0.25)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 4),
+            Text('$value',
+              style: GoogleFonts.orbitron(
+                fontSize: 18, fontWeight: FontWeight.w700, color: color)),
+            Text(label,
+              style: GoogleFonts.poppins(
+                fontSize: 10, color: AppColors.textSecondary)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatItem extends StatelessWidget {
+  final IconData icon;
+  final String   label;
+  final Widget   valueWidget;
+
+  const _StatItem({
+    required this.icon, required this.label, required this.valueWidget});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: 40, height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColors.neonCyan.withOpacity(0.1)),
+          child: Icon(icon, color: AppColors.neonCyan, size: 20),
+        ),
+        const SizedBox(height: 8),
+        Text(label,
+          style: GoogleFonts.poppins(
+            fontSize: 10, color: AppColors.textSecondary,
+            letterSpacing: 1.5)),
+        const SizedBox(height: 4),
+        valueWidget,
+      ],
+    );
+  }
+}
+
+class _PremiumFeature extends StatelessWidget {
+  final String text;
+  const _PremiumFeature({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 22, height: 22,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle, color: AppColors.neonCyan),
+          child: const Icon(Icons.check_rounded,
+            color: AppColors.darkBg, size: 14),
+        ),
+        const SizedBox(width: 12),
+        Text(text,
+          style: GoogleFonts.poppins(
+            fontSize: 13, color: Colors.white,
+            fontWeight: FontWeight.w400)),
+      ],
+    );
+  }
+}
