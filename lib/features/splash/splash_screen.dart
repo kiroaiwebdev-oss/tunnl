@@ -102,7 +102,7 @@ class _SplashScreenState extends State<SplashScreen>
       final settingsRes = await ApiClient.get(ApiEndpoints.appSettings)
           .timeout(const Duration(seconds: 8));
 
-      if (settingsRes['status'] == true) {
+      if (settingsRes['success'] == true || settingsRes['status'] == true) {
         final settings = Map<String, dynamic>.from(settingsRes['data'] ?? {});
 
         // Save important settings to prefs
@@ -160,10 +160,10 @@ class _SplashScreenState extends State<SplashScreen>
         ).timeout(const Duration(seconds: 6));
 
         // Token invalid — force logout
-        if (profileRes['status'] == false &&
-            profileRes['message']?.toString().contains('nauthorized') == true) {
+        if ((profileRes['success'] == false && profileRes['status'] != true) &&
+            profileRes['message']?.toString().toLowerCase().contains('login') == true) {
           await prefs.clear();
-        } else if (profileRes['status'] == true) {
+        } else if (profileRes['success'] == true || profileRes['status'] == true) {
           // Refresh premium status from server
           final user = profileRes['data']?['user'];
           if (user != null) {

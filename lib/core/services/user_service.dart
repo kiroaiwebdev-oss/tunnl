@@ -1,21 +1,26 @@
 // lib/core/services/user_service.dart
 
+import 'package:flutter/foundation.dart';
 import '../network/api_client.dart';
 import '../network/api_endpoints.dart';
 import '../services/auth_service.dart';
 
 class UserService {
+  static bool _ok(Map<String, dynamic> res) =>
+      res['success'] == true || res['status'] == true;
 
   // ── Get profile ───────────────────────────────────
+  /// Returns the raw response { success, data: { user, stats, recent_tests } }
   static Future<Map<String, dynamic>> getProfile() async {
     try {
       return await ApiClient.get(ApiEndpoints.userProfile, auth: true);
     } catch (e) {
-      return {'status': false, 'message': 'Failed to load profile.'};
+      debugPrint('[UserService.getProfile] $e');
+      return {'success': false, 'message': 'Failed to load profile.'};
     }
   }
 
-  // ── Update name ───────────────────────────────────
+  // ── Update profile fields ─────────────────────────
   static Future<bool> updateName(String name) async {
     try {
       final res = await ApiClient.post(
@@ -23,7 +28,7 @@ class UserService {
         {'name': name},
         auth: true,
       );
-      if (res['status'] == true) {
+      if (_ok(res)) {
         await AuthService.setCachedName(name);
         return true;
       }
@@ -33,7 +38,55 @@ class UserService {
     }
   }
 
-  // ── Update FCM token ──────────────────────────────
+  static Future<bool> updateStandard(String standard) async {
+    try {
+      final res = await ApiClient.post(
+        ApiEndpoints.userProfile,
+        {'standard': standard},
+        auth: true,
+      );
+      if (_ok(res)) {
+        await AuthService.setCachedStandard(standard);
+        return true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<bool> updateProfile({
+    String? name,
+    String? standard,
+    String? fcmToken,
+  }) async {
+    try {
+      final body = <String, dynamic>{};
+      if (name != null && name.isNotEmpty) body['name'] = name;
+      if (standard != null && standard.isNotEmpty) body['standard'] = standard;
+      if (fcmToken != null && fcmToken.isNotEmpty) body['fcm_token'] = fcmToken;
+      if (body.isEmpty) return false;
+
+      final res = await ApiClient.post(
+        ApiEndpoints.userProfile,
+        body,
+        auth: true,
+      );
+      if (_ok(res)) {
+        if (name != null && name.isNotEmpty) {
+          await AuthService.setCachedName(name);
+        }
+        if (standard != null && standard.isNotEmpty) {
+          await AuthService.setCachedStandard(standard);
+        }
+        return true;
+      }
+      return false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   static Future<void> updateFcmToken(String token) async {
     try {
       await ApiClient.post(
@@ -45,97 +98,109 @@ class UserService {
   }
 
   // ── Leaderboard ───────────────────────────────────
-  static Future<List<Map<String, dynamic>>> getLeaderboard() async {
-    try {
-      final res = await ApiClient.get(ApiEndpoints.leaderboard);
-      if (res['status'] != true) return [];
-      return List<Map<String, dynamic>>.from(res['data'] ?? []);
-    } catch (_) {
-      return [];
-    }
-  }
-
-  // ── Solve & Earn leaderboard ──────────────────────
-  static Future<List<Map<String, dynamic>>> getSolveEarnLeaderboard() async {
+  /// type: 'all_time' (default) | 'weekly' | 'monthly'
+  /// Returns { entries: [...], myRank, myXp, type }
+  static Future<Map<String, dynamic>> getLeaderboard({
+    String type = 'all_time',
+    int limit = 50,
+  }) async {
     try {
       final res = await ApiClient.get(
         ApiEndpoints.leaderboard,
-        params: {'type': 'solve_earn'},
+        params: {'type': type, 'limit': '$limit'},
+        auth: true,
       );
-      if (res['status'] != true) return [];
-      return List<Map<String, dynamic>>.from(res['data'] ?? []);
+      if (!_ok(res)) {
+        return {'entries': const [], 'my_rank': null, 'my_xp': null};
+      }
+      final list = res['leaderboard'];
+      final entries = (list is List)
+          ? list
+              .whereType<Map>()
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList()
+          : <Map<String, dynamic>>[];
+      return {
+        'entries': entries,
+        'my_rank': res['my_rank'],
+        'my_xp': res['my_xp'],
+        'type': res['type'] ?? type,
+      };
+    } catch (e) {
+      debugPrint('[Leaderboard] $e');
+      return {'entries': const [], 'my_rank': null, 'my_xp': null};
+    }
+  }
+
+  // ── Recent test history (from user_profile.recent_tests) ──
+  static Future<List<Map<String, dynamic>>> getRecentTests() async {
+    try {
+      final res = await getProfile();
+      if (!_ok(res)) return [];
+      final data = res['data'];
+      if (data is! Map) return [];
+      final list = data['recent_tests'];
+      if (list is! List) return [];
+      return list
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
     } catch (_) {
       return [];
     }
   }
 
-  // ── History ───────────────────────────────────────
-  static Future<List<Map<String, dynamic>>> getHistory() async {
+  // ── Weekly Challenge ──────────────────────────────
+  static Future<Map<String, dynamic>> getWeeklyChallenge() async {
     try {
-      final res = await ApiClient.get(
-        ApiEndpoints.history,
-        auth: true,
-      );
-      if (res['status'] != true) return [];
-      return List<Map<String, dynamic>>.from(res['data'] ?? []);
-    } catch (_) {
-      return [];
+      return await ApiClient.get(ApiEndpoints.weeklyChallenge, auth: true);
+    } catch (e) {
+      return {'success': false, 'message': '$e'};
     }
   }
 
-  // ── XP summary ────────────────────────────────────
-  static Future<Map<String, dynamic>> getXpSummary() async {
-    try {
-      final res = await ApiClient.get(
-        ApiEndpoints.userXp,
-        auth: true,
-      );
-      if (res['status'] != true) return {};
-      return Map<String, dynamic>.from(res['data'] ?? {});
-    } catch (_) {
-      return {};
-    }
-  }
-
-  // ── Get set progress ──────────────────────────────  ← ADD KIYA
-  static Future<Map<String, dynamic>> getSetProgress(String category) async {
-    try {
-      return await ApiClient.get(
-        ApiEndpoints.userProfile,
-        params: {
-          'action'  : 'get_set_progress',
-          'category': category,
-        },
-        auth: true,
-      );
-    } catch (_) {
-      return {'status': false, 'data': []};
-    }
-  }
-
-  // ── Update set progress ───────────────────────────  ← FIX KIYA (andar hai ab)
-  static Future<bool> updateSetProgress({
-    required String category,
-    required int    setNumber,
-    required double progress,
-    required bool   isCompleted,
+  static Future<Map<String, dynamic>> submitWeeklyChallenge({
+    required int challengeId,
+    required int correct,
+    required int wrong,
+    required int timeTaken,
   }) async {
     try {
-      final res = await ApiClient.post(
-        ApiEndpoints.userProfile,
+      return await ApiClient.post(
+        ApiEndpoints.weeklyChallenge,
         {
-          'action'      : 'update_set_progress',
-          'category'    : category,
-          'set_number'  : setNumber,
-          'progress'    : progress,
-          'is_completed': isCompleted ? 1 : 0,
+          'challenge_id': challengeId,
+          'correct': correct,
+          'wrong': wrong,
+          'time_taken': timeTaken,
         },
         auth: true,
       );
-      return res['status'] == true;
-    } catch (_) {
-      return false;
+    } catch (e) {
+      return {'success': false, 'message': '$e'};
     }
   }
 
-} 
+  // ── Verify Razorpay payment ───────────────────────
+  static Future<Map<String, dynamic>> verifyPayment({
+    required String orderId,
+    required String paymentId,
+    required String signature,
+    String plan = 'monthly',
+  }) async {
+    try {
+      return await ApiClient.post(
+        ApiEndpoints.verifyPayment,
+        {
+          'razorpay_order_id': orderId,
+          'razorpay_payment_id': paymentId,
+          'razorpay_signature': signature,
+          'plan': plan,
+        },
+        auth: true,
+      );
+    } catch (e) {
+      return {'success': false, 'message': '$e'};
+    }
+  }
+}

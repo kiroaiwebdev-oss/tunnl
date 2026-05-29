@@ -1,7 +1,7 @@
 // lib/core/models/banner_model.dart
 
 class BannerModel {
-  final int    id;
+  final int id;
   final String title;
   final String subtitle;
   final String imageUrl;
@@ -17,15 +17,14 @@ class BannerModel {
 
   factory BannerModel.fromJson(Map<String, dynamic> j) {
     return BannerModel(
-      id:          (j['id'] as num?)?.toInt()    ?? 0,
-      title:       j['title']?.toString()        ?? '',
-      subtitle:    j['subtitle']?.toString()     ?? '',
-      imageUrl:    j['image_url']?.toString()    ?? '',
-      actionValue: j['action_value']?.toString() ?? 'mcq',
+      id: (j['id'] as num?)?.toInt() ?? 0,
+      title: (j['title'] ?? '').toString(),
+      subtitle: (j['subtitle'] ?? '').toString(),
+      imageUrl: (j['image_url'] ?? '').toString(),
+      actionValue: (j['action_value'] ?? 'mcq').toString(),
     );
   }
 
   @override
-  String toString() =>
-      'BannerModel(id:$id, title:$title, action:$actionValue)';
+  String toString() => 'BannerModel(id:$id, title:$title, action:$actionValue)';
 }

@@ -29,6 +29,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   // ── User data ─────────────────────────────────────
   String _name        = '';
   String _phone       = '';
+  String _standard    = '';
   String _memberSince = '';
   bool   _isPremium   = false;
   bool   _isLoading   = true;
@@ -77,33 +78,26 @@ class _ProfileScreenState extends State<ProfileScreen>
   // ── ✅ FIXED: 'success' check + correct data parsing ──
 Future<void> _loadFromApi() async {
   try {
-    final results = await Future.wait([
-      UserService.getProfile(),
-      UserService.getXpSummary(),
-    ]);
-
-    final profileRes = results[0];
-    final xpRes      = results[1];
+    final profileRes = await UserService.getProfile();
 
     if (!mounted) return;
 
-    // ✅ PHP 'success' bhejta hai, 'status' nahi
-    if (profileRes['success'] == true) {
+    // ✅ PHP 'success' bhejta hai
+    if (profileRes['success'] == true || profileRes['status'] == true) {
       final user  = profileRes['data']?['user']  as Map<String, dynamic>? ?? {};
       final stats = profileRes['data']?['stats'] as Map<String, dynamic>? ?? {};
 
       setState(() {
         _name        = user['name']        as String? ?? '';
         _phone       = user['phone']       as String? ?? '';
+        _standard    = user['standard']    as String? ?? '';
         _memberSince = _formatDate(user['created_at'] as String? ?? '');
         _isPremium   = user['is_premium'] == true || user['is_premium'] == 1;
 
-        // ✅ PHP user_profile.php ke exact field names
         _rank           = int.tryParse('${user['rank_position']}')  ?? 0;
         _currentStreak  = int.tryParse('${user['current_streak']}') ?? 0;
         _totalXP        = int.tryParse('${user['total_xp']}')       ?? 0;
 
-        // Stats from 'stats' object
         _totalAttempted = int.tryParse('${stats['total_tests']}')   ?? 0;
         _correctAnswers = int.tryParse('${stats['total_correct']}') ?? 0;
         _accuracy       = double.tryParse('${stats['avg_accuracy']}') ?? 0.0;
@@ -113,15 +107,6 @@ Future<void> _loadFromApi() async {
 
     } else {
       await _loadFromCache();
-    }
-
-    // XP summary bhi 'success' check karo
-    if (xpRes['success'] == true) {
-      final xpData = xpRes['data'] as Map<String, dynamic>? ?? {};
-      setState(() {
-        _totalXP       = int.tryParse('${xpData['total_xp']}')       ?? _totalXP;
-        _currentStreak = int.tryParse('${xpData['current_streak']}') ?? _currentStreak;
-      });
     }
 
   } catch (e) {
@@ -135,11 +120,13 @@ Future<void> _loadFromApi() async {
   Future<void> _loadFromCache() async {
     final name      = await AuthService.getCachedName();
     final phone     = await AuthService.getCachedPhone();
+    final standard  = await AuthService.getCachedStandard();
     final isPremium = await AuthService.isPremium();
     if (mounted) {
       setState(() {
         _name      = name;
         _phone     = phone;
+        _standard  = standard;
         _isPremium = isPremium;
         _isLoading = false;
       });
@@ -192,93 +179,218 @@ Future<void> _loadFromApi() async {
     );
   }
 
-  // ── Name change dialog ────────────────────────────
+  // ── Edit profile sheet (name + class/exam) ────────
   void _showNameChangeDialog() {
-    final ctrl = TextEditingController(text: _name);
+    _showEditProfileSheet();
+  }
+
+  void _showEditProfileSheet() {
+    final nameCtrl = TextEditingController(text: _name);
+    String? selectedStandard = _standard.isNotEmpty ? _standard : null;
     bool isSaving = false;
 
-    showDialog(
+    const standards = [
+      'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10',
+      'Class 11', 'Class 12',
+      'SSC / Railway', 'Banking', 'UPSC', 'Other Competitive',
+    ];
+
+    showModalBottomSheet(
       context: context,
-      builder: (_) => StatefulBuilder(
-        builder: (ctx, setS) => AlertDialog(
-          backgroundColor: AppColors.darkCard,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: AppColors.neonCyan.withOpacity(0.3)),
-          ),
-          title: Text('Change Name',
-            style: GoogleFonts.poppins(
-              color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
-          content: TextField(
-            controller: ctrl,
-            autofocus: true,
-            style: GoogleFonts.poppins(color: Colors.white),
-            cursorColor: AppColors.neonCyan,
-            textCapitalization: TextCapitalization.words,
-            decoration: InputDecoration(
-              hintText: 'Enter your name',
-              hintStyle: GoogleFonts.poppins(color: AppColors.textMuted),
-              prefixIcon: const Icon(Icons.person_rounded,
-                color: AppColors.neonCyan, size: 18),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: AppColors.neonCyan.withOpacity(0.2)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(
-                  color: AppColors.neonCyan, width: 1.5),
-              ),
-              filled: true,
-              fillColor: AppColors.darkBg,
+      backgroundColor: AppColors.darkCard,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setS) {
+          return Padding(
+            padding: EdgeInsets.fromLTRB(
+              24, 20, 24,
+              MediaQuery.of(ctx).viewInsets.bottom + 24,
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text('Cancel',
-                style: GoogleFonts.poppins(color: AppColors.textMuted)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.neonCyan,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20, vertical: 10),
-              ),
-              onPressed: isSaving ? null : () async {
-                final newName = ctrl.text.trim();
-                if (newName.isEmpty) return;
-                setS(() => isSaving = true);
-
-                // ✅ API call
-                final ok = await UserService.updateName(newName);
-
-                if (!mounted) return;
-                Navigator.pop(ctx);
-
-                if (ok) {
-                  setState(() => _name = newName);
-                  _showSnack('Name updated successfully!');
-                } else {
-                  _showSnack('Failed to update name. Try again.',
-                    color: AppColors.error);
-                }
-              },
-              child: isSaving
-                  ? const SizedBox(
-                      width: 16, height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white))
-                  : Text('Save',
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.textMuted.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text('Edit Profile',
                       style: GoogleFonts.poppins(
-                        color: AppColors.darkBg,
-                        fontWeight: FontWeight.w700)),
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white)),
+                  const SizedBox(height: 4),
+                  Text('Update your name & class/exam',
+                      style: GoogleFonts.poppins(
+                          fontSize: 12, color: AppColors.textSecondary)),
+                  const SizedBox(height: 20),
+                  Text('Your Name',
+                      style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                          letterSpacing: 1)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: nameCtrl,
+                    autofocus: true,
+                    style: GoogleFonts.poppins(color: Colors.white),
+                    cursorColor: AppColors.neonCyan,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: InputDecoration(
+                      hintText: 'Enter your name',
+                      hintStyle: GoogleFonts.poppins(color: AppColors.textMuted),
+                      prefixIcon: const Icon(Icons.person_rounded,
+                          color: AppColors.neonCyan, size: 18),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                            color: AppColors.neonCyan.withOpacity(0.2)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                            color: AppColors.neonCyan, width: 1.5),
+                      ),
+                      filled: true,
+                      fillColor: AppColors.darkBg,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text('Class / Exam',
+                      style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                          letterSpacing: 1)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: standards.map((s) {
+                      final selected = selectedStandard == s;
+                      return GestureDetector(
+                        onTap: () => setS(() => selectedStandard = s),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? AppColors.neonCyan.withOpacity(0.15)
+                                : AppColors.darkBg,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: selected
+                                  ? AppColors.neonCyan
+                                  : AppColors.neonCyan.withOpacity(0.1),
+                              width: selected ? 1.5 : 1,
+                            ),
+                          ),
+                          child: Text(s,
+                              style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  fontWeight: selected
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                  color: selected
+                                      ? AppColors.neonCyan
+                                      : AppColors.textSecondary)),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: isSaving ? null : () => Navigator.pop(ctx),
+                          style: TextButton.styleFrom(
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 14),
+                            backgroundColor: AppColors.darkBg,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: Text('Cancel',
+                              style: GoogleFonts.poppins(
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w600)),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.neonCyan,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          onPressed: isSaving
+                              ? null
+                              : () async {
+                                  final newName = nameCtrl.text.trim();
+                                  if (newName.isEmpty) {
+                                    _showSnack('Please enter your name',
+                                        color: AppColors.error);
+                                    return;
+                                  }
+                                  setS(() => isSaving = true);
+
+                                  final ok = await UserService.updateProfile(
+                                    name: newName,
+                                    standard: selectedStandard,
+                                  );
+
+                                  if (!mounted) return;
+                                  Navigator.pop(ctx);
+
+                                  if (ok) {
+                                    setState(() {
+                                      _name = newName;
+                                      _standard = selectedStandard ?? '';
+                                    });
+                                    _showSnack('Profile updated!');
+                                  } else {
+                                    _showSnack(
+                                        'Failed to update. Try again.',
+                                        color: AppColors.error);
+                                  }
+                                },
+                          child: isSaving
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2, color: Colors.white))
+                              : Text('Save',
+                                  style: GoogleFonts.poppins(
+                                      color: AppColors.darkBg,
+                                      fontWeight: FontWeight.w700)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

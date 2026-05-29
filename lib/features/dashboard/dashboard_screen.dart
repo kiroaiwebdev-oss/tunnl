@@ -154,14 +154,14 @@ class _DashboardScreenState extends State<DashboardScreen>
       final res = await UserService.getProfile();
       if (!mounted) return;
 
-      if (res['status'] == true) {
+      if (res['success'] == true || res['status'] == true) {
         final user = res['data']?['user'];
         if (user != null) {
           setState(() {
-            _isPremium  = user['is_premium'] == true;
+            _isPremium  = user['is_premium'] == true || user['is_premium'] == 1;
             _userName   = user['name']           ?? '';
-            _totalXp    = (user['total_xp']   ?? 0) as int;
-            _streak     = (user['current_streak'] ?? 0) as int;
+            _totalXp    = (user['total_xp']   as num?)?.toInt() ?? 0;
+            _streak     = (user['current_streak'] as num?)?.toInt() ?? 0;
             _isLoadingUser = false;
           });
           return;

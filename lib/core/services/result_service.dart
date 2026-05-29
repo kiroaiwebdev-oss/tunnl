@@ -1,48 +1,67 @@
 // lib/core/services/result_service.dart
+//
+// Posts the test result to admin's submit_result.php.
 
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import '../constants/app_constants.dart';
-import 'auth_service.dart';
+import '../network/api_client.dart';
+import '../network/api_endpoints.dart';
 
 class ResultService {
   static Future<bool> saveResult({
     required String category,
-    required int    setNumber,
-    required String mode,
-    required int    totalQuestions,
-    required int    correct,
-    required int    wrong,
-    required int    skipped,
-    required double accuracy,
-    required double avgSpeedSeconds,
-    required int    xpEarned,
+    required int setId,
+    required int correct,
+    required int wrong,
+    required int skipped,
+    required int timeTaken,
+    List<Map<String, dynamic>>? answers,
   }) async {
     try {
-      final token = await AuthService.getToken();
-      final res   = await http.post(
-        Uri.parse('${AppConstants.baseUrl}/user/save-result'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type' : 'application/json',
+      final res = await ApiClient.post(
+        ApiEndpoints.submitResult,
+        {
+          'category': category,
+          'set_id': setId,
+          'correct': correct,
+          'wrong': wrong,
+          'skipped': skipped,
+          'time_taken': timeTaken,
+          if (answers != null) 'answers': answers,
         },
-        body: jsonEncode({
-          'category'          : category,
-          'set_number'        : setNumber,
-          'mode'              : mode,
-          'total_questions'   : totalQuestions,
-          'correct'           : correct,
-          'wrong'             : wrong,
-          'skipped'           : skipped,
-          'accuracy'          : accuracy,
-          'avg_speed_seconds' : avgSpeedSeconds,
-          'xp_earned'         : xpEarned,
-        }),
-      ).timeout(const Duration(seconds: 10));
-
-      return jsonDecode(res.body)['status'] == true;
+        auth: true,
+      );
+      return res['success'] == true || res['status'] == true;
     } catch (_) {
       return false;
+    }
+  }
+
+  /// Same as saveResult but returns the raw response so the caller can
+  /// surface XP / badges info.
+  static Future<Map<String, dynamic>> saveResultRaw({
+    required String category,
+    required int setId,
+    required int correct,
+    required int wrong,
+    required int skipped,
+    required int timeTaken,
+    List<Map<String, dynamic>>? answers,
+  }) async {
+    try {
+      return await ApiClient.post(
+        ApiEndpoints.submitResult,
+        {
+          'category': category,
+          'set_id': setId,
+          'correct': correct,
+          'wrong': wrong,
+          'skipped': skipped,
+          'time_taken': timeTaken,
+          if (answers != null) 'answers': answers,
+        },
+        auth: true,
+      );
+    } catch (e) {
+      return {'success': false, 'message': '$e'};
     }
   }
 }
