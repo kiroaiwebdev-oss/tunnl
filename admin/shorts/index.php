@@ -1,0 +1,111 @@
+<?php
+$pageTitle = 'Shorts';
+require_once dirname(__DIR__) . '/includes/header.php';
+
+$shorts = $pdo->query("SELECT * FROM shorts ORDER BY created_at DESC")->fetchAll();
+?>
+
+<div class="flex-between mb-24">
+  <div>
+    <h2 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700">YouTube Shorts</h2>
+    <p class="text-muted"><?= count($shorts) ?> shorts total</p>
+  </div>
+  <a href="<?= ADMIN_URL ?>/shorts/add.php" class="btn btn-primary">
+    <i class="fas fa-plus"></i> Add Short
+  </a>
+</div>
+
+<!-- Grid View -->
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">
+  <?php if (empty($shorts)): ?>
+  <div class="card" style="grid-column:1/-1;text-align:center;padding:60px;color:var(--muted)">
+    <i class="fas fa-play-circle" style="font-size:48px;display:block;margin-bottom:16px;opacity:0.3"></i>
+    No shorts yet. <a href="<?= ADMIN_URL ?>/shorts/add.php" style="color:var(--cyan)">Add one!</a>
+  </div>
+  <?php else: ?>
+  <?php foreach ($shorts as $s):
+    // Extract YouTube thumbnail from URL
+    preg_match('/(?:v=|\/shorts\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/', $s['youtube_url'], $m);
+    $vid   = $m[1] ?? '';
+    $thumb = $vid ? "https://img.youtube.com/vi/$vid/mqdefault.jpg" : '';
+  ?>
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;
+    transition:all 0.2s" onmouseover="this.style.borderColor='var(--cyan)';this.style.transform='translateY(-2px)'"
+    onmouseout="this.style.borderColor='var(--border)';this.style.transform=''">
+
+    <!-- Thumbnail -->
+    <div style="position:relative;aspect-ratio:16/9;background:var(--dark);overflow:hidden">
+      <?php if ($thumb): ?>
+      <img src="<?= $thumb ?>" alt="Thumb"
+        style="width:100%;height:100%;object-fit:cover;opacity:0.8">
+      <?php else: ?>
+      <div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--border2)">
+        <i class="fas fa-video" style="font-size:32px"></i>
+      </div>
+      <?php endif; ?>
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+        <a href="<?= htmlspecialchars($s['youtube_url']) ?>" target="_blank"
+          style="width:44px;height:44px;background:rgba(255,0,0,0.9);border-radius:50%;
+            display:flex;align-items:center;justify-content:center;color:white;font-size:16px;
+            text-decoration:none;transition:transform 0.2s"
+          onmouseover="this.style.transform='scale(1.1)'"
+          onmouseout="this.style.transform=''">
+          <i class="fas fa-play" style="margin-left:3px"></i>
+        </a>
+      </div>
+      <!-- Status badge -->
+      <div style="position:absolute;top:8px;right:8px">
+        <?php if ($s['is_active']): ?>
+        <span class="badge badge-success" style="font-size:9px">LIVE</span>
+        <?php else: ?>
+        <span class="badge badge-error" style="font-size:9px">HIDDEN</span>
+        <?php endif; ?>
+      </div>
+    </div>
+
+    <!-- Info -->
+    <div style="padding:14px">
+      <div style="font-weight:600;color:var(--text);font-size:13px;margin-bottom:4px;
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+        <?= htmlspecialchars($s['title']) ?>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+        <span class="badge badge-cyan" style="font-size:10px">
+          <?= ucfirst(str_replace('_',' ',$s['category'])) ?>
+        </span>
+        <?php if ($s['duration']): ?>
+        <span style="font-size:11px;color:var(--muted)">
+          <i class="fas fa-clock"></i> <?= $s['duration'] ?>s
+        </span>
+        <?php endif; ?>
+        <span style="font-size:11px;color:var(--muted);margin-left:auto">
+          <?= date('d M', strtotime($s['created_at'])) ?>
+        </span>
+      </div>
+      <div style="display:flex;gap:6px">
+        <a href="<?= ADMIN_URL ?>/shorts/edit.php?id=<?= $s['id'] ?>"
+           class="btn btn-secondary btn-sm" style="flex:1;justify-content:center">
+          <i class="fas fa-edit"></i> Edit
+        </a>
+        <button onclick="deleteShort(<?= $s['id'] ?>)" class="btn btn-danger btn-sm">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+  <?php endforeach; ?>
+  <?php endif; ?>
+</div>
+
+<script>
+function deleteShort(id) {
+  if (!confirm('Delete this short?')) return;
+  fetch('/admin/shorts/delete.php', {
+    method:'POST',
+    headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:'id='+id
+  }).then(r=>r.json()).then(d=>{ if(d.success) location.reload(); else alert(d.message); });
+}
+</script>
+
+<?php require_once dirname(__DIR__) . '/includes/footer.php'; ?>
