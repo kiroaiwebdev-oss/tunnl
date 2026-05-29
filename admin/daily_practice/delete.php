@@ -1,0 +1,13 @@
+<?php
+require_once dirname(__DIR__) . '/config/auth_check.php';
+require_once dirname(__DIR__) . '/config/db.php';
+header('Content-Type: application/json');
+$id = intval($_POST['id'] ?? 0);
+if (!$id) { echo json_encode(['success'=>false,'message'=>'Invalid ID']); exit; }
+try {
+    $pdo->prepare("DELETE FROM daily_practice_questions WHERE practice_id=?")->execute([$id]);
+    $pdo->prepare("DELETE FROM daily_practice WHERE id=?")->execute([$id]);
+    echo json_encode(['success'=>true]);
+} catch (Exception $e) {
+    echo json_encode(['success'=>false,'message'=>$e->getMessage()]);
+}
