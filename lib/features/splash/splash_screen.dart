@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/network/api_client.dart';
 import '../../core/network/api_endpoints.dart';
+import '../../core/services/app_settings_service.dart';
 import '../hub/hub_screen.dart';
 import '../auth/login_screen.dart';
 
@@ -99,11 +100,17 @@ class _SplashScreenState extends State<SplashScreen>
     // ── 1. App Settings fetch (maintenance + force update)
     _setStatus('LOADING CONFIG');
     try {
+      // Initialise the settings singleton — this loads the disk cache
+      // immediately and kicks off a background refresh.
+      await AppSettingsService.instance.init();
+
       final settingsRes = await ApiClient.get(ApiEndpoints.appSettings)
           .timeout(const Duration(seconds: 8));
 
       if (settingsRes['success'] == true || settingsRes['status'] == true) {
         final settings = Map<String, dynamic>.from(settingsRes['data'] ?? {});
+        // Push fresh values into the singleton too (covers offline init)
+        AppSettingsService.instance.overrideLocal(settings);
 
         // Save important settings to prefs
         final prefs = await SharedPreferences.getInstance();

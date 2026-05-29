@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
+import 'core/services/app_settings_service.dart';
 import 'features/splash/splash_screen.dart';
 
 void main() async {
@@ -32,8 +33,36 @@ void main() async {
   );
 }
 
-class TunnelApp extends StatelessWidget {
+class TunnelApp extends StatefulWidget {
   const TunnelApp({super.key});
+
+  @override
+  State<TunnelApp> createState() => _TunnelAppState();
+}
+
+class _TunnelAppState extends State<TunnelApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // App came back to foreground → quietly re-fetch app settings so any
+    // change made by admin (price, razorpay keys, banners, maintenance flag,
+    // force-update version, etc.) reflects without a restart.
+    if (state == AppLifecycleState.resumed) {
+      AppSettingsService.instance.refresh();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
