@@ -1,0 +1,52 @@
+2026-04-28 07:45:36 | Provider: fast2sms | Phone: 7667311203 | OTP: 462948
+Response: {"status_code":996,"message":"Before using OTP Message API, complete website verification. Visit OTP Message menu or use DLT SMS API."}
+cURL Error: none
+---
+2026-05-02 03:33:46 | Provider: twilio | Phone: 7667311203 | OTP: 518573
+Response: {"code":20003,"message":"Authentication Error - No password provided","more_info":"https://www.twilio.com/docs/errors/20003","status":401}
+cURL Error: none
+---
+2026-05-02 03:37:34 | Provider: twilio | Phone: 7667311203 | OTP: 128047
+Response: {"code":21659,"message":"'From' +1234567890 is not a Twilio phone number or Short Code country mismatch","more_info":"https://www.twilio.com/docs/errors/21659","status":400}
+cURL Error: none
+---
+2026-05-02 03:38:45 | Provider: twilio | Phone: 7667311203 | OTP: 064795
+Response: {"account_sid": "AC745ff94635bdf402da9d368f4960391b", "api_version": "2010-04-01", "body": "Sent from your Twilio trial account - Your TUNNEL OTP is 064795. Valid for 10 minutes. Do not share.", "date_created": "Sat, 02 May 2026 03:38:44 +0000", "date_sent": null, "date_updated": "Sat, 02 May 2026 03:38:44 +0000", "direction": "outbound-api", "error_code": null, "error_message": null, "from": "+13613103790", "messaging_service_sid": null, "num_media": "0", "num_segments": "1", "price": null, "price_unit": "USD", "sid": "SMf8001d48d8e5a14e34554e1dcc7e32a3", "status": "queued", "subresource_uris": {"media": "/2010-04-01/Accounts/AC745ff94635bdf402da9d368f4960391b/Messages/SMf8001d48d8e5a14e34554e1dcc7e32a3/Media.json"}, "to": "+917667311203", "uri": "/2010-04-01/Accounts/AC745ff94635bdf402da9d368f4960391b/Messages/SMf8001d48d8e5a14e34554e1dcc7e32a3.json"}
+cURL Error: none
+---
+2026-05-02 04:07:00 | Provider: twilio | Phone: 7667311203 | OTP: 756306
+Response: {"account_sid": "AC745ff94635bdf402da9d368f4960391b", "api_version": "2010-04-01", "body": "Sent from your Twilio trial account - Your TUNNEL OTP is 756306. Valid for 10 minutes. Do not share.", "date_created": "Sat, 02 May 2026 04:07:00 +0000", "date_sent": null, "date_updated": "Sat, 02 May 2026 04:07:00 +0000", "direction": "outbound-api", "error_code": null, "error_message": null, "from": "+13613103790", "messaging_service_sid": null, "num_media": "0", "num_segments": "1", "price": null, "price_unit": "USD", "sid": "SM74ca1c30f954fe90ed425fc9d9e4e440", "status": "queued", "subresource_uris": {"media": "/2010-04-01/Accounts/AC745ff94635bdf402da9d368f4960391b/Messages/SM74ca1c30f954fe90ed425fc9d9e4e440/Media.json"}, "to": "+917667311203", "uri": "/2010-04-01/Accounts/AC745ff94635bdf402da9d368f4960391b/Messages/SM74ca1c30f954fe90ed425fc9d9e4e440.json"}
+cURL Error: none
+---
+2026-05-02 04:12:08 | Provider: twilio | Phone: 7667311203 | OTP: 931632
+Response: {"account_sid": "AC745ff94635bdf402da9d368f4960391b", "api_version": "2010-04-01", "body": "Sent from your Twilio trial account - Your TUNNEL OTP is 931632. Valid for 10 minutes. Do not share.", "date_created": "Sat, 02 May 2026 04:12:08 +0000", "date_sent": null, "date_updated": "Sat, 02 May 2026 04:12:08 +0000", "direction": "outbound-api", "error_code": null, "error_message": null, "from": "+13613103790", "messaging_service_sid": null, "num_media": "0", "num_segments": "1", "price": null, "price_unit": "USD", "sid": "SM069a8690a7ac4cbbe3b0a0ba00e69e1d", "status": "queued", "subresource_uris": {"media": "/2010-04-01/Accounts/AC745ff94635bdf402da9d368f4960391b/Messages/SM069a8690a7ac4cbbe3b0a0ba00e69e1d/Media.json"}, "to": "+917667311203", "uri": "/2010-04-01/Accounts/AC745ff94635bdf402da9d368f4960391b/Messages/SM069a8690a7ac4cbbe3b0a0ba00e69e1d.json"}
+cURL Error: none
+---
+2026-05-02 04:32:32 | Provider: twilio | Phone: 7667311203 | OTP: 203843
+Response: {"account_sid": "AC745ff94635bdf402da9d368f4960391b", "api_version": "2010-04-01", "body": "Sent from your Twilio trial account - Your TUNNEL OTP is 203843. Valid for 10 minutes. Do not share.", "date_created": "Sat, 02 May 2026 04:32:32 +0000", "date_sent": null, "date_updated": "Sat, 02 May 2026 04:32:32 +0000", "direction": "outbound-api", "error_code": null, "error_message": null, "from": "+13613103790", "messaging_service_sid": null, "num_media": "0", "num_segments": "1", "price": null, "price_unit": "USD", "sid": "SM162901468b865933f12c7b28a4983470", "status": "queued", "subresource_uris": {"media": "/2010-04-01/Accounts/AC745ff94635bdf402da9d368f4960391b/Messages/SM162901468b865933f12c7b28a4983470/Media.json"}, "to": "+917667311203", "uri": "/2010-04-01/Accounts/AC745ff94635bdf402da9d368f4960391b/Messages/SM162901468b865933f12c7b28a4983470.json"}
+cURL Error: none
+---
+2026-05-02 05:56:51 | Provider: twilio | Phone: 7667311203 | OTP: 006950
+Response: {"account_sid": "AC745ff94635bdf402da9d368f4960391b", "api_version": "2010-04-01", "body": "Sent from your Twilio trial account - Your TUNNEL OTP is 006950. Valid for 10 minutes. Do not share.", "date_created": "Sat, 02 May 2026 05:56:51 +0000", "date_sent": null, "date_updated": "Sat, 02 May 2026 05:56:51 +0000", "direction": "outbound-api", "error_code": null, "error_message": null, "from": "+13613103790", "messaging_service_sid": null, "num_media": "0", "num_segments": "1", "price": null, "price_unit": "USD", "sid": "SM3851d6ae6f02d2098a400e0960c1727f", "status": "queued", "subresource_uris": {"media": "/2010-04-01/Accounts/AC745ff94635bdf402da9d368f4960391b/Messages/SM3851d6ae6f02d2098a400e0960c1727f/Media.json"}, "to": "+917667311203", "uri": "/2010-04-01/Accounts/AC745ff94635bdf402da9d368f4960391b/Messages/SM3851d6ae6f02d2098a400e0960c1727f.json"}
+cURL Error: none
+---
+2026-05-13 06:43:27 | Provider: twilio | Phone: 7667311203 | OTP: 470825
+Response: {"account_sid": "AC745ff94635bdf402da9d368f4960391b", "api_version": "2010-04-01", "body": "Sent from your Twilio trial account - Your TUNNEL OTP is 470825. Valid for 10 minutes. Do not share.", "date_created": "Wed, 13 May 2026 06:43:27 +0000", "date_sent": null, "date_updated": "Wed, 13 May 2026 06:43:27 +0000", "direction": "outbound-api", "error_code": null, "error_message": null, "from": "+13613103790", "messaging_service_sid": null, "num_media": "0", "num_segments": "1", "price": null, "price_unit": "USD", "sid": "SMf7931e167d8be8ad70ba5988c02de20f", "status": "queued", "subresource_uris": {"media": "/2010-04-01/Accounts/AC745ff94635bdf402da9d368f4960391b/Messages/SMf7931e167d8be8ad70ba5988c02de20f/Media.json"}, "to": "+917667311203", "uri": "/2010-04-01/Accounts/AC745ff94635bdf402da9d368f4960391b/Messages/SMf7931e167d8be8ad70ba5988c02de20f.json"}
+cURL Error: none
+---
+2026-05-13 06:56:59 | Provider: twilio | Phone: 9876543210 | OTP: 553515
+Response: {"code":21608,"message":"The number +91987654XXXX is unverified. Trial accounts cannot send messages to unverified numbers; verify +91987654XXXX at twilio.com/user/account/phone-numbers/verified, or purchase a Twilio number to send messages to unverified numbers","more_info":"https://www.twilio.com/docs/errors/21608","status":400}
+cURL Error: none
+---
+2026-05-13 07:14:36 | Provider: twilio | Phone: 7667388128 | OTP: 057876
+Response: {"code":21608,"message":"The number +91766738XXXX is unverified. Trial accounts cannot send messages to unverified numbers; verify +91766738XXXX at twilio.com/user/account/phone-numbers/verified, or purchase a Twilio number to send messages to unverified numbers","more_info":"https://www.twilio.com/docs/errors/21608","status":400}
+cURL Error: none
+---
+2026-05-13 07:14:43 | Provider: twilio | Phone: 7667311203 | OTP: 655202
+Response: {"account_sid": "AC745ff94635bdf402da9d368f4960391b", "api_version": "2010-04-01", "body": "Sent from your Twilio trial account - Your TUNNEL OTP is 655202. Valid for 10 minutes. Do not share.", "date_created": "Wed, 13 May 2026 07:14:43 +0000", "date_sent": null, "date_updated": "Wed, 13 May 2026 07:14:43 +0000", "direction": "outbound-api", "error_code": null, "error_message": null, "from": "+13613103790", "messaging_service_sid": null, "num_media": "0", "num_segments": "1", "price": null, "price_unit": "USD", "sid": "SMee60ed77f7bfd32f5fefabe008764f94", "status": "queued", "subresource_uris": {"media": "/2010-04-01/Accounts/AC745ff94635bdf402da9d368f4960391b/Messages/SMee60ed77f7bfd32f5fefabe008764f94/Media.json"}, "to": "+917667311203", "uri": "/2010-04-01/Accounts/AC745ff94635bdf402da9d368f4960391b/Messages/SMee60ed77f7bfd32f5fefabe008764f94.json"}
+cURL Error: none
+---
+2026-05-13 12:55:04 | Provider: twilio | Phone: 7667311203 | OTP: 270904
+Response: {"account_sid": "AC745ff94635bdf402da9d368f4960391b", "api_version": "2010-04-01", "body": "Sent from your Twilio trial account - Your TUNNEL OTP is 270904. Valid for 10 minutes. Do not share.", "date_created": "Wed, 13 May 2026 12:55:03 +0000", "date_sent": null, "date_updated": "Wed, 13 May 2026 12:55:03 +0000", "direction": "outbound-api", "error_code": null, "error_message": null, "from": "+13613103790", "messaging_service_sid": null, "num_media": "0", "num_segments": "1", "price": null, "price_unit": "USD", "sid": "SMe910ed9114fce1717870fded88131295", "status": "queued", "subresource_uris": {"media": "/2010-04-01/Accounts/AC745ff94635bdf402da9d368f4960391b/Messages/SMe910ed9114fce1717870fded88131295/Media.json"}, "to": "+917667311203", "uri": "/2010-04-01/Accounts/AC745ff94635bdf402da9d368f4960391b/Messages/SMe910ed9114fce1717870fded88131295.json"}
+cURL Error: none
+---
