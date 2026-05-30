@@ -181,7 +181,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
                       const SizedBox(height: 8),
                       Center(
                         child: Text(
-                          'Help us personalise your TUNNEL experience',
+                          'Help us personalise your Tunnl experience',
                           textAlign: TextAlign.center,
                           style: GoogleFonts.poppins(
                             fontSize: 13, color: AppColors.textSecondary,

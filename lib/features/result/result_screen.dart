@@ -21,6 +21,9 @@ class ResultScreen extends StatefulWidget {
   final double avgSpeedSeconds;
   final List<Map<String, dynamic>> summary;
   final int setNumber;
+  final int setId;
+  final int totalTimeTaken;
+  final List<Map<String, dynamic>> answersForApi;
 
   const ResultScreen({
     super.key,
@@ -34,6 +37,9 @@ class ResultScreen extends StatefulWidget {
     required this.avgSpeedSeconds,
     required this.summary,
     this.setNumber = 1,
+    this.setId = 0,
+    this.totalTimeTaken = 0,
+    this.answersForApi = const [],
   });
 
   @override
@@ -118,17 +124,21 @@ class _ResultScreenState extends State<ResultScreen>
 
   Future<void> _saveResult() async {
     try {
+      // If we don't have a real set_id (e.g. tunnelity speed test), skip API save.
+      if (widget.setId <= 0) {
+        if (mounted) setState(() => _savedOk = false);
+        return;
+      }
       final ok = await ResultService.saveResult(
-        category:        widget.category,
-        setNumber:       widget.setNumber,
-        mode:            widget.mode,
-        totalQuestions:  widget.totalQuestions,
-        correct:         widget.correct,
-        wrong:           widget.wrong,
-        skipped:         widget.skipped,
-        accuracy:        widget.accuracy,
-        avgSpeedSeconds: widget.avgSpeedSeconds,
-        xpEarned:        _xpEarned,
+        category: widget.category,
+        setId: widget.setId,
+        correct: widget.correct,
+        wrong: widget.wrong,
+        skipped: widget.skipped,
+        timeTaken: widget.totalTimeTaken > 0
+            ? widget.totalTimeTaken
+            : (widget.avgSpeedSeconds * widget.totalQuestions).round(),
+        answers: widget.answersForApi,
       );
       if (mounted) setState(() => _savedOk = ok);
     } catch (_) {
@@ -235,7 +245,7 @@ class _ResultScreenState extends State<ResultScreen>
             child: const Icon(Icons.arrow_back_ios_new_rounded,
               color: AppColors.neonCyan, size: 20),
           ),
-          Text('TUNNEL',
+          Text('Tunnl',
             style: GoogleFonts.orbitron(
               fontSize: 16, fontWeight: FontWeight.w700,
               color: AppColors.neonCyan, letterSpacing: 3)),
@@ -505,6 +515,7 @@ class _ResultScreenState extends State<ResultScreen>
         MaterialPageRoute(builder: (_) => QuestionScreen(
           mode:           widget.mode,
           category:       widget.category,
+          setId:          widget.setId,
           setNumber:      widget.setNumber,
           totalQuestions: widget.totalQuestions,
         )),

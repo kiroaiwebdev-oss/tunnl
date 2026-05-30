@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/app_settings_service.dart';
+import '../../core/services/payment_service.dart';
+import '../../core/services/auth_service.dart';
+import '../../core/services/user_service.dart';
 import '../dashboard/dashboard_screen.dart';
 
 class PremiumScreen extends StatefulWidget {
@@ -14,6 +18,7 @@ class _PremiumScreenState extends State<PremiumScreen>
     with TickerProviderStateMixin {
 
   bool _isLoading = false;
+  late final PaymentService _payment;
 
   late AnimationController _entryCtrl;
   late Animation<double> _fadeAnim;
@@ -98,10 +103,31 @@ class _PremiumScreenState extends State<PremiumScreen>
     },
   ];
 
+  // Live price (defaults to 50 then refreshes from app_settings)
+  int _priceRupees = 50;
+
   @override
   void initState() {
     super.initState();
     _setupAnimations();
+    _setupPayment();
+    _loadPrice();
+    AppSettingsService.instance.addListener(_loadPrice);
+  }
+
+  void _loadPrice() {
+    if (!mounted) return;
+    setState(() {
+      _priceRupees = AppSettingsService.instance.getInt('premium_price', 50);
+    });
+  }
+
+  void _setupPayment() {
+    _payment = PaymentService()
+      ..attach(
+        onSuccess: _onPaymentSuccess,
+        onError: _onPaymentError,
+      );
   }
 
   void _setupAnimations() {
@@ -141,6 +167,8 @@ class _PremiumScreenState extends State<PremiumScreen>
 
   @override
   void dispose() {
+    AppSettingsService.instance.removeListener(_loadPrice);
+    _payment.dispose();
     _entryCtrl.dispose();
     _glowCtrl.dispose();
     _badgeCtrl.dispose();
@@ -148,21 +176,56 @@ class _PremiumScreenState extends State<PremiumScreen>
   }
 
   // ── Payment Handler ───────────────────────────────
-  void _handlePayment() async {
+  Future<void> _handlePayment() async {
     setState(() => _isLoading = true);
+    await _payment.startUpgrade(plan: 'lifetime');
+    // success/error callbacks toggle _isLoading off
+  }
 
-    // TODO: Razorpay integration here
-    // For now — simulate payment success
-    await Future.delayed(const Duration(milliseconds: 1800));
+  void _onPaymentSuccess(Map<String, dynamic> premiumInfo) async {
+    if (!mounted) return;
+
+    // Refresh user profile so dashboard etc. reflect new premium status
+    try {
+      await UserService.getProfile();
+    } catch (_) {}
+    await AuthService.setPremium(true);
 
     if (!mounted) return;
     setState(() => _isLoading = false);
-
-    // Show success dialog
-    _showPaymentSuccess();
+    _showPaymentSuccess(premiumInfo);
   }
 
-  void _showPaymentSuccess() {
+  void _onPaymentError(String message) {
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: AppColors.darkCard,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side:
+                BorderSide(color: AppColors.error.withOpacity(0.4), width: 1)),
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline_rounded,
+                color: AppColors.error, size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(message,
+                  style: GoogleFonts.poppins(
+                      color: Colors.white, fontSize: 13)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showPaymentSuccess(Map<String, dynamic> premiumInfo) {
+    final plan = (premiumInfo['plan'] ?? 'lifetime').toString();
+    final expiry = (premiumInfo['expiry'] ?? 'Lifetime').toString();
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -179,7 +242,6 @@ class _PremiumScreenState extends State<PremiumScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(height: 10),
-            // Success icon
             Container(
               width: 72,
               height: 72,
@@ -208,7 +270,7 @@ class _PremiumScreenState extends State<PremiumScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              'Welcome to TUNNEL Premium!\nAll features unlocked 🎉',
+              'Welcome to Tunnl Premium!\nAll features unlocked 🎉',
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 13,
@@ -216,18 +278,56 @@ class _PremiumScreenState extends State<PremiumScreen>
                 height: 1.5,
               ),
             ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.success.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                    color: AppColors.success.withOpacity(0.2), width: 1),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    plan.toUpperCase(),
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      color: AppColors.success,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    width: 4,
+                    height: 4,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Valid: $expiry',
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 24),
-            // Go to Dashboard button
             GestureDetector(
               onTap: () {
                 Navigator.of(context).pushAndRemoveUntil(
                   PageRouteBuilder(
-                    pageBuilder: (_, __, ___) =>
-                        const DashboardScreen(),
+                    pageBuilder: (_, __, ___) => const DashboardScreen(),
                     transitionsBuilder: (_, anim, __, child) =>
                         FadeTransition(opacity: anim, child: child),
-                    transitionDuration:
-                        const Duration(milliseconds: 500),
+                    transitionDuration: const Duration(milliseconds: 500),
                   ),
                   (route) => false,
                 );
@@ -273,7 +373,6 @@ class _PremiumScreenState extends State<PremiumScreen>
               position: _slideAnim,
               child: Column(
                 children: [
-                  // ── AppBar
                   _buildAppBar(),
 
                   Expanded(
@@ -282,13 +381,9 @@ class _PremiumScreenState extends State<PremiumScreen>
                       child: Column(
                         children: [
                           const SizedBox(height: 10),
-
-                          // ── Hero Badge
                           _buildHeroBadge(),
-
                           const SizedBox(height: 24),
 
-                          // ── FREE section
                           _buildSectionHeader(
                             label: 'AS A GUEST',
                             sublabel: 'Free forever',
@@ -300,16 +395,12 @@ class _PremiumScreenState extends State<PremiumScreen>
                               _BenefitRow(data: b, isPremium: false)),
 
                           const SizedBox(height: 20),
-
-                          // ── Divider with VS
                           _buildVsDivider(),
-
                           const SizedBox(height: 20),
 
-                          // ── PREMIUM section
                           _buildSectionHeader(
-                            label: 'TICKET TO TUNNEL',
-                            sublabel: 'Premium — ₹50 one time',
+                            label: 'TICKET TO TUNNL',
+                            sublabel: 'Premium — ₹$_priceRupees one time',
                             color: AppColors.yellow,
                             icon: Icons.workspace_premium_rounded,
                           ),
@@ -318,20 +409,11 @@ class _PremiumScreenState extends State<PremiumScreen>
                               _BenefitRow(data: b, isPremium: true)),
 
                           const SizedBox(height: 28),
-
-                          // ── Price card
                           _buildPriceCard(),
-
                           const SizedBox(height: 16),
-
-                          // ── Pay button
                           _buildPayButton(),
-
                           const SizedBox(height: 10),
-
-                          // ── Secure note
                           _buildSecureNote(),
-
                           const SizedBox(height: 30),
                         ],
                       ),
@@ -346,7 +428,6 @@ class _PremiumScreenState extends State<PremiumScreen>
     );
   }
 
-  // ── APP BAR ───────────────────────────────────────
   Widget _buildAppBar() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -362,7 +443,7 @@ class _PremiumScreenState extends State<PremiumScreen>
           ),
           const SizedBox(width: 12),
           Text(
-            'TICKET TO TUNNEL',
+            'TICKET TO TUNNL',
             style: GoogleFonts.orbitron(
               fontSize: 15,
               fontWeight: FontWeight.w700,
@@ -375,7 +456,6 @@ class _PremiumScreenState extends State<PremiumScreen>
     );
   }
 
-  // ── HERO BADGE ────────────────────────────────────
   Widget _buildHeroBadge() {
     return ScaleTransition(
       scale: _badgeScaleAnim,
@@ -411,7 +491,6 @@ class _PremiumScreenState extends State<PremiumScreen>
             ),
             child: Column(
               children: [
-                // Crown icon
                 Container(
                   width: 60,
                   height: 60,
@@ -449,23 +528,22 @@ class _PremiumScreenState extends State<PremiumScreen>
                   ),
                 ),
                 const SizedBox(height: 14),
-                // Price chips
-                const Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     _PriceChip(
-                      label: '₹50',
+                      label: '₹$_priceRupees',
                       sublabel: 'ONE TIME',
                       color: AppColors.yellow,
                     ),
-                    SizedBox(width: 12),
-                    _PriceChip(
+                    const SizedBox(width: 12),
+                    const _PriceChip(
                       label: '∞',
                       sublabel: 'LIFETIME',
                       color: AppColors.neonCyan,
                     ),
-                    SizedBox(width: 12),
-                    _PriceChip(
+                    const SizedBox(width: 12),
+                    const _PriceChip(
                       label: '8+',
                       sublabel: 'FEATURES',
                       color: AppColors.success,
@@ -480,7 +558,6 @@ class _PremiumScreenState extends State<PremiumScreen>
     );
   }
 
-  // ── SECTION HEADER ────────────────────────────────
   Widget _buildSectionHeader({
     required String label,
     required String sublabel,
@@ -528,7 +605,6 @@ class _PremiumScreenState extends State<PremiumScreen>
     );
   }
 
-  // ── VS DIVIDER ────────────────────────────────────
   Widget _buildVsDivider() {
     return Row(
       children: [
@@ -571,7 +647,6 @@ class _PremiumScreenState extends State<PremiumScreen>
     );
   }
 
-  // ── PRICE CARD ────────────────────────────────────
   Widget _buildPriceCard() {
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -612,7 +687,7 @@ class _PremiumScreenState extends State<PremiumScreen>
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '₹50',
+                '₹$_priceRupees',
                 style: GoogleFonts.orbitron(
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
@@ -633,7 +708,6 @@ class _PremiumScreenState extends State<PremiumScreen>
     );
   }
 
-  // ── PAY BUTTON ────────────────────────────────────
   Widget _buildPayButton() {
     return GestureDetector(
       onTap: _isLoading ? null : _handlePayment,
@@ -678,7 +752,7 @@ class _PremiumScreenState extends State<PremiumScreen>
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    'PAY ₹50 & UNLOCK NOW',
+                    'PAY ₹$_priceRupees & UNLOCK NOW',
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -692,7 +766,6 @@ class _PremiumScreenState extends State<PremiumScreen>
     );
   }
 
-  // ── SECURE NOTE ───────────────────────────────────
   Widget _buildSecureNote() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,

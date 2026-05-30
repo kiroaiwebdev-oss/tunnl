@@ -11,6 +11,7 @@ import '../../core/services/user_service.dart';
 import '../hub/hub_screen.dart';
 import '../history/history_screen.dart';
 import '../premium/premium_screen.dart';
+import 'edit_profile_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -29,6 +30,8 @@ class _ProfileScreenState extends State<ProfileScreen>
   // ── User data ─────────────────────────────────────
   String _name        = '';
   String _phone       = '';
+  String _standard    = '';
+  String _profileImage = '';
   String _memberSince = '';
   bool   _isPremium   = false;
   bool   _isLoading   = true;
@@ -77,33 +80,27 @@ class _ProfileScreenState extends State<ProfileScreen>
   // ── ✅ FIXED: 'success' check + correct data parsing ──
 Future<void> _loadFromApi() async {
   try {
-    final results = await Future.wait([
-      UserService.getProfile(),
-      UserService.getXpSummary(),
-    ]);
-
-    final profileRes = results[0];
-    final xpRes      = results[1];
+    final profileRes = await UserService.getProfile();
 
     if (!mounted) return;
 
-    // ✅ PHP 'success' bhejta hai, 'status' nahi
-    if (profileRes['success'] == true) {
+    // ✅ PHP 'success' bhejta hai
+    if (profileRes['success'] == true || profileRes['status'] == true) {
       final user  = profileRes['data']?['user']  as Map<String, dynamic>? ?? {};
       final stats = profileRes['data']?['stats'] as Map<String, dynamic>? ?? {};
 
       setState(() {
-        _name        = user['name']        as String? ?? '';
-        _phone       = user['phone']       as String? ?? '';
-        _memberSince = _formatDate(user['created_at'] as String? ?? '');
-        _isPremium   = user['is_premium'] == true || user['is_premium'] == 1;
+        _name         = user['name']         as String? ?? '';
+        _phone        = user['phone']        as String? ?? '';
+        _standard     = user['standard']     as String? ?? '';
+        _profileImage = user['profile_image'] as String? ?? '';
+        _memberSince  = _formatDate(user['created_at'] as String? ?? '');
+        _isPremium    = user['is_premium'] == true || user['is_premium'] == 1;
 
-        // ✅ PHP user_profile.php ke exact field names
         _rank           = int.tryParse('${user['rank_position']}')  ?? 0;
         _currentStreak  = int.tryParse('${user['current_streak']}') ?? 0;
         _totalXP        = int.tryParse('${user['total_xp']}')       ?? 0;
 
-        // Stats from 'stats' object
         _totalAttempted = int.tryParse('${stats['total_tests']}')   ?? 0;
         _correctAnswers = int.tryParse('${stats['total_correct']}') ?? 0;
         _accuracy       = double.tryParse('${stats['avg_accuracy']}') ?? 0.0;
@@ -113,15 +110,6 @@ Future<void> _loadFromApi() async {
 
     } else {
       await _loadFromCache();
-    }
-
-    // XP summary bhi 'success' check karo
-    if (xpRes['success'] == true) {
-      final xpData = xpRes['data'] as Map<String, dynamic>? ?? {};
-      setState(() {
-        _totalXP       = int.tryParse('${xpData['total_xp']}')       ?? _totalXP;
-        _currentStreak = int.tryParse('${xpData['current_streak']}') ?? _currentStreak;
-      });
     }
 
   } catch (e) {
@@ -135,11 +123,13 @@ Future<void> _loadFromApi() async {
   Future<void> _loadFromCache() async {
     final name      = await AuthService.getCachedName();
     final phone     = await AuthService.getCachedPhone();
+    final standard  = await AuthService.getCachedStandard();
     final isPremium = await AuthService.isPremium();
     if (mounted) {
       setState(() {
         _name      = name;
         _phone     = phone;
+        _standard  = standard;
         _isPremium = isPremium;
         _isLoading = false;
       });
@@ -192,95 +182,22 @@ Future<void> _loadFromApi() async {
     );
   }
 
-  // ── Name change dialog ────────────────────────────
-  void _showNameChangeDialog() {
-    final ctrl = TextEditingController(text: _name);
-    bool isSaving = false;
-
-    showDialog(
-      context: context,
-      builder: (_) => StatefulBuilder(
-        builder: (ctx, setS) => AlertDialog(
-          backgroundColor: AppColors.darkCard,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: AppColors.neonCyan.withOpacity(0.3)),
-          ),
-          title: Text('Change Name',
-            style: GoogleFonts.poppins(
-              color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
-          content: TextField(
-            controller: ctrl,
-            autofocus: true,
-            style: GoogleFonts.poppins(color: Colors.white),
-            cursorColor: AppColors.neonCyan,
-            textCapitalization: TextCapitalization.words,
-            decoration: InputDecoration(
-              hintText: 'Enter your name',
-              hintStyle: GoogleFonts.poppins(color: AppColors.textMuted),
-              prefixIcon: const Icon(Icons.person_rounded,
-                color: AppColors.neonCyan, size: 18),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: AppColors.neonCyan.withOpacity(0.2)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(
-                  color: AppColors.neonCyan, width: 1.5),
-              ),
-              filled: true,
-              fillColor: AppColors.darkBg,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text('Cancel',
-                style: GoogleFonts.poppins(color: AppColors.textMuted)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.neonCyan,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20, vertical: 10),
-              ),
-              onPressed: isSaving ? null : () async {
-                final newName = ctrl.text.trim();
-                if (newName.isEmpty) return;
-                setS(() => isSaving = true);
-
-                // ✅ API call
-                final ok = await UserService.updateName(newName);
-
-                if (!mounted) return;
-                Navigator.pop(ctx);
-
-                if (ok) {
-                  setState(() => _name = newName);
-                  _showSnack('Name updated successfully!');
-                } else {
-                  _showSnack('Failed to update name. Try again.',
-                    color: AppColors.error);
-                }
-              },
-              child: isSaving
-                  ? const SizedBox(
-                      width: 16, height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2, color: Colors.white))
-                  : Text('Save',
-                      style: GoogleFonts.poppins(
-                        color: AppColors.darkBg,
-                        fontWeight: FontWeight.w700)),
-            ),
-          ],
+  // ── Open full-page editor ─────────────────────────
+  Future<void> _openEditProfile() async {
+    final updated = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => EditProfileScreen(
+          initialName:     _name,
+          initialStandard: _standard,
+          initialImageUrl: _profileImage,
+          phone:           _phone,
         ),
       ),
     );
+    // EditProfileScreen pops `true` on a successful save.
+    if (updated == true && mounted) {
+      await _loadFromApi();
+    }
   }
 
   // ── Notification settings ─────────────────────────
@@ -395,7 +312,7 @@ Future<void> _loadFromApi() async {
                   color: Colors.white)),
               const SizedBox(height: 16),
               Text(
-                'TUNNEL collects minimal user data including phone number and '
+                'Tunnl collects minimal user data including phone number and '
                 'test performance to provide a personalized learning experience.\n\n'
                 'Your data is never shared with third parties without your '
                 'consent. All test history and scores are stored securely.\n\n'
@@ -449,7 +366,7 @@ Future<void> _loadFromApi() async {
                 final uri = Uri(
                   scheme: 'mailto',
                   path: 'support@tunnel.app',
-                  query: 'subject=TUNNEL App Support',
+                  query: 'subject=Tunnl App Support',
                 );
                 if (await canLaunchUrl(uri)) launchUrl(uri);
               },
@@ -480,7 +397,7 @@ Future<void> _loadFromApi() async {
                 final uri = Uri(
                   scheme: 'mailto',
                   path: 'support@tunnel.app',
-                  query: 'subject=Bug Report — TUNNEL App',
+                  query: 'subject=Bug Report — Tunnl App',
                 );
                 if (await canLaunchUrl(uri)) launchUrl(uri);
                 _showSnack('Thank you! Bug reported.');
@@ -613,7 +530,7 @@ Future<void> _loadFromApi() async {
               color: AppColors.neonCyan, letterSpacing: 2)),
           const Spacer(),
           GestureDetector(
-            onTap: _showNameChangeDialog,
+            onTap: _openEditProfile,
             child: Container(
               width: 36, height: 36,
               decoration: BoxDecoration(
@@ -663,13 +580,34 @@ Future<void> _loadFromApi() async {
                           color: AppColors.neonCyan.withOpacity(0.5),
                           width: 2),
                       ),
-                      child: Center(
-                        child: Text(
-                          _name.isNotEmpty ? _name[0].toUpperCase() : '?',
-                          style: GoogleFonts.orbitron(
-                            fontSize: 28, fontWeight: FontWeight.w700,
-                            color: AppColors.neonCyan),
-                        ),
+                      child: ClipOval(
+                        child: _profileImage.isNotEmpty
+                            ? Image.network(
+                                _profileImage,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Center(
+                                  child: Text(
+                                    _name.isNotEmpty
+                                        ? _name[0].toUpperCase()
+                                        : '?',
+                                    style: GoogleFonts.orbitron(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.neonCyan),
+                                  ),
+                                ),
+                              )
+                            : Center(
+                                child: Text(
+                                  _name.isNotEmpty
+                                      ? _name[0].toUpperCase()
+                                      : '?',
+                                  style: GoogleFonts.orbitron(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.neonCyan),
+                                ),
+                              ),
                       ),
                     ),
                     Positioned(
@@ -884,9 +822,14 @@ Future<void> _loadFromApi() async {
   // ── PREMIUM CARD ──────────────────────────────────
   Widget _buildPremiumCard() {
     return GestureDetector(
-      onTap: _isPremium ? null : () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const PremiumScreen()),
-      ),
+      onTap: _isPremium ? null : () async {
+        await Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const PremiumScreen()),
+        );
+        // Came back from premium screen — refresh profile so the
+        // "Unlock Premium" card flips to "TUNNL PREMIUM" if upgrade succeeded.
+        if (mounted) await _loadFromApi();
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         decoration: BoxDecoration(
@@ -928,7 +871,7 @@ Future<void> _loadFromApi() async {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _isPremium ? 'TUNNEL PREMIUM' : 'Unlock Premium',
+                    _isPremium ? 'TUNNL PREMIUM' : 'Unlock Premium',
                     style: GoogleFonts.poppins(
                       fontSize: 14, fontWeight: FontWeight.w700,
                       color: _isPremium ? AppColors.yellow : Colors.white)),

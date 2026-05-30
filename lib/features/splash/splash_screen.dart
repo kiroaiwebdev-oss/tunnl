@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/network/api_client.dart';
 import '../../core/network/api_endpoints.dart';
+import '../../core/services/app_settings_service.dart';
 import '../hub/hub_screen.dart';
 import '../auth/login_screen.dart';
 
@@ -99,11 +100,17 @@ class _SplashScreenState extends State<SplashScreen>
     // ── 1. App Settings fetch (maintenance + force update)
     _setStatus('LOADING CONFIG');
     try {
+      // Initialise the settings singleton — this loads the disk cache
+      // immediately and kicks off a background refresh.
+      await AppSettingsService.instance.init();
+
       final settingsRes = await ApiClient.get(ApiEndpoints.appSettings)
           .timeout(const Duration(seconds: 8));
 
-      if (settingsRes['status'] == true) {
+      if (settingsRes['success'] == true || settingsRes['status'] == true) {
         final settings = Map<String, dynamic>.from(settingsRes['data'] ?? {});
+        // Push fresh values into the singleton too (covers offline init)
+        AppSettingsService.instance.overrideLocal(settings);
 
         // Save important settings to prefs
         final prefs = await SharedPreferences.getInstance();
@@ -160,10 +167,10 @@ class _SplashScreenState extends State<SplashScreen>
         ).timeout(const Duration(seconds: 6));
 
         // Token invalid — force logout
-        if (profileRes['status'] == false &&
-            profileRes['message']?.toString().contains('nauthorized') == true) {
+        if ((profileRes['success'] == false && profileRes['status'] != true) &&
+            profileRes['message']?.toString().toLowerCase().contains('login') == true) {
           await prefs.clear();
-        } else if (profileRes['status'] == true) {
+        } else if (profileRes['success'] == true || profileRes['status'] == true) {
           // Refresh premium status from server
           final user = profileRes['data']?['user'];
           if (user != null) {
@@ -256,7 +263,7 @@ class _SplashScreenState extends State<SplashScreen>
           ),
         ),
         content: const Text(
-          'A new version of TUNNEL is available. Please update to continue.',
+          'A new version of Tunnl is available. Please update to continue.',
           style: TextStyle(
             color: AppColors.textSecondary,
             fontFamily: 'Poppins',
@@ -598,7 +605,7 @@ class _MaintenanceScreen extends StatelessWidget {
                 ),
                 SizedBox(height: 16),
                 Text(
-                  'We are improving TUNNEL for you.\nPlease check back shortly.',
+                  'We are improving Tunnl for you.\nPlease check back shortly.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontFamily: 'Poppins',

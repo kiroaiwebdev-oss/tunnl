@@ -23,12 +23,10 @@ class ApiEndpoints {
 
   // ── User ──────────────────────────────────────────
   static const String userProfile     = 'user_profile.php';
-  static const String userXp          = 'user_xp.php';
 
   // ── Results ───────────────────────────────────────
   static const String submitResult    = 'submit_result.php';
   static const String submitDaily     = 'submit_daily_practice.php';
-  static const String history         = 'history.php';
 
   // ── Leaderboard & Payments ────────────────────────
   static const String leaderboard     = 'leaderboard.php';

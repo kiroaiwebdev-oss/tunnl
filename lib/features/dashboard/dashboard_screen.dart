@@ -51,7 +51,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   final List<Map<String, dynamic>> _coreItems = [
     {
-      'title':       'TUNNEL TRICKS',
+      'title':       'TUNNL TRICKS',
       'subtitle':    'Learn powerful strategies & tricks',
       'icon':        Icons.layers_rounded,
       'iconBg':      const Color(0xFF0D2233),
@@ -154,14 +154,14 @@ class _DashboardScreenState extends State<DashboardScreen>
       final res = await UserService.getProfile();
       if (!mounted) return;
 
-      if (res['status'] == true) {
+      if (res['success'] == true || res['status'] == true) {
         final user = res['data']?['user'];
         if (user != null) {
           setState(() {
-            _isPremium  = user['is_premium'] == true;
+            _isPremium  = user['is_premium'] == true || user['is_premium'] == 1;
             _userName   = user['name']           ?? '';
-            _totalXp    = (user['total_xp']   ?? 0) as int;
-            _streak     = (user['current_streak'] ?? 0) as int;
+            _totalXp    = (user['total_xp']   as num?)?.toInt() ?? 0;
+            _streak     = (user['current_streak'] as num?)?.toInt() ?? 0;
             _isLoadingUser = false;
           });
           return;
@@ -204,10 +204,12 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  void _goToPremium() {
-    Navigator.of(context).push(
+  void _goToPremium() async {
+    await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const PremiumScreen()),
     );
+    // User came back — refresh in case they upgraded.
+    if (mounted) await _loadAll();
   }
 
   // ── Dashboard item tap ────────────────────────────
@@ -568,7 +570,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               color: Colors.white, size: 26),
           ),
           Text(
-            'TUNNEL',
+            'Tunnl',
             style: GoogleFonts.orbitron(
               fontSize: 16, fontWeight: FontWeight.w700,
               color: AppColors.neonCyan, letterSpacing: 3,
@@ -620,7 +622,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 4),
               child: Text(
-                'TUNNEL',
+                'Tunnl',
                 style: GoogleFonts.orbitron(
                   fontSize: 22, fontWeight: FontWeight.w700,
                   color: AppColors.neonCyan, letterSpacing: 4,

@@ -15,7 +15,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'privacy_policy', 'about_us',
             'maintenance_mode', 'force_update',
             'min_app_version', 'premium_price',
+            'premium_yearly_price', 'premium_lifetime_price',
             'daily_dose_text', 'daily_dose_active',
+            // Razorpay
+            'razorpay_enabled', 'razorpay_key_id', 'razorpay_key_secret',
             // OTP / SMS
             'sms_provider', 'sms_api_key', 'sms_sender_id',
             'otp_expiry_minutes', 'otp_message',
@@ -373,6 +376,104 @@ foreach ($settingsRaw as $row) {
         <div style="background:linear-gradient(135deg,#FFD600,#FF8F00);padding:8px 16px;border-radius:20px;font-weight:700;color:#000">
           ₹<span id="pricePreview2"><?= $s['premium_price'] ?? '50' ?></span>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Razorpay Gateway ── -->
+  <div class="card mb-24">
+    <div class="card-header">
+      <div class="card-title-text">
+        <i class="fas fa-credit-card" style="color:#3B82F6"></i> Razorpay Payment Gateway
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-title">Enable Razorpay</div>
+        <div class="setting-desc">Turn on real payment via Razorpay (Test/Live)</div>
+      </div>
+      <div class="setting-control">
+        <select name="razorpay_enabled" class="form-input" style="width:160px">
+          <option value="1" <?= ($s['razorpay_enabled'] ?? '0') == '1' ? 'selected' : '' ?>>Enabled</option>
+          <option value="0" <?= ($s['razorpay_enabled'] ?? '0') == '0' ? 'selected' : '' ?>>Disabled</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-title">Razorpay Key ID</div>
+        <div class="setting-desc">Public key (rzp_test_xxx or rzp_live_xxx) — exposed to app</div>
+      </div>
+      <div class="setting-control">
+        <input type="text" name="razorpay_key_id" class="form-input"
+          value="<?= htmlspecialchars($s['razorpay_key_id'] ?? '') ?>"
+          placeholder="rzp_test_xxxxxxxxxxxx" style="width:280px;font-family:monospace">
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-title">Razorpay Key Secret</div>
+        <div class="setting-desc">Server-side only — never sent to app. Used to sign &amp; verify orders.</div>
+      </div>
+      <div class="setting-control">
+        <input type="password" name="razorpay_key_secret" class="form-input"
+          value="<?= htmlspecialchars($s['razorpay_key_secret'] ?? '') ?>"
+          placeholder="••••••••••••••••" style="width:280px;font-family:monospace"
+          autocomplete="new-password">
+      </div>
+    </div>
+
+    <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.3);border-radius:12px;padding:12px 14px;margin-top:12px;font-size:12px;color:var(--muted);line-height:1.6">
+      <i class="fas fa-info-circle" style="color:#3B82F6"></i>
+      <strong style="color:#93C5FD">How it works:</strong> Saving these fills the keys instantly — app refreshes settings on resume,
+      no rebuild needed. Use <code>rzp_test_*</code> keys to test, switch to <code>rzp_live_*</code> when going live.
+    </div>
+  </div>
+
+  <!-- ── Plan Pricing ── -->
+  <div class="card mb-24">
+    <div class="card-header">
+      <div class="card-title-text">
+        <i class="fas fa-tags" style="color:var(--cyan)"></i> Plan Pricing (₹)
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-title">Monthly Price</div>
+        <div class="setting-desc">Same as <code>premium_price</code> above when used as monthly</div>
+      </div>
+      <div class="setting-control">
+        <input type="number" name="premium_price" class="form-input"
+          value="<?= htmlspecialchars($s['premium_price'] ?? '50') ?>"
+          placeholder="50" style="width:140px">
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-title">Yearly Price</div>
+        <div class="setting-desc">Used when plan = yearly</div>
+      </div>
+      <div class="setting-control">
+        <input type="number" name="premium_yearly_price" class="form-input"
+          value="<?= htmlspecialchars($s['premium_yearly_price'] ?? '499') ?>"
+          placeholder="499" style="width:140px">
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-title">Lifetime Price</div>
+        <div class="setting-desc">One-time payment, no expiry</div>
+      </div>
+      <div class="setting-control">
+        <input type="number" name="premium_lifetime_price" class="form-input"
+          value="<?= htmlspecialchars($s['premium_lifetime_price'] ?? '50') ?>"
+          placeholder="50" style="width:140px">
       </div>
     </div>
   </div>

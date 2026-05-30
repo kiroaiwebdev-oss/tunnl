@@ -4,22 +4,24 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
-import '../../core/services/question_service.dart';
+import '../../core/services/content_service.dart';
+import '../../core/models/question_model.dart';
 import '../result/result_screen.dart';
-
 
 class QuestionScreen extends StatefulWidget {
   final String mode;
-  final int    setNumber;
-  final int    totalQuestions;
-  final String category;           // ← NEW (sets_screen se aata hai)
-  final VoidCallback? onSetCompleted; // ← NEW (sets_screen ko callback)
+  final int setNumber;
+  final int setId;
+  final int totalQuestions;
+  final String category;
+  final VoidCallback? onSetCompleted;
 
   const QuestionScreen({
     super.key,
     required this.mode,
     required this.category,
-    this.setNumber      = 1,
+    this.setId = 0,
+    this.setNumber = 1,
     this.totalQuestions = 10,
     this.onSetCompleted,
   });
@@ -32,7 +34,7 @@ class _QuestionScreenState extends State<QuestionScreen>
     with TickerProviderStateMixin {
 
   // ── Question data ──────────────────────────────────
-  List<Map<String, dynamic>> _questions = [];
+  List<QuestionModel> _questions = [];
   int  _currentIndex    = 0;
   int? _selectedOption;
   int? _confirmedOption;
@@ -46,6 +48,7 @@ class _QuestionScreenState extends State<QuestionScreen>
   int _wrongCount   = 0;
   final List<Map<String, dynamic>> _summary  = [];
   final List<int>                  _timeTaken = [];
+  final List<Map<String, dynamic>> _answersForApi = [];
 
   // ── Timer ──────────────────────────────────────────
   static const int _timerMax = 30;
@@ -75,34 +78,49 @@ class _QuestionScreenState extends State<QuestionScreen>
   // ─────────────────────────────────────────────────
   Future<void> _loadQuestionsFromApi() async {
     setState(() { _isLoading = true; _hasError = false; });
-    try {
-      final res = await QuestionService.getQuestions(
-        category:       widget.category,
-        setNumber:      widget.setNumber,
-        totalQuestions: widget.totalQuestions,
-        mode:           widget.mode,
-      );
 
-      if (res['status'] == true) {
-        final rawList = res['data'] as List<dynamic>;
-        _questions = rawList.map<Map<String, dynamic>>((q) {
-          // Normalise API response keys
-          return {
-            'question': q['question']    ?? '',
-            'options' : List<String>.from(q['options'] ?? []),
-            'correct' : (q['correct_index'] ?? q['correct'] ?? 0) as int,
-            'stage'   : 'STAGE ${(rawList.indexOf(q) + 1).toString().padLeft(2, '0')}',
-          };
-        }).toList();
-
-        setState(() => _isLoading = false);
-        _startTimer();
-      } else {
-        _showApiError(res['message'] ?? 'Failed to load questions');
+    if (widget.setId == 0) {
+      // No set_id provided (e.g. "tunnelity" speed test from hub) →
+      // fall back to first available MCQ set.
+      try {
+        final sets = await ContentService.getSets(
+          'mcq',
+          page: 1,
+          perPage: 1,
+        );
+        if (sets.isEmpty) {
+          _showApiError(
+              'No questions available yet. Admin will publish soon.');
+          return;
+        }
+        final setId = sets.first.id;
+        final qs = await ContentService.getQuestions(setId, shuffle: true);
+        _applyQuestions(qs);
+      } catch (e) {
+        _showApiError('Failed to load. Check connection.');
       }
+      return;
+    }
+
+    try {
+      final qs = await ContentService.getQuestions(widget.setId, shuffle: true);
+      _applyQuestions(qs);
     } catch (e) {
       _showApiError('Network error. Check your connection.');
     }
+  }
+
+  void _applyQuestions(List<QuestionModel> qs) {
+    if (qs.isEmpty) {
+      _showApiError(
+          'This set has no questions yet. Admin will publish soon.');
+      return;
+    }
+    setState(() {
+      _questions = qs;
+      _isLoading = false;
+    });
+    _startTimer();
   }
 
   void _showApiError(String msg) {
@@ -162,8 +180,11 @@ class _QuestionScreenState extends State<QuestionScreen>
   // Timer
   // ─────────────────────────────────────────────────
   void _startTimer() {
-    _timerSeconds = _timerMax;
+    final q = _questions.isNotEmpty ? _questions[_currentIndex] : null;
+    final maxSeconds = (q?.timeLimit ?? _timerMax).clamp(5, 600);
+    _timerSeconds = maxSeconds;
     _timerRingCtrl
+      ..duration = Duration(seconds: maxSeconds)
       ..reset()
       ..forward();
 
@@ -202,7 +223,8 @@ class _QuestionScreenState extends State<QuestionScreen>
     _questionTimer?.cancel();
     _timerRingCtrl.stop();
 
-    final timeTaken = _timerMax - _timerSeconds;
+    final q = _questions[_currentIndex];
+    final timeTaken = (q.timeLimit > 0 ? q.timeLimit : _timerMax) - _timerSeconds;
 
     setState(() {
       _isAnswered      = true;
@@ -214,8 +236,8 @@ class _QuestionScreenState extends State<QuestionScreen>
   }
 
   void _recordAnswer(int selected, {int timeTaken = 30}) {
-    final q         = _questions[_currentIndex];
-    final isCorrect = selected == q['correct'];
+    final q = _questions[_currentIndex];
+    final isCorrect = selected == q.correctIndex;
 
     if (selected >= 0) {
       if (isCorrect) {
@@ -227,18 +249,28 @@ class _QuestionScreenState extends State<QuestionScreen>
 
     _timeTaken.add(timeTaken);
     _summary.add({
-      'question' : q['question'],
-      'options'  : q['options'],
-      'selected' : selected,
-      'correct'  : q['correct'],
+      'question': q.questionText,
+      'options': q.options,
+      'selected': selected,
+      'correct': q.correctIndex,
       'isCorrect': isCorrect,
       'timeTaken': timeTaken,
+      'explanation': q.explanation,
+    });
+
+    // For submit_result API
+    const letters = ['a', 'b', 'c', 'd'];
+    _answersForApi.add({
+      'question_id': q.id,
+      'selected': selected >= 0 && selected < 4 ? letters[selected] : null,
+      'correct': letters[q.correctIndex.clamp(0, 3)],
+      'is_correct': isCorrect,
     });
   }
 
   void _goNext() {
     if (!mounted) return;
-    if (_currentIndex >= widget.totalQuestions - 1) {
+    if (_currentIndex >= _questions.length - 1) {
       _navigateToResult();
       return;
     }
@@ -256,29 +288,34 @@ class _QuestionScreenState extends State<QuestionScreen>
   }
 
   void _navigateToResult() {
-    // ✅ Fire onSetCompleted callback BEFORE navigating
     widget.onSetCompleted?.call();
 
+    final answeredCount = _correctCount + _wrongCount;
+    final skipped = _questions.length - answeredCount;
     final avgTime = _timeTaken.isEmpty
         ? 0.0
         : _timeTaken.reduce((a, b) => a + b) / _timeTaken.length;
-    final accuracy = widget.totalQuestions == 0
+    final accuracy = _questions.isEmpty
         ? 0.0
-        : (_correctCount / widget.totalQuestions) * 100;
+        : (_correctCount / _questions.length) * 100;
+    final totalTime = _timeTaken.fold<int>(0, (s, e) => s + e);
 
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (_, __, ___) => ResultScreen(
-          mode:             widget.mode,
-          category:         widget.category,
-          totalQuestions:   widget.totalQuestions,
-          correct:          _correctCount,
-          wrong:            _wrongCount,
-          skipped: widget.totalQuestions - _correctCount - _wrongCount,
-          accuracy:         accuracy,
-          avgSpeedSeconds:  avgTime,
-          summary:          _summary,
-          setNumber:        widget.setNumber,
+          mode: widget.mode,
+          category: widget.category,
+          totalQuestions: _questions.length,
+          correct: _correctCount,
+          wrong: _wrongCount,
+          skipped: skipped,
+          accuracy: accuracy,
+          avgSpeedSeconds: avgTime,
+          summary: _summary,
+          setNumber: widget.setNumber,
+          setId: widget.setId,
+          totalTimeTaken: totalTime,
+          answersForApi: _answersForApi,
         ),
         transitionsBuilder: (_, anim, __, child) =>
             FadeTransition(opacity: anim, child: child),
@@ -335,7 +372,6 @@ class _QuestionScreenState extends State<QuestionScreen>
   // ─────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    // ── Loading ──────────────────────────────────────
     if (_isLoading) {
       return Scaffold(
         backgroundColor: AppColors.darkBg,
@@ -348,7 +384,6 @@ class _QuestionScreenState extends State<QuestionScreen>
       );
     }
 
-    // ── Error ─────────────────────────────────────────
     if (_hasError) {
       return Scaffold(
         backgroundColor: AppColors.darkBg,
@@ -408,6 +443,7 @@ class _QuestionScreenState extends State<QuestionScreen>
     }
 
     final q = _questions[_currentIndex];
+    final stage = 'STAGE ${(_currentIndex + 1).toString().padLeft(2, '0')}';
 
     return WillPopScope(
       onWillPop: _onWillPop,
@@ -422,7 +458,7 @@ class _QuestionScreenState extends State<QuestionScreen>
                 const SizedBox(height: 20),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: _buildQuestionCard(q),
+                  child: _buildQuestionCard(q, stage),
                 ),
                 const SizedBox(height: 24),
                 Expanded(
@@ -468,7 +504,7 @@ class _QuestionScreenState extends State<QuestionScreen>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('${_timerMax}S LIMIT',
+              Text('${_questions.isEmpty ? _timerMax : _questions[_currentIndex].timeLimit}S LIMIT',
                 style: GoogleFonts.poppins(
                   fontSize: 10, color: AppColors.textSecondary,
                   letterSpacing: 1.5)),
@@ -477,7 +513,7 @@ class _QuestionScreenState extends State<QuestionScreen>
                   fontSize: 9, color: AppColors.neonCyan,
                   letterSpacing: 1.5, fontWeight: FontWeight.w600)),
               Text(
-                '${(_currentIndex + 1).toString().padLeft(2, '0')} / ${widget.totalQuestions.toString().padLeft(2, '0')}',
+                '${(_currentIndex + 1).toString().padLeft(2, '0')} / ${_questions.length.toString().padLeft(2, '0')}',
                 style: GoogleFonts.orbitron(
                   fontSize: 14, fontWeight: FontWeight.w700,
                   color: Colors.white)),
@@ -553,7 +589,7 @@ class _QuestionScreenState extends State<QuestionScreen>
   }
 
   // ── QUESTION CARD ─────────────────────────────────
-  Widget _buildQuestionCard(Map<String, dynamic> q) {
+  Widget _buildQuestionCard(QuestionModel q, String stage) {
     return SlideTransition(
       position: _questionSlideAnim,
       child: FadeTransition(
@@ -575,7 +611,7 @@ class _QuestionScreenState extends State<QuestionScreen>
                   Container(width: 40, height: 1,
                     color: AppColors.textMuted.withOpacity(0.4)),
                   const SizedBox(width: 10),
-                  Text(q['stage'] ?? 'STAGE 01',
+                  Text(stage,
                     style: GoogleFonts.poppins(
                       fontSize: 11, color: AppColors.textSecondary,
                       letterSpacing: 2, fontWeight: FontWeight.w500)),
@@ -585,10 +621,10 @@ class _QuestionScreenState extends State<QuestionScreen>
                 ],
               ),
               const SizedBox(height: 20),
-              Text(q['question'] ?? '',
+              Text(q.questionText,
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
-                  fontSize: 30, fontWeight: FontWeight.w700,
+                  fontSize: 26, fontWeight: FontWeight.w700,
                   color: Colors.white, height: 1.3)),
             ],
           ),
@@ -598,10 +634,10 @@ class _QuestionScreenState extends State<QuestionScreen>
   }
 
   // ── OPTIONS ───────────────────────────────────────
-  Widget _buildOptions(Map<String, dynamic> q) {
-    final options      = List<String>.from(q['options'] ?? []);
-    final correctIndex = q['correct'] as int;
-    final labels       = ['A', 'B', 'C', 'D'];
+  Widget _buildOptions(QuestionModel q) {
+    final options = q.options;
+    final correctIndex = q.correctIndex;
+    final labels = ['A', 'B', 'C', 'D'];
 
     return ListView.separated(
       physics: const NeverScrollableScrollPhysics(),
@@ -707,7 +743,7 @@ class _QuestionScreenState extends State<QuestionScreen>
   // ── CONTINUE BUTTON ───────────────────────────────
   Widget _buildContinueButton() {
     final canContinue   = _selectedOption != null && !_isAnswered;
-    final isLastQ       = _currentIndex == widget.totalQuestions - 1;
+    final isLastQ       = _currentIndex == _questions.length - 1;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),

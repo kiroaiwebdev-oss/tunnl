@@ -1,4 +1,11 @@
 // lib/core/services/content_service.dart
+//
+// Wrapper around the admin panel content endpoints.
+// Admin (PHP) returns either:
+//   - {success: true, data: [...]}              ── login.php / banners.php / app_settings.php / user_profile.php
+//   - {success: true, <named_key>: [...] }      ── sets.php / questions.php / shorts.php / tricks.php / daily_dose.php / etc.
+//
+// Helpers below tolerate both shapes.
 
 import 'package:flutter/foundation.dart';
 import '../network/api_client.dart';
@@ -11,22 +18,53 @@ import '../models/short_model.dart';
 import '../models/daily_dose_model.dart';
 
 class ContentService {
+  // ── Helpers ───────────────────────────────────────
+  static bool _ok(Map<String, dynamic> res) =>
+      res['success'] == true || res['status'] == true;
+
+  static List<dynamic> _list(Map<String, dynamic> res, List<String> keys) {
+    for (final k in keys) {
+      final v = res[k];
+      if (v is List) return v;
+    }
+    final data = res['data'];
+    if (data is List) return data;
+    return const [];
+  }
+
+  static Map<String, dynamic> _map(Map<String, dynamic> res, List<String> keys) {
+    for (final k in keys) {
+      final v = res[k];
+      if (v is Map<String, dynamic>) return v;
+      if (v is Map) return Map<String, dynamic>.from(v);
+    }
+    final data = res['data'];
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    return const {};
+  }
+
+  // ── App settings ──────────────────────────────────
+  static Future<Map<String, dynamic>> getAppSettings() async {
+    try {
+      final res = await ApiClient.get(ApiEndpoints.appSettings);
+      if (!_ok(res)) return {};
+      return _map(res, const ['settings']);
+    } catch (_) {
+      return {};
+    }
+  }
 
   // ── Banners ───────────────────────────────────────
   static Future<List<BannerModel>> getBanners() async {
     try {
       final res = await ApiClient.get(ApiEndpoints.banners);
-      debugPrint('[Banners] success=${res['success']} count=${(res['data'] as List?)?.length}');
-
-      if (res['success'] != true) return [];
-
-      final raw = res['data'];
-      if (raw == null || raw is! List) return [];
-
+      if (!_ok(res)) return [];
+      final raw = _list(res, const ['banners']);
       return raw
-          .map((e) => BannerModel.fromJson(e as Map<String, dynamic>))
+          .whereType<Map>()
+          .map((e) => BannerModel.fromJson(Map<String, dynamic>.from(e)))
           .toList();
-
     } catch (e, st) {
       debugPrint('[Banners] ERROR: $e\n$st');
       return [];
@@ -34,76 +72,143 @@ class ContentService {
   }
 
   // ── Sets by category ──────────────────────────────
-  static Future<List<SetModel>> getSets(String category) async {
+  static Future<List<SetModel>> getSets(
+    String category, {
+    int? examId,
+    int page = 1,
+    int perPage = 50,
+  }) async {
     try {
+      final params = <String, String>{
+        'category': category,
+        'page': '$page',
+        'per_page': '$perPage',
+      };
+      if (examId != null) params['exam_id'] = '$examId';
+
       final res = await ApiClient.get(
         ApiEndpoints.sets,
-        params: {'category': category},
+        params: params,
       );
-      if (res['success'] != true) return [];
-      return (res['data'] as List)
-          .map((e) => SetModel.fromJson(e))
+      if (!_ok(res)) return [];
+      final raw = _list(res, const ['sets']);
+      return raw
+          .whereType<Map>()
+          .map((e) => SetModel.fromJson(Map<String, dynamic>.from(e)))
           .toList();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[Sets] ERROR: $e');
       return [];
     }
   }
 
   // ── Questions by set_id ───────────────────────────
-  static Future<List<QuestionModel>> getQuestions(int setId) async {
+  static Future<List<QuestionModel>> getQuestions(
+    int setId, {
+    bool shuffle = false,
+  }) async {
     try {
+      final params = <String, String>{'set_id': '$setId'};
+      if (shuffle) params['shuffle'] = '1';
+
       final res = await ApiClient.get(
         ApiEndpoints.questions,
-        params: {'set_id': setId.toString()},
+        params: params,
         auth: true,
       );
-      if (res['success'] != true) return [];
-      return (res['data'] as List)
-          .map((e) => QuestionModel.fromJson(e))
+      if (!_ok(res)) return [];
+      final raw = _list(res, const ['questions']);
+      return raw
+          .whereType<Map>()
+          .map((e) => QuestionModel.fromJson(Map<String, dynamic>.from(e)))
           .toList();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[Questions] ERROR: $e');
       return [];
+    }
+  }
+
+  // Raw questions response (so the question screen can also pull set info)
+  static Future<Map<String, dynamic>> getQuestionsRaw(int setId,
+      {bool shuffle = false}) async {
+    try {
+      final params = <String, String>{'set_id': '$setId'};
+      if (shuffle) params['shuffle'] = '1';
+
+      return await ApiClient.get(
+        ApiEndpoints.questions,
+        params: params,
+        auth: true,
+      );
+    } catch (e) {
+      return {'success': false, 'message': '$e'};
     }
   }
 
   // ── Tricks ────────────────────────────────────────
-  static Future<List<TrickModel>> getTricks() async {
+  static Future<List<TrickModel>> getTricks({String? category}) async {
     try {
-      final res = await ApiClient.get(ApiEndpoints.tricks);
-      if (res['success'] != true) return [];
-      return (res['data'] as List)
-          .map((e) => TrickModel.fromJson(e))
+      final params = <String, String>{};
+      if (category != null && category.isNotEmpty && category != 'ALL') {
+        params['category'] = category;
+      }
+      final res = await ApiClient.get(
+        ApiEndpoints.tricks,
+        params: params.isEmpty ? null : params,
+      );
+      if (!_ok(res)) return [];
+      final raw = _list(res, const ['tricks']);
+      return raw
+          .whereType<Map>()
+          .map((e) => TrickModel.fromJson(Map<String, dynamic>.from(e)))
           .toList();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[Tricks] ERROR: $e');
       return [];
     }
   }
 
-  // ── Tricks by category ────────────────────────────
-  static Future<List<TrickModel>> getTricksByCategory(String category) async {
+  static Future<TrickModel?> getTrickById(int id) async {
     try {
       final res = await ApiClient.get(
         ApiEndpoints.tricks,
-        params: {'category': category},
+        params: {'id': '$id'},
       );
-      if (res['success'] != true) return [];
-      return (res['data'] as List)
-          .map((e) => TrickModel.fromJson(e))
-          .toList();
+      if (!_ok(res)) return null;
+      final m = _map(res, const ['trick']);
+      if (m.isEmpty) return null;
+      return TrickModel.fromJson(m);
     } catch (_) {
-      return [];
+      return null;
     }
   }
 
   // ── Shorts ────────────────────────────────────────
-  static Future<List<ShortModel>> getShorts() async {
+  static Future<List<ShortModel>> getShorts({
+    String? category,
+    int page = 1,
+    int perPage = 30,
+  }) async {
     try {
-      final res = await ApiClient.get(ApiEndpoints.shorts);
-      if (res['success'] != true) return [];
-      return (res['data'] as List)
-          .map((e) => ShortModel.fromJson(e))
+      final params = <String, String>{
+        'page': '$page',
+        'per_page': '$perPage',
+      };
+      if (category != null && category.isNotEmpty && category != 'ALL') {
+        params['category'] = category.toLowerCase();
+      }
+      final res = await ApiClient.get(
+        ApiEndpoints.shorts,
+        params: params,
+      );
+      if (!_ok(res)) return [];
+      final raw = _list(res, const ['shorts']);
+      return raw
+          .whereType<Map>()
+          .map((e) => ShortModel.fromJson(Map<String, dynamic>.from(e)))
           .toList();
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[Shorts] ERROR: $e');
       return [];
     }
   }
@@ -112,36 +217,67 @@ class ContentService {
   static Future<DailyDoseModel?> getDailyDose() async {
     try {
       final res = await ApiClient.get(ApiEndpoints.dailyDose);
-      if (res['success'] != true || res['data'] == null) return null;
-      return DailyDoseModel.fromJson(res['data']);
+      if (!_ok(res)) return null;
+      final m = _map(res, const ['dose']);
+      if (m.isEmpty) return null;
+      return DailyDoseModel.fromJson(m);
     } catch (_) {
       return null;
+    }
+  }
+
+  // ── Daily Practice (auth) ─────────────────────────
+  static Future<Map<String, dynamic>> getDailyPractice() async {
+    try {
+      return await ApiClient.get(ApiEndpoints.dailyPractice, auth: true);
+    } catch (e) {
+      return {'success': false, 'message': '$e'};
+    }
+  }
+
+  static Future<Map<String, dynamic>> submitDailyPractice({
+    required int practiceId,
+    required int correct,
+    required int wrong,
+    required int timeTaken,
+  }) async {
+    try {
+      return await ApiClient.post(
+        ApiEndpoints.submitDaily,
+        {
+          'practice_id': practiceId,
+          'correct': correct,
+          'wrong': wrong,
+          'time_taken': timeTaken,
+        },
+        auth: true,
+      );
+    } catch (e) {
+      return {'success': false, 'message': '$e'};
     }
   }
 
   // ── Submit test result ────────────────────────────
   static Future<Map<String, dynamic>> submitResult({
     required String category,
-    required int    setId,
-    required int    score,
-    required int    total,
-    required int    correct,
-    required int    wrong,
-    required int    skipped,
-    required int    timeTaken,
+    required int setId,
+    required int correct,
+    required int wrong,
+    required int skipped,
+    required int timeTaken,
+    List<Map<String, dynamic>>? answers,
   }) async {
     try {
       return await ApiClient.post(
         ApiEndpoints.submitResult,
         {
-          'category':        category,
-          'set_id':          setId,
-          'score':           score,
-          'total_questions': total,
-          'correct':         correct,
-          'wrong':           wrong,
-          'skipped':         skipped,
-          'time_taken':      timeTaken,
+          'category': category,
+          'set_id': setId,
+          'correct': correct,
+          'wrong': wrong,
+          'skipped': skipped,
+          'time_taken': timeTaken,
+          if (answers != null) 'answers': answers,
         },
         auth: true,
       );
@@ -150,22 +286,39 @@ class ContentService {
     }
   }
 
-  // ── PYQ by exam type ──────────────────────────────
-  static Future<List<SetModel>> getPreviousYearSets(String examType) async {
+  // ── Previous Year exams (grouped by name) ─────────
+  static Future<Map<String, List<Map<String, dynamic>>>>
+      getPreviousYearExams() async {
     try {
-      final res = await ApiClient.get(
-        ApiEndpoints.sets,
-        params: {
-          'category':  'previous_year',
-          'exam_type': examType,
-        },
+      final res = await ApiClient.get(ApiEndpoints.previousYear);
+      if (!_ok(res)) return {};
+      final raw = res['exams'];
+      if (raw is! Map) return {};
+      final out = <String, List<Map<String, dynamic>>>{};
+      raw.forEach((key, value) {
+        if (value is List) {
+          out['$key'] = value
+              .whereType<Map>()
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList();
+        }
+      });
+      return out;
+    } catch (e) {
+      debugPrint('[PreviousYear] ERROR: $e');
+      return {};
+    }
+  }
+
+  // ── PYQ sets for a single exam ────────────────────
+  static Future<Map<String, dynamic>> getPreviousYearExam(int examId) async {
+    try {
+      return await ApiClient.get(
+        ApiEndpoints.previousYear,
+        params: {'exam_id': '$examId'},
       );
-      if (res['success'] != true) return [];
-      return (res['data'] as List)
-          .map((e) => SetModel.fromJson(e))
-          .toList();
-    } catch (_) {
-      return [];
+    } catch (e) {
+      return {'success': false, 'message': '$e'};
     }
   }
 }

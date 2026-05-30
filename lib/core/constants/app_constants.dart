@@ -1,10 +1,10 @@
 class AppConstants {
-  static const String appName    = 'TUNNEL';
+  static const String appName    = 'Tunnl';
   static const String appTagline = 'New Way to Math';
   static const String appVersion = 'V1.0.4';
 
-  // ✅ Apna server URL
-  static const String baseUrl = 'https://test.devsarun.io/api';
+  // ✅ Apna server URL — admin panel API
+  static const String baseUrl = 'https://admin.tunnl.co.in/api';
 
   // Routes
   static const String routeSplash      = '/';
