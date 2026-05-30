@@ -31,6 +31,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   String _name        = '';
   String _phone       = '';
   String _standard    = '';
+  String _profileImage = '';
   String _memberSince = '';
   bool   _isPremium   = false;
   bool   _isLoading   = true;
@@ -89,11 +90,12 @@ Future<void> _loadFromApi() async {
       final stats = profileRes['data']?['stats'] as Map<String, dynamic>? ?? {};
 
       setState(() {
-        _name        = user['name']        as String? ?? '';
-        _phone       = user['phone']       as String? ?? '';
-        _standard    = user['standard']    as String? ?? '';
-        _memberSince = _formatDate(user['created_at'] as String? ?? '');
-        _isPremium   = user['is_premium'] == true || user['is_premium'] == 1;
+        _name         = user['name']         as String? ?? '';
+        _phone        = user['phone']        as String? ?? '';
+        _standard     = user['standard']     as String? ?? '';
+        _profileImage = user['profile_image'] as String? ?? '';
+        _memberSince  = _formatDate(user['created_at'] as String? ?? '');
+        _isPremium    = user['is_premium'] == true || user['is_premium'] == 1;
 
         _rank           = int.tryParse('${user['rank_position']}')  ?? 0;
         _currentStreak  = int.tryParse('${user['current_streak']}') ?? 0;
@@ -187,6 +189,7 @@ Future<void> _loadFromApi() async {
         builder: (_) => EditProfileScreen(
           initialName:     _name,
           initialStandard: _standard,
+          initialImageUrl: _profileImage,
           phone:           _phone,
         ),
       ),
@@ -577,13 +580,34 @@ Future<void> _loadFromApi() async {
                           color: AppColors.neonCyan.withOpacity(0.5),
                           width: 2),
                       ),
-                      child: Center(
-                        child: Text(
-                          _name.isNotEmpty ? _name[0].toUpperCase() : '?',
-                          style: GoogleFonts.orbitron(
-                            fontSize: 28, fontWeight: FontWeight.w700,
-                            color: AppColors.neonCyan),
-                        ),
+                      child: ClipOval(
+                        child: _profileImage.isNotEmpty
+                            ? Image.network(
+                                _profileImage,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Center(
+                                  child: Text(
+                                    _name.isNotEmpty
+                                        ? _name[0].toUpperCase()
+                                        : '?',
+                                    style: GoogleFonts.orbitron(
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppColors.neonCyan),
+                                  ),
+                                ),
+                              )
+                            : Center(
+                                child: Text(
+                                  _name.isNotEmpty
+                                      ? _name[0].toUpperCase()
+                                      : '?',
+                                  style: GoogleFonts.orbitron(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.neonCyan),
+                                ),
+                              ),
                       ),
                     ),
                     Positioned(

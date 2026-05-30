@@ -56,13 +56,10 @@ class PaymentService {
       return;
     }
 
-    // Make sure settings (including razorpay_enabled) are fresh
+    // Make sure settings are fresh (price etc.) but DON'T early-return based
+    // on a client-side `razorpay_enabled` flag — server is the source of
+    // truth and will reject the order if keys aren't configured.
     await AppSettingsService.instance.refresh();
-    final enabled = AppSettingsService.instance.getBool('razorpay_enabled');
-    if (!enabled) {
-      _onError?.call('Online payments are temporarily disabled. Please try again later.');
-      return;
-    }
 
     Map<String, dynamic> orderRes;
     try {

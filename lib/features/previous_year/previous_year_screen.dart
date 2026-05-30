@@ -92,6 +92,22 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
     return Icons.school_rounded;
   }
 
+  IconData _resolveIcon(String? iconName, String examName) {
+    switch ((iconName ?? '').toLowerCase()) {
+      case 'school':            return Icons.school_rounded;
+      case 'train':             return Icons.train_rounded;
+      case 'account_balance':   return Icons.account_balance_rounded;
+      case 'security':          return Icons.security_rounded;
+      case 'flight':            return Icons.flight_rounded;
+      case 'gavel':             return Icons.gavel_rounded;
+      case 'medical_services':  return Icons.medical_services_rounded;
+      case 'engineering':       return Icons.engineering_rounded;
+      case 'science':           return Icons.science_rounded;
+      case 'workspace_premium': return Icons.workspace_premium_rounded;
+    }
+    return _examIcon(examName);
+  }
+
   Color _examColor(String name) {
     final n = name.toLowerCase();
     if (n.contains('ssc')) return AppColors.yellow;
@@ -338,7 +354,16 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
           final examName = entries[i].key;
           final years = entries[i].value;
           final color = _examColor(examName);
-          final icon = _examIcon(examName);
+          // Prefer the admin-configured icon from the first year's entry,
+          // fall back to name-based heuristic if the admin hasn't set one.
+          final firstWithIcon = years.firstWhere(
+            (e) => (e['icon'] ?? '').toString().isNotEmpty,
+            orElse: () => years.isNotEmpty ? years.first : <String, dynamic>{},
+          );
+          final icon = _resolveIcon(
+            firstWithIcon['icon']?.toString(),
+            examName,
+          );
 
           return Container(
             margin: const EdgeInsets.only(bottom: 16),

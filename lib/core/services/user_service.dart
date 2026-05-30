@@ -1,6 +1,10 @@
 // lib/core/services/user_service.dart
 
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../constants/app_constants.dart';
 import '../network/api_client.dart';
 import '../network/api_endpoints.dart';
 import '../services/auth_service.dart';
@@ -95,6 +99,47 @@ class UserService {
         auth: true,
       );
     } catch (_) {}
+  }
+
+  /// Upload a local image file as the profile picture. Uses multipart/form-data
+  /// so it goes straight to admin/api/user_profile.php which moves the file
+  /// into admin/uploads/profiles/ and stores the public URL.
+  ///
+  /// Returns the new public URL on success, null on failure.
+  static Future<String?> uploadProfileImage(String filePath) async {
+    try {
+      final base = AppConstants.baseUrl.endsWith('/')
+          ? AppConstants.baseUrl.substring(0, AppConstants.baseUrl.length - 1)
+          : AppConstants.baseUrl;
+      final uri = Uri.parse('$base/${ApiEndpoints.userProfile}');
+
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString(AppConstants.prefAuthToken) ?? '';
+
+      final req = http.MultipartRequest('POST', uri)
+        ..headers['Authorization'] = 'Bearer $token'
+        ..headers['Accept'] = 'application/json'
+        ..files.add(await http.MultipartFile.fromPath('profile_image', filePath));
+
+      final streamed = await req.send().timeout(const Duration(seconds: 30));
+      final body = await streamed.stream.bytesToString();
+      if (streamed.statusCode >= 400) {
+        debugPrint('[uploadProfileImage] HTTP ${streamed.statusCode} → $body');
+        return null;
+      }
+
+      final json = jsonDecode(body);
+      if (json is Map &&
+          (json['success'] == true || json['status'] == true)) {
+        final url = (json['data']?['profile_image'] ?? '').toString();
+        return url.isEmpty ? null : url;
+      }
+      debugPrint('[uploadProfileImage] failed → $body');
+      return null;
+    } catch (e) {
+      debugPrint('[uploadProfileImage] error: $e');
+      return null;
+    }
   }
 
   // ── Leaderboard ───────────────────────────────────

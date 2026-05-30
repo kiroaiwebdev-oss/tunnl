@@ -21,6 +21,12 @@ $settings = $pdo->query(
     "SELECT setting_key, setting_value FROM app_settings"
 )->fetchAll(PDO::FETCH_KEY_PAIR);
 
+// Hard-disabled by admin?
+$enabledRaw = strtolower((string)($settings['razorpay_enabled'] ?? '1'));
+if (in_array($enabledRaw, ['0','false','no','off'], true)) {
+    error('Online payments are temporarily disabled. Please contact support.', 503);
+}
+
 $keyId = $settings['razorpay_key_id'] ?? '';
 $keySecret = $settings['razorpay_key_secret'] ?? '';
 

@@ -1,11 +1,12 @@
 // lib/features/profile/edit_profile_screen.dart
 //
-// Full-page editor for the user's profile. Reuses the same look-and-feel as
-// ProfileSetupScreen so first-time onboarding and later edits feel consistent.
+// Full-page editor for the user's profile.
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/user_service.dart';
@@ -13,12 +14,14 @@ import '../../core/services/user_service.dart';
 class EditProfileScreen extends StatefulWidget {
   final String initialName;
   final String initialStandard;
+  final String initialImageUrl;
   final String phone;
 
   const EditProfileScreen({
     super.key,
     this.initialName = '',
     this.initialStandard = '',
+    this.initialImageUrl = '',
     this.phone = '',
   });
 
@@ -31,8 +34,11 @@ class _EditProfileScreenState extends State<EditProfileScreen>
 
   late final TextEditingController _nameCtrl;
   final FocusNode _nameFocus = FocusNode();
+  final ImagePicker _picker = ImagePicker();
 
   String? _selectedStandard;
+  String _currentImageUrl = '';
+  File? _localImage;
   bool _isLoading = false;
   bool _hasNameError = false;
 
@@ -53,6 +59,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     _selectedStandard = widget.initialStandard.isNotEmpty
         ? widget.initialStandard
         : null;
+    _currentImageUrl = widget.initialImageUrl;
 
     _entryCtrl = AnimationController(
       vsync: this,
@@ -78,9 +85,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
 
   bool get _hasChanges {
     final nameChanged = _nameCtrl.text.trim() != widget.initialName.trim();
-    final stdChanged =
-        (_selectedStandard ?? '') != widget.initialStandard;
-    return nameChanged || stdChanged;
+    final stdChanged = (_selectedStandard ?? '') != widget.initialStandard;
+    final imgChanged = _localImage != null;
+    return nameChanged || stdChanged || imgChanged;
   }
 
   Future<bool> _onWillPop() async {
@@ -116,6 +123,116 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     return result ?? false;
   }
 
+  Future<void> _pickImage() async {
+    try {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: AppColors.darkCard,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (ctx) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.textMuted.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.photo_camera_rounded,
+                    color: AppColors.neonCyan),
+                title: Text('Take Photo',
+                    style: GoogleFonts.poppins(color: Colors.white)),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  await _pickFrom(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_rounded,
+                    color: AppColors.neonCyan),
+                title: Text('Choose from Gallery',
+                    style: GoogleFonts.poppins(color: Colors.white)),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  await _pickFrom(ImageSource.gallery);
+                },
+              ),
+              if (_localImage != null || _currentImageUrl.isNotEmpty)
+                ListTile(
+                  leading: const Icon(Icons.delete_outline_rounded,
+                      color: AppColors.error),
+                  title: Text('Remove Photo',
+                      style: GoogleFonts.poppins(color: AppColors.error)),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    setState(() {
+                      _localImage = null;
+                      _currentImageUrl = '';
+                    });
+                  },
+                ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        ),
+      );
+    } catch (_) {}
+  }
+
+  Future<void> _pickFrom(ImageSource src) async {
+    try {
+      final XFile? f = await _picker.pickImage(
+        source: src,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+      if (f != null && mounted) {
+        setState(() => _localImage = File(f.path));
+      }
+    } catch (e) {
+      if (mounted) _toast('Could not pick image: $e', isError: true);
+    }
+  }
+
+  void _toast(String msg, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: AppColors.darkCard,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(
+                color: (isError ? AppColors.error : AppColors.success)
+                    .withOpacity(0.4),
+                width: 1)),
+        content: Row(
+          children: [
+            Icon(
+                isError
+                    ? Icons.error_outline_rounded
+                    : Icons.check_circle_rounded,
+                color: isError ? AppColors.error : AppColors.success,
+                size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(msg,
+                  style:
+                      GoogleFonts.poppins(color: Colors.white, fontSize: 13)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _save() async {
     final name = _nameCtrl.text.trim();
     setState(() => _hasNameError = name.isEmpty);
@@ -123,6 +240,19 @@ class _EditProfileScreenState extends State<EditProfileScreen>
 
     setState(() => _isLoading = true);
 
+    // 1. If user picked a new image, upload it first
+    String? newImageUrl;
+    if (_localImage != null) {
+      newImageUrl = await UserService.uploadProfileImage(_localImage!.path);
+      if (newImageUrl == null) {
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        _toast('Failed to upload image. Try again.', isError: true);
+        return;
+      }
+    }
+
+    // 2. Update name + standard (and the new image URL if uploaded)
     final ok = await UserService.updateProfile(
       name: name,
       standard: _selectedStandard,
@@ -131,57 +261,15 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     if (!mounted) return;
 
     if (ok) {
-      // AuthService cache already updated inside updateProfile, but make
-      // doubly sure for offline fallback.
       await AuthService.setCachedName(name);
       if (_selectedStandard != null) {
         await AuthService.setCachedStandard(_selectedStandard!);
       }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.darkCard,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(
-                  color: AppColors.success.withOpacity(0.4), width: 1)),
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle_rounded,
-                  color: AppColors.success, size: 18),
-              const SizedBox(width: 10),
-              Text('Profile updated!',
-                  style: GoogleFonts.poppins(
-                      color: Colors.white, fontSize: 13)),
-            ],
-          ),
-        ),
-      );
-      // Pop with `true` so caller can refresh
+      _toast('Profile updated!');
       Navigator.of(context).pop(true);
     } else {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.darkCard,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(
-                  color: AppColors.error.withOpacity(0.4), width: 1)),
-          content: Row(
-            children: [
-              const Icon(Icons.error_outline_rounded,
-                  color: AppColors.error, size: 18),
-              const SizedBox(width: 10),
-              Text('Failed to update. Please try again.',
-                  style: GoogleFonts.poppins(
-                      color: Colors.white, fontSize: 13)),
-            ],
-          ),
-        ),
-      );
+      _toast('Failed to update. Try again.', isError: true);
     }
   }
 
@@ -244,7 +332,6 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     );
   }
 
-  // ── App bar ──────────────────────────────────────
   Widget _buildAppBar() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -270,40 +357,70 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     );
   }
 
-  // ── Avatar ───────────────────────────────────────
   Widget _buildAvatar(String letter) {
+    final hasImage = _localImage != null || _currentImageUrl.isNotEmpty;
     return Center(
-      child: Container(
-        width: 96,
-        height: 96,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: AppColors.neonCyan.withOpacity(0.12),
-          border: Border.all(
-              color: AppColors.neonCyan.withOpacity(0.4), width: 2),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.neonCyan.withOpacity(0.15),
-              blurRadius: 24,
-              spreadRadius: 4,
+      child: GestureDetector(
+        onTap: _pickImage,
+        child: Stack(
+          alignment: Alignment.bottomRight,
+          children: [
+            Container(
+              width: 110,
+              height: 110,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.neonCyan.withOpacity(0.12),
+                border: Border.all(
+                    color: AppColors.neonCyan.withOpacity(0.4), width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.neonCyan.withOpacity(0.15),
+                    blurRadius: 24,
+                    spreadRadius: 4,
+                  ),
+                ],
+              ),
+              child: ClipOval(
+                child: hasImage
+                    ? (_localImage != null
+                        ? Image.file(_localImage!, fit: BoxFit.cover)
+                        : Image.network(
+                            _currentImageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => _initialFallback(letter),
+                          ))
+                    : _initialFallback(letter),
+              ),
+            ),
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.neonCyan,
+                border: Border.all(color: AppColors.darkBg, width: 2),
+              ),
+              child: const Icon(Icons.camera_alt_rounded,
+                  color: AppColors.darkBg, size: 18),
             ),
           ],
-        ),
-        child: Center(
-          child: Text(
-            letter,
-            style: GoogleFonts.orbitron(
-              fontSize: 36,
-              fontWeight: FontWeight.w700,
-              color: AppColors.neonCyan,
-            ),
-          ),
         ),
       ),
     );
   }
 
-  // ── Section label ────────────────────────────────
+  Widget _initialFallback(String letter) => Center(
+        child: Text(
+          letter,
+          style: GoogleFonts.orbitron(
+            fontSize: 36,
+            fontWeight: FontWeight.w700,
+            color: AppColors.neonCyan,
+          ),
+        ),
+      );
+
   Widget _buildSectionLabel(String text) {
     return Text(
       text,
@@ -316,7 +433,6 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     );
   }
 
-  // ── Name field ───────────────────────────────────
   Widget _buildNameField() {
     return TextField(
       controller: _nameCtrl,
@@ -363,7 +479,6 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     );
   }
 
-  // ── Phone field (read-only) ──────────────────────
   Widget _buildPhoneField() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
@@ -390,16 +505,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           GestureDetector(
             onTap: () {
               Clipboard.setData(ClipboardData(text: widget.phone));
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                duration: const Duration(seconds: 1),
-                backgroundColor: AppColors.darkCard,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                content: Text('Phone copied',
-                    style: GoogleFonts.poppins(
-                        color: AppColors.neonCyan, fontSize: 12)),
-              ));
+              _toast('Phone copied');
             },
             child: Container(
               padding:
@@ -430,7 +536,6 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     );
   }
 
-  // ── Standard / Class chips ───────────────────────
   Widget _buildStandardGrid() {
     return Wrap(
       spacing: 8,
@@ -481,7 +586,6 @@ class _EditProfileScreenState extends State<EditProfileScreen>
     );
   }
 
-  // ── Save bar ─────────────────────────────────────
   Widget _buildSaveBar() {
     final canSave = _hasChanges && !_isLoading;
     return Padding(

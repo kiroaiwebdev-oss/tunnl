@@ -13,7 +13,7 @@ function isActive($dir) {
   <div class="sidebar-logo">
     <div class="logo-icon-sm">⚡</div>
     <div class="logo-text">
-      <span class="logo-name">MathVoid</span>
+      <span class="logo-name">Tunnl</span>
       <span class="logo-badge">ADMIN</span>
     </div>
     <button class="sidebar-close" onclick="toggleSidebar()">
@@ -43,14 +43,23 @@ function isActive($dir) {
     </a>
 
     <div class="nav-section">CONTENT</div>
+    <a href="<?= ADMIN_URL ?>/sets/index.php?category=mcq" class="nav-item">
+      <i class="fas fa-bolt nav-icon"></i>
+      <span>5000 Speed MCQs</span>
+      <span class="nav-badge">SETS</span>
+    </a>
+    <a href="<?= ADMIN_URL ?>/sets/index.php?category=simplification" class="nav-item">
+      <i class="fas fa-divide nav-icon"></i>
+      <span>Simplification</span>
+    </a>
     <a href="<?= ADMIN_URL ?>/questions/index.php" class="nav-item <?= isActive('questions') ?>">
       <i class="fas fa-question-circle nav-icon"></i>
-      <span>Questions</span>
+      <span>All Questions</span>
       <span class="nav-badge">5000+</span>
     </a>
     <a href="<?= ADMIN_URL ?>/sets/index.php" class="nav-item <?= isActive('sets') ?>">
       <i class="fas fa-layer-group nav-icon"></i>
-      <span>Sets</span>
+      <span>All Sets</span>
     </a>
     <a href="<?= ADMIN_URL ?>/tricks/index.php" class="nav-item <?= isActive('tricks') ?>">
       <i class="fas fa-bolt nav-icon"></i>
