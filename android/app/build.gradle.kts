@@ -13,6 +13,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        // Required for Razorpay + java.time desugaring on older Android versions
+        isCoreLibraryDesugaringEnabled = true
     }
 
     kotlinOptions {
@@ -21,21 +23,41 @@ android {
 
     defaultConfig {
         applicationId = "co.tunnl.app"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // Razorpay requires API 21+
+        minSdk = maxOf(flutter.minSdkVersion, 21)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        multiDexEnabled = true
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // Use debug signing for now so `flutter run --release` works.
+            // Replace with your own keystore before publishing to Play Store.
             signingConfig = signingConfigs.getByName("debug")
+
+            // ✅ Disable code shrinking/obfuscation. Razorpay's native bridge
+            // (and many Flutter plugins) crash at runtime if R8 strips
+            // reflective classes. Re-enable later with proper keep rules.
+            isMinifyEnabled = false
+            isShrinkResources = false
+
+            // If you ever turn minification back on, ProGuard rules below
+            // will be applied. Safe to keep referenced even when disabled.
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
+    // Required so Razorpay's CheckOutTheme parent (Theme.AppCompat.*) resolves
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.multidex:multidex:2.0.1")
 }
 
 flutter {
