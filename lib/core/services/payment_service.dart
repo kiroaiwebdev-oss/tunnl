@@ -91,7 +91,7 @@ class PaymentService {
       return;
     }
 
-    final appName = AppSettingsService.instance.get('app_name', 'Tunnel');
+    final appName = AppSettingsService.instance.get('app_name', 'Tunnl');
     final appTagline = AppSettingsService.instance.get(
       'app_tagline',
       'Premium Upgrade',

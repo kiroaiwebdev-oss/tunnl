@@ -4,6 +4,15 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
+    <!-- Image picker permissions (Android 12 and below use READ_EXTERNAL_STORAGE) -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"/>
+    <!-- Android 13+ uses scoped media permissions -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- Optional: declare camera as not required so phones without it can still install -->
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+
     <application
         android:label="Tunnl"
         android:name="${applicationName}"

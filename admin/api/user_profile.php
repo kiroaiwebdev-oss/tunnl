@@ -148,18 +148,32 @@ if ($method === 'POST') {
                 exit();
             }
 
-            $uploadDir = realpath(__DIR__ . '/../uploads') ?: (__DIR__ . '/../uploads');
-            $userDir   = $uploadDir . '/profiles';
-            if (!is_dir($userDir)) @mkdir($userDir, 0755, true);
+            // Resolve uploads dir robustly (parent must exist)
+            $uploadsParent = dirname(__DIR__) . '/uploads';
+            if (!is_dir($uploadsParent)) {
+                @mkdir($uploadsParent, 0755, true);
+            }
+            $userDir = $uploadsParent . '/profiles';
+            if (!is_dir($userDir)) {
+                @mkdir($userDir, 0755, true);
+            }
+
+            // Sanity checks the image picker fix actually wrote a file
+            if (!is_dir($userDir) || !is_writable($userDir)) {
+                response([
+                    'success' => false,
+                    'message' => 'Server cannot write uploads. Please CHMOD admin/uploads/profiles to 755.',
+                ], 500);
+                exit();
+            }
 
             $fname = 'u' . $user['id'] . '_' . time() . '.' . $ext;
             $dest  = $userDir . '/' . $fname;
             if (!@move_uploaded_file($file['tmp_name'], $dest)) {
-                response(['success' => false, 'message' => 'Failed to save image']);
+                response(['success' => false, 'message' => 'Failed to save image'], 500);
                 exit();
             }
 
-            // Build public URL
             $publicUrl = rtrim(ADMIN_URL, '/') . '/uploads/profiles/' . $fname;
             $updates[] = 'profile_image = ?';
             $params[]  = $publicUrl;
