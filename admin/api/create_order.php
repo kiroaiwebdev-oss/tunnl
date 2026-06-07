@@ -27,15 +27,15 @@ if (in_array($enabledRaw, ['0','false','no','off','disabled'], true)) {
     error('Online payments are temporarily disabled. Please contact support.', 503);
 }
 
-$keyId = $settings['razorpay_key_id'] ?? '';
-$keySecret = $settings['razorpay_key_secret'] ?? '';
+$keyId = trim($settings['razorpay_key_id'] ?? '');
+$keySecret = trim($settings['razorpay_key_secret'] ?? '');
 
 // Fallback to constants if admin hasn't set them via UI
 if (!$keyId && defined('RAZORPAY_KEY_ID')) {
-    $keyId = RAZORPAY_KEY_ID;
+    $keyId = trim(RAZORPAY_KEY_ID);
 }
 if (!$keySecret && defined('RAZORPAY_KEY_SECRET')) {
-    $keySecret = RAZORPAY_KEY_SECRET;
+    $keySecret = trim(RAZORPAY_KEY_SECRET);
 }
 
 if (!$keyId || !$keySecret ||
