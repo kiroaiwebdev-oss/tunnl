@@ -1,6 +1,12 @@
+// lib/features/solve_earn/solve_earn_screen.dart
+//
+// Weekly "Solve & Earn" challenge. ALL data comes from the admin panel via
+// weekly_challenge.php (UserService.getWeeklyChallenge()). Nothing hardcoded.
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/user_service.dart';
 import '../question/question_screen.dart';
 import 'solve_earn_leaderboard_screen.dart';
 
@@ -21,23 +27,34 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
   late AnimationController _pulseCtrl;
   late Animation<double> _pulseAnim;
 
-  // Weekly challenge data — API se aayega
-  final int _daysLeft = 3;
-  final int _hoursLeft = 14;
-  final int _totalQuestions = 20;
-  final bool _hasAttempted = false;
-  final int _myScore = 0;
-  final int _myRank = 0;
-  final int _totalParticipants = 1240;
+  // ── Live challenge data (admin-driven) ────────────
+  bool _isLoading = true;
+  Map<String, dynamic>? _challenge;
+  List<Map<String, dynamic>> _leaderboard = [];
 
-  // Prize pool
-  final List<Map<String, dynamic>> _prizes = [
-    {'rank': '1st', 'icon': '🥇', 'prize': '₹500', 'color': const Color(0xFFFFD700)},
-    {'rank': '2nd', 'icon': '🥈', 'prize': '₹300', 'color': const Color(0xFFC0C0C0)},
-    {'rank': '3rd', 'icon': '🥉', 'prize': '₹200', 'color': const Color(0xFFCD7F32)},
-    {'rank': '4th', 'icon': '🎖️', 'prize': '₹100', 'color': AppColors.neonCyan},
-    {'rank': '5th', 'icon': '🎖️', 'prize': '₹50',  'color': AppColors.neonCyan},
-  ];
+  bool get _hasChallenge => _challenge != null;
+  bool get _hasAttempted => _challenge?['is_attempted'] == true;
+  Map<String, dynamic> get _myEntry =>
+      (_challenge?['my_entry'] as Map?)?.cast<String, dynamic>() ?? {};
+
+  int get _totalQuestions =>
+      (_challenge?['total_questions'] as num?)?.toInt() ?? 0;
+  double get _prizeAmount =>
+      (_challenge?['prize_amount'] as num?)?.toDouble() ?? 0.0;
+  int get _totalParticipants => _leaderboard.length;
+
+  // Time remaining computed from end_date
+  Duration get _timeLeft {
+    final raw = (_challenge?['end_date'] ?? '').toString();
+    if (raw.isEmpty) return Duration.zero;
+    final end = DateTime.tryParse(raw);
+    if (end == null) return Duration.zero;
+    final diff = end.difference(DateTime.now());
+    return diff.isNegative ? Duration.zero : diff;
+  }
+
+  int get _daysLeft => _timeLeft.inDays;
+  int get _hoursLeft => _timeLeft.inHours % 24;
 
   @override
   void initState() {
@@ -59,9 +76,11 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
-    _pulseAnim = Tween<double>(begin: 0.95, end: 1.05).animate(
+    _pulseAnim = Tween<double>(begin: 0.97, end: 1.03).animate(
       CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut),
     );
+
+    _loadChallenge();
   }
 
   @override
@@ -69,6 +88,29 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
     _entryCtrl.dispose();
     _pulseCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadChallenge() async {
+    setState(() => _isLoading = true);
+    final res = await UserService.getWeeklyChallenge();
+    if (!mounted) return;
+
+    final ok = res['success'] == true || res['status'] == true;
+    final challenge = res['challenge'];
+    final lb = res['leaderboard'];
+
+    setState(() {
+      _challenge = (ok && challenge is Map)
+          ? challenge.cast<String, dynamic>()
+          : null;
+      _leaderboard = (lb is List)
+          ? lb
+              .whereType<Map>()
+              .map((e) => e.cast<String, dynamic>())
+              .toList()
+          : [];
+      _isLoading = false;
+    });
   }
 
   @override
@@ -84,60 +126,82 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
               position: _slideAnim,
               child: Column(
                 children: [
-                  // ── AppBar
                   _buildAppBar(),
-
                   Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Column(
-                        children: [
-                          const SizedBox(height: 10),
-
-                          // ── Hero Banner
-                          _buildHeroBanner(),
-
-                          const SizedBox(height: 16),
-
-                          // ── Timer Card
-                          _buildTimerCard(),
-
-                          const SizedBox(height: 16),
-
-                          // ── Prize Pool
-                          _buildPrizePool(),
-
-                          const SizedBox(height: 16),
-
-                          // ── My Status (if attempted)
-                          if (_hasAttempted) ...[
-                            _buildMyStatus(),
-                            const SizedBox(height: 16),
-                          ],
-
-                          // ── How it works
-                          _buildHowItWorks(),
-
-                          const SizedBox(height: 16),
-
-                          // ── Rules
-                          _buildRules(),
-
-                          const SizedBox(height: 24),
-
-                          // ── Action buttons
-                          _buildActionButtons(),
-
-                          const SizedBox(height: 30),
-                        ],
-                      ),
-                    ),
+                    child: _isLoading
+                        ? const Center(
+                            child: CircularProgressIndicator(
+                                color: AppColors.yellow))
+                        : !_hasChallenge
+                            ? _buildNoChallenge()
+                            : RefreshIndicator(
+                                color: AppColors.yellow,
+                                backgroundColor: AppColors.darkCard,
+                                onRefresh: _loadChallenge,
+                                child: SingleChildScrollView(
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20),
+                                  child: Column(
+                                    children: [
+                                      const SizedBox(height: 10),
+                                      _buildHeroBanner(),
+                                      const SizedBox(height: 16),
+                                      _buildTimerCard(),
+                                      const SizedBox(height: 16),
+                                      _buildPrizeCard(),
+                                      const SizedBox(height: 16),
+                                      if (_hasAttempted) ...[
+                                        _buildMyStatus(),
+                                        const SizedBox(height: 16),
+                                      ],
+                                      _buildRules(),
+                                      const SizedBox(height: 24),
+                                      _buildActionButtons(),
+                                      const SizedBox(height: 30),
+                                    ],
+                                  ),
+                                ),
+                              ),
                   ),
                 ],
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // ── NO ACTIVE CHALLENGE ───────────────────────────
+  Widget _buildNoChallenge() {
+    return RefreshIndicator(
+      color: AppColors.yellow,
+      backgroundColor: AppColors.darkCard,
+      onRefresh: _loadChallenge,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          SizedBox(height: MediaQuery.of(context).size.height * 0.25),
+          const Icon(Icons.emoji_events_outlined,
+              color: AppColors.textMuted, size: 64),
+          const SizedBox(height: 16),
+          Center(
+            child: Text('No active challenge',
+                style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white)),
+          ),
+          const SizedBox(height: 6),
+          Center(
+            child: Text('Admin will launch the next weekly challenge soon!',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                    fontSize: 13, color: AppColors.textSecondary)),
+          ),
+        ],
       ),
     );
   }
@@ -179,37 +243,34 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
             ],
           ),
           const Spacer(),
-          // Participants
-          Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: AppColors.darkCard,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: AppColors.yellow.withOpacity(0.3),
-                width: 1,
+          if (_totalParticipants > 0)
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppColors.darkCard,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: AppColors.yellow.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.people_rounded,
+                      color: AppColors.yellow, size: 13),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$_totalParticipants',
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      color: AppColors.yellow,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.people_rounded,
-                  color: AppColors.yellow,
-                  size: 13,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '$_totalParticipants',
-                  style: GoogleFonts.poppins(
-                    fontSize: 11,
-                    color: AppColors.yellow,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -217,6 +278,8 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
 
   // ── HERO BANNER ───────────────────────────────────
   Widget _buildHeroBanner() {
+    final title = (_challenge?['title'] ?? 'WEEKLY CHALLENGE').toString();
+    final desc = (_challenge?['description'] ?? '').toString();
     return ScaleTransition(
       scale: _pulseAnim,
       child: Container(
@@ -233,17 +296,9 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
             color: AppColors.yellow.withOpacity(0.4),
             width: 1.5,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.yellow.withOpacity(0.1),
-              blurRadius: 20,
-              spreadRadius: 2,
-            ),
-          ],
         ),
         child: Column(
           children: [
-            // Trophy icon
             Container(
               width: 70,
               height: 70,
@@ -254,13 +309,6 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
                   color: AppColors.yellow.withOpacity(0.4),
                   width: 2,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.yellow.withOpacity(0.2),
-                    blurRadius: 16,
-                    spreadRadius: 4,
-                  ),
-                ],
               ),
               child: const Icon(
                 Icons.emoji_events_rounded,
@@ -268,23 +316,22 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
                 size: 36,
               ),
             ),
-
             const SizedBox(height: 14),
-
             Text(
-              'WEEKLY CHALLENGE',
+              title.toUpperCase(),
+              textAlign: TextAlign.center,
               style: GoogleFonts.orbitron(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: AppColors.yellow,
-                letterSpacing: 2,
+                letterSpacing: 1.5,
               ),
             ),
-
             const SizedBox(height: 6),
-
             Text(
-              'Solve $_totalQuestions questions as fast as possible\nTop 5 winners get REAL rewards!',
+              desc.isNotEmpty
+                  ? desc
+                  : 'Solve $_totalQuestions questions as fast as possible.\nTop performers win real rewards!',
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 13,
@@ -292,41 +339,37 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
                 height: 1.5,
               ),
             ),
-
-            const SizedBox(height: 16),
-
-            // Total prize chip
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppColors.yellow.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(30),
-                border: Border.all(
-                  color: AppColors.yellow.withOpacity(0.4),
-                  width: 1,
+            if (_prizeAmount > 0) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 20, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.yellow.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                    color: AppColors.yellow.withOpacity(0.4),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.currency_rupee_rounded,
+                        color: AppColors.yellow, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Total Prize Pool: ₹${_prizeAmount.toStringAsFixed(0)}',
+                      style: GoogleFonts.orbitron(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.yellow,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    Icons.currency_rupee_rounded,
-                    color: AppColors.yellow,
-                    size: 16,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Total Prize Pool: ₹1150',
-                    style: GoogleFonts.orbitron(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.yellow,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            ],
           ],
         ),
       ),
@@ -335,6 +378,7 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
 
   // ── TIMER CARD ────────────────────────────────────
   Widget _buildTimerCard() {
+    final ended = _timeLeft == Duration.zero;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -347,7 +391,6 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
       ),
       child: Row(
         children: [
-          // Timer icon
           Container(
             width: 44,
             height: 44,
@@ -359,21 +402,16 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
                 width: 1,
               ),
             ),
-            child: const Icon(
-              Icons.timer_rounded,
-              color: AppColors.neonCyan,
-              size: 22,
-            ),
+            child: const Icon(Icons.timer_rounded,
+                color: AppColors.neonCyan, size: 22),
           ),
           const SizedBox(width: 14),
-
-          // Time info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Challenge Ends In',
+                  ended ? 'Challenge Closed' : 'Challenge Ends In',
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     color: AppColors.textSecondary,
@@ -381,7 +419,7 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '$_daysLeft Days $_hoursLeft Hours',
+                  ended ? '—' : '$_daysLeft Days $_hoursLeft Hours',
                   style: GoogleFonts.orbitron(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -391,105 +429,71 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
               ],
             ),
           ),
+          if (!ended)
+            Row(
+              children: [
+                _TimeBox(value: '$_daysLeft', label: 'DAYS'),
+                const SizedBox(width: 6),
+                Text(':',
+                    style: GoogleFonts.orbitron(
+                        fontSize: 18,
+                        color: AppColors.neonCyan,
+                        fontWeight: FontWeight.w700)),
+                const SizedBox(width: 6),
+                _TimeBox(value: '$_hoursLeft', label: 'HRS'),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
 
-          // Time boxes
-          Row(
-            children: [
-              _TimeBox(value: '$_daysLeft', label: 'DAYS'),
-              const SizedBox(width: 6),
-              Text(
-                ':',
-                style: GoogleFonts.orbitron(
-                  fontSize: 18,
-                  color: AppColors.neonCyan,
-                  fontWeight: FontWeight.w700,
+  // ── PRIZE CARD ────────────────────────────────────
+  Widget _buildPrizeCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.darkCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.yellow.withOpacity(0.15)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.card_giftcard_rounded,
+              color: AppColors.yellow, size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Prize Pool',
+                    style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white)),
+                const SizedBox(height: 2),
+                Text(
+                  _prizeAmount > 0
+                      ? 'Top performers share ₹${_prizeAmount.toStringAsFixed(0)} — paid via UPI / vouchers'
+                      : 'Compete to win rewards announced by admin',
+                  style: GoogleFonts.poppins(
+                      fontSize: 11, color: AppColors.textSecondary),
                 ),
-              ),
-              const SizedBox(width: 6),
-              _TimeBox(value: '$_hoursLeft', label: 'HRS'),
-            ],
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  // ── PRIZE POOL ────────────────────────────────────
-  Widget _buildPrizePool() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Icon(
-              Icons.emoji_events_rounded,
-              color: AppColors.yellow,
-              size: 16,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              'PRIZE POOL',
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: AppColors.yellow,
-                letterSpacing: 1.5,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: _prizes.map((prize) {
-            final color = prize['color'] as Color;
-            return Expanded(
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                padding: const EdgeInsets.symmetric(
-                    vertical: 12, horizontal: 4),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.07),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: color.withOpacity(0.25),
-                    width: 1,
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      prize['icon'],
-                      style: const TextStyle(fontSize: 20),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      prize['prize'],
-                      style: GoogleFonts.orbitron(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: color,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      prize['rank'],
-                      style: GoogleFonts.poppins(
-                        fontSize: 10,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
   // ── MY STATUS ─────────────────────────────────────
   Widget _buildMyStatus() {
+    final score = (_myEntry['score'] as num?)?.toInt() ?? 0;
+    final accuracy = (_myEntry['accuracy'] as num?)?.toDouble() ?? 0.0;
+    final isWinner = _myEntry['is_winner'] == true;
+    final prizeWon = (_myEntry['prize_won'] as num?)?.toDouble() ?? 0.0;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -507,18 +511,17 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.check_circle_rounded,
-            color: AppColors.success,
-            size: 20,
-          ),
+          const Icon(Icons.check_circle_rounded,
+              color: AppColors.success, size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'You have attempted this week!',
+                  isWinner
+                      ? 'You won ₹${prizeWon.toStringAsFixed(0)}! 🎉'
+                      : 'You have attempted this challenge!',
                   style: GoogleFonts.poppins(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -526,7 +529,7 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
                   ),
                 ),
                 Text(
-                  'Score: $_myScore pts  •  Rank: #$_myRank',
+                  'Score: $score  •  Accuracy: ${accuracy.toStringAsFixed(0)}%',
                   style: GoogleFonts.poppins(
                     fontSize: 11,
                     color: AppColors.textSecondary,
@@ -544,8 +547,8 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
               );
             },
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 10, vertical: 6),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: AppColors.neonCyan.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
@@ -569,132 +572,13 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
     );
   }
 
-  // ── HOW IT WORKS ──────────────────────────────────
-  Widget _buildHowItWorks() {
-    final steps = [
-      {
-        'num': '01',
-        'title': 'Attempt Challenge',
-        'desc': 'Solve 20 questions as fast as you can',
-        'icon': Icons.play_arrow_rounded,
-        'color': AppColors.neonCyan,
-      },
-      {
-        'num': '02',
-        'title': 'Score Submitted',
-        'desc': 'Your score + time is saved automatically',
-        'icon': Icons.upload_rounded,
-        'color': AppColors.yellow,
-      },
-      {
-        'num': '03',
-        'title': 'Week Ends',
-        'desc': 'Challenge closes after 7 days',
-        'icon': Icons.timer_off_rounded,
-        'color': AppColors.orange,
-      },
-      {
-        'num': '04',
-        'title': 'Winners Rewarded',
-        'desc': 'Top 5 get prizes via UPI/Amazon/Flipkart',
-        'icon': Icons.emoji_events_rounded,
-        'color': AppColors.yellow,
-      },
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'HOW IT WORKS',
-          style: GoogleFonts.poppins(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textSecondary,
-            letterSpacing: 1.5,
-          ),
-        ),
-        const SizedBox(height: 12),
-        ...steps.map((step) {
-          final color = step['color'] as Color;
-          return Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.darkCard,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: color.withOpacity(0.1),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: color.withOpacity(0.1),
-                    border: Border.all(
-                      color: color.withOpacity(0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Center(
-                    child: Text(
-                      step['num'] as String,
-                      style: GoogleFonts.orbitron(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: color,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        step['title'] as String,
-                        style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        step['desc'] as String,
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  step['icon'] as IconData,
-                  color: color.withOpacity(0.5),
-                  size: 20,
-                ),
-              ],
-            ),
-          );
-        }),
-      ],
-    );
-  }
-
   // ── RULES ─────────────────────────────────────────
   Widget _buildRules() {
     final rules = [
       'Each question carries equal marks',
       'Faster completion = Higher rank (tie-breaker)',
-      'Only ONE attempt allowed per week',
-      'Results announced after challenge ends',
+      'Only ONE attempt allowed per challenge',
+      'Results announced after the challenge ends',
       'Admin will contact winners for reward delivery',
     ];
 
@@ -713,11 +597,8 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
         children: [
           Row(
             children: [
-              const Icon(
-                Icons.rule_rounded,
-                color: AppColors.neonCyan,
-                size: 16,
-              ),
+              const Icon(Icons.rule_rounded,
+                  color: AppColors.neonCyan, size: 16),
               const SizedBox(width: 6),
               Text(
                 'RULES',
@@ -777,81 +658,72 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
 
   // ── ACTION BUTTONS ────────────────────────────────
   Widget _buildActionButtons() {
+    final ended = _timeLeft == Duration.zero;
+    final disabled = _hasAttempted || ended || _totalQuestions <= 0;
+
+    String label;
+    if (_hasAttempted) {
+      label = 'ALREADY ATTEMPTED';
+    } else if (ended) {
+      label = 'CHALLENGE CLOSED';
+    } else if (_totalQuestions <= 0) {
+      label = 'NO QUESTIONS YET';
+    } else {
+      label = 'START CHALLENGE';
+    }
+
     return Column(
       children: [
-        // START CHALLENGE button
         GestureDetector(
-          onTap: _hasAttempted
+          onTap: disabled
               ? null
-              : () {
-                  Navigator.of(context).push(
+              : () async {
+                  await Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => const QuestionScreen(
+                      builder: (_) => QuestionScreen(
                         mode: 'solve_earn',
                         category: 'mcq',
                         setNumber: 1,
-                        totalQuestions: 20,
+                        totalQuestions: _totalQuestions,
                       ),
                     ),
                   );
+                  if (mounted) _loadChallenge();
                 },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             height: 56,
             width: double.infinity,
             decoration: BoxDecoration(
-              gradient: _hasAttempted
+              gradient: disabled
                   ? null
                   : const LinearGradient(
-                      colors: [
-                        Color(0xFFFFD600),
-                        Color(0xFFFF8F00),
-                      ],
+                      colors: [Color(0xFFFFD600), Color(0xFFFF8F00)],
                     ),
-              color: _hasAttempted
-                  ? AppColors.darkCard
-                  : null,
+              color: disabled ? AppColors.darkCard : null,
               borderRadius: BorderRadius.circular(28),
-              border: _hasAttempted
+              border: disabled
                   ? Border.all(
-                      color: AppColors.textMuted.withOpacity(0.2),
-                      width: 1,
-                    )
+                      color: AppColors.textMuted.withOpacity(0.2), width: 1)
                   : null,
-              boxShadow: _hasAttempted
-                  ? null
-                  : [
-                      BoxShadow(
-                        color: AppColors.yellow.withOpacity(0.3),
-                        blurRadius: 16,
-                        spreadRadius: 2,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  _hasAttempted
-                      ? Icons.check_circle_rounded
+                  disabled
+                      ? Icons.lock_clock_rounded
                       : Icons.play_arrow_rounded,
-                  color: _hasAttempted
-                      ? AppColors.textMuted
-                      : AppColors.darkBg,
+                  color: disabled ? AppColors.textMuted : AppColors.darkBg,
                   size: 22,
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  _hasAttempted
-                      ? 'ALREADY ATTEMPTED'
-                      : 'START CHALLENGE',
+                  label,
                   style: GoogleFonts.orbitron(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: _hasAttempted
-                        ? AppColors.textMuted
-                        : AppColors.darkBg,
+                    color: disabled ? AppColors.textMuted : AppColors.darkBg,
                     letterSpacing: 1.5,
                   ),
                 ),
@@ -859,10 +731,7 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
             ),
           ),
         ),
-
         const SizedBox(height: 12),
-
-        // VIEW LEADERBOARD button
         GestureDetector(
           onTap: () {
             Navigator.of(context).push(
@@ -885,11 +754,8 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
-                  Icons.leaderboard_rounded,
-                  color: AppColors.neonCyan,
-                  size: 18,
-                ),
+                const Icon(Icons.leaderboard_rounded,
+                    color: AppColors.neonCyan, size: 18),
                 const SizedBox(width: 8),
                 Text(
                   'VIEW LEADERBOARD',

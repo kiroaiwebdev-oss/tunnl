@@ -19,55 +19,16 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
   late AnimationController _entryCtrl;
   late Animation<double> _fadeAnim;
 
-  // Dummy article content — Admin se aayega
-  final List<Map<String, dynamic>> _articleContent = [
-    {
-      'type': 'heading',
-      'text': 'What is this Trick?',
-    },
-    {
-      'type': 'text',
-      'text':
-          'This powerful Vedic Math technique allows you to multiply two 2-digit numbers in just a few seconds without using a calculator. Once mastered, you can solve problems 5x faster than traditional methods.',
-    },
-    {
-      'type': 'heading',
-      'text': 'How it Works',
-    },
-    {
-      'type': 'text',
-      'text':
-          'The method involves three simple steps:\n\n1. Multiply the units digits\n2. Cross multiply and add\n3. Multiply the tens digits',
-    },
-    {
-      'type': 'example',
-      'problem': '23 × 14 = ?',
-      'steps': [
-        'Step 1: 3 × 4 = 12 (write 2, carry 1)',
-        'Step 2: (2×4) + (3×1) + 1 = 12 (write 2, carry 1)',
-        'Step 3: 2 × 1 + 1 = 3',
-        'Answer: 322 ✓',
-      ],
-    },
-    {
-      'type': 'heading',
-      'text': 'Practice Examples',
-    },
-    {
-      'type': 'text',
-      'text': 'Try these on your own:\n• 32 × 21\n• 45 × 13\n• 67 × 24\n• 89 × 32',
-    },
-    {
-      'type': 'tip',
-      'text':
-          '💡 Pro Tip: Practice this method daily for 10 minutes. Within a week, you\'ll be solving these mentally!',
-    },
-  ];
+  // ── Admin-driven content ──────────────────────────
+  // The article content comes straight from the admin panel
+  // (tricks.article_content). We render it as readable paragraphs so whatever
+  // the admin types is exactly what the user sees — no dummy data.
+  String get _articleContent =>
+      (widget.data['articleContent'] ?? '').toString();
 
-  // Dummy video — Admin se YouTube link aayega
-  final String _videoUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-  final String _videoThumbnail = '';
-  final String _videoDuration = '5:24';
+  String get _videoUrl => (widget.data['videoUrl'] ?? '').toString();
+
+  String get _videoDuration => (widget.data['duration'] ?? '').toString();
 
   @override
   void initState() {
@@ -95,16 +56,30 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
   }
 
   Future<void> _openVideo() async {
+    if (_videoUrl.isEmpty) return;
     final uri = Uri.parse(_videoUrl);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.darkCard,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12)),
+          content: Text('Could not open video link!',
+              style: GoogleFonts.poppins(color: Colors.white)),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final hasVideo = widget.data['hasVideo'] == true;
-    final hasArticle = widget.data['hasArticle'] == true;
+    final hasVideo = widget.data['hasVideo'] == true && _videoUrl.isNotEmpty;
+    final hasArticle =
+        widget.data['hasArticle'] == true && _articleContent.trim().isNotEmpty;
 
     return Scaffold(
       backgroundColor: AppColors.darkBg,
@@ -123,9 +98,11 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
 
                 // ── Content
                 Expanded(
-                  child: _selectedTab == 0
-                      ? _buildArticle()
-                      : _buildVideoSection(),
+                  child: !hasArticle && !hasVideo
+                      ? _buildEmpty()
+                      : (_selectedTab == 0 && hasArticle) || !hasVideo
+                          ? _buildArticle()
+                          : _buildVideoSection(),
                 ),
               ],
             ),
@@ -135,9 +112,37 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
     );
   }
 
+  // ── EMPTY ─────────────────────────────────────────
+  Widget _buildEmpty() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.menu_book_rounded,
+                color: AppColors.textMuted, size: 48),
+            const SizedBox(height: 12),
+            Text('No content yet',
+                style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700)),
+            const SizedBox(height: 6),
+            Text('Admin will publish this trick soon.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                    color: AppColors.textSecondary, fontSize: 13)),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ── APP BAR ───────────────────────────────────────
   Widget _buildAppBar() {
-    final Color diffColor = widget.data['diffColor'] as Color;
+    final Color diffColor =
+        (widget.data['diffColor'] as Color?) ?? AppColors.success;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -157,7 +162,7 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'CHAPTER ${widget.data['chapter']}',
+                  'CHAPTER ${widget.data['chapter'] ?? ''}',
                   style: GoogleFonts.poppins(
                     fontSize: 10,
                     color: AppColors.neonCyan,
@@ -166,7 +171,7 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
                   ),
                 ),
                 Text(
-                  widget.data['title'],
+                  (widget.data['title'] ?? '').toString(),
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -190,7 +195,7 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
               ),
             ),
             child: Text(
-              widget.data['difficulty'],
+              (widget.data['difficulty'] ?? '').toString(),
               style: GoogleFonts.poppins(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
@@ -303,166 +308,77 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
     );
   }
 
-  // ── ARTICLE CONTENT ───────────────────────────────
+  // ── ARTICLE CONTENT (admin-driven) ────────────────
   Widget _buildArticle() {
+    final subtitle = (widget.data['subtitle'] ?? '').toString();
+    final duration = (widget.data['duration'] ?? '').toString();
+
+    // Split the admin article into paragraphs. Lines that look like a short
+    // heading (no trailing period and reasonably short) get rendered as a
+    // heading for nicer reading — purely presentational, content stays as-is.
+    final paragraphs = _articleContent
+        .replaceAll('\r\n', '\n')
+        .split(RegExp(r'\n{2,}'))
+        .map((p) => p.trim())
+        .where((p) => p.isNotEmpty)
+        .toList();
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Duration chip
-          Row(
-            children: [
-              const Icon(
-                Icons.timer_outlined,
-                size: 13,
-                color: AppColors.textMuted,
+          if (duration.isNotEmpty)
+            Row(
+              children: [
+                const Icon(Icons.timer_outlined,
+                    size: 13, color: AppColors.textMuted),
+                const SizedBox(width: 4),
+                Text(
+                  duration,
+                  style: GoogleFonts.poppins(
+                      fontSize: 11, color: AppColors.textMuted),
+                ),
+              ],
+            ),
+          if (subtitle.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              subtitle,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.neonCyan,
+                height: 1.5,
               ),
-              const SizedBox(width: 4),
-              Text(
-                widget.data['duration'],
+            ),
+          ],
+          const SizedBox(height: 16),
+          ...paragraphs.map((para) {
+            final isHeading = para.length <= 60 &&
+                !para.endsWith('.') &&
+                !para.contains('\n');
+            return Padding(
+              padding: EdgeInsets.only(top: isHeading ? 14 : 0, bottom: 10),
+              child: Text(
+                para,
                 style: GoogleFonts.poppins(
-                  fontSize: 11,
-                  color: AppColors.textMuted,
+                  fontSize: isHeading ? 16 : 13,
+                  fontWeight:
+                      isHeading ? FontWeight.w700 : FontWeight.w400,
+                  color: isHeading ? Colors.white : AppColors.textSecondary,
+                  height: 1.6,
                 ),
               ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Article blocks
-          ..._articleContent.map((block) {
-            switch (block['type']) {
-              case 'heading':
-                return Padding(
-                  padding: const EdgeInsets.only(top: 16, bottom: 8),
-                  child: Text(
-                    block['text'],
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
-                  ),
-                );
-
-              case 'text':
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Text(
-                    block['text'],
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                      height: 1.6,
-                    ),
-                  ),
-                );
-
-              case 'example':
-                return Container(
-                  margin: const EdgeInsets.symmetric(vertical: 12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.neonCyan.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: AppColors.neonCyan.withOpacity(0.2),
-                      width: 1,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Problem
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: AppColors.neonCyan.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          block['problem'],
-                          style: GoogleFonts.orbitron(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.neonCyan,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      // Steps
-                      ...(block['steps'] as List<String>).map(
-                        (step) => Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
-                          child: Row(
-                            crossAxisAlignment:
-                                CrossAxisAlignment.start,
-                            children: [
-                              Container(
-                                width: 6,
-                                height: 6,
-                                margin: const EdgeInsets.only(
-                                    top: 6, right: 8),
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: AppColors.neonCyan,
-                                ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  step,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    color: Colors.white,
-                                    height: 1.4,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-
-              case 'tip':
-                return Container(
-                  margin: const EdgeInsets.symmetric(vertical: 12),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: AppColors.yellow.withOpacity(0.07),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: AppColors.yellow.withOpacity(0.25),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    block['text'],
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      color: AppColors.yellow,
-                      height: 1.5,
-                    ),
-                  ),
-                );
-
-              default:
-                return const SizedBox();
-            }
+            );
           }),
-
           const SizedBox(height: 30),
         ],
       ),
     );
   }
 
-  // ── VIDEO SECTION ─────────────────────────────────
+  // ── VIDEO SECTION (admin-driven) ──────────────────
   Widget _buildVideoSection() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -484,7 +400,6 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
               ),
               child: Stack(
                 children: [
-                  // Background gradient
                   Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
@@ -498,8 +413,6 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
                       ),
                     ),
                   ),
-
-                  // Play button center
                   Center(
                     child: Container(
                       width: 64,
@@ -523,30 +436,27 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
                       ),
                     ),
                   ),
-
-                  // Duration chip
-                  Positioned(
-                    bottom: 12,
-                    right: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        _videoDuration,
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
+                  if (_videoDuration.isNotEmpty)
+                    Positioned(
+                      bottom: 12,
+                      right: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.7),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          _videoDuration,
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-
-                  // Tap to open label
                   Positioned(
                     top: 12,
                     left: 12,
@@ -590,46 +500,50 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.data['title'],
+                  (widget.data['title'] ?? '').toString(),
                   style: GoogleFonts.poppins(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  widget.data['subtitle'],
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.timer_outlined,
-                      size: 13,
-                      color: AppColors.textMuted,
+                if ((widget.data['subtitle'] ?? '').toString().isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    (widget.data['subtitle'] ?? '').toString(),
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Duration: $_videoDuration',
-                      style: GoogleFonts.poppins(
-                        fontSize: 11,
+                  ),
+                ],
+                if (_videoDuration.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.timer_outlined,
+                        size: 13,
                         color: AppColors.textMuted,
                       ),
-                    ),
-                  ],
-                ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Duration: $_videoDuration',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
 
           const SizedBox(height: 16),
 
-          // Open in YouTube button
+          // Open video button
           GestureDetector(
             onTap: _openVideo,
             child: Container(
@@ -653,7 +567,7 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'OPEN IN YOUTUBE',
+                    'WATCH VIDEO',
                     style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,

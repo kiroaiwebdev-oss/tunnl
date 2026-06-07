@@ -49,6 +49,8 @@ class ShortModel {
       final lower = url.toLowerCase();
       if (lower.contains('instagram')) {
         platform = 'INSTAGRAM';
+      } else if (lower.contains('facebook') || lower.contains('fb.watch')) {
+        platform = 'FACEBOOK';
       } else if (lower.contains('t.me') || lower.contains('telegram')) {
         platform = 'TELEGRAM';
       } else {
