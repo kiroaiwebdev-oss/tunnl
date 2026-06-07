@@ -25,9 +25,9 @@ $settings = $pdo->query(
     "SELECT setting_key, setting_value FROM app_settings"
 )->fetchAll(PDO::FETCH_KEY_PAIR);
 
-$keySecret = $settings['razorpay_key_secret'] ?? '';
+$keySecret = trim($settings['razorpay_key_secret'] ?? '');
 if (!$keySecret && defined('RAZORPAY_KEY_SECRET')) {
-    $keySecret = RAZORPAY_KEY_SECRET;
+    $keySecret = trim(RAZORPAY_KEY_SECRET);
 }
 if (!$keySecret || str_starts_with($keySecret, 'your_')) {
     error('Payment gateway not configured', 503);
