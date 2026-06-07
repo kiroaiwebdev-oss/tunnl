@@ -307,13 +307,13 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
               decoration: BoxDecoration(
                 color: _isLoggedIn
-                    ? AppColors.neonCyan.withOpacity(0.1)
-                    : AppColors.orange.withOpacity(0.12),
+                    ? AppColors.neonCyan.withValues(alpha: 0.1)
+                    : AppColors.orange.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: _isLoggedIn
-                      ? AppColors.neonCyan.withOpacity(0.35)
-                      : AppColors.orange.withOpacity(0.4),
+                      ? AppColors.neonCyan.withValues(alpha: 0.35)
+                      : AppColors.orange.withValues(alpha: 0.4),
                 ),
               ),
               child: _isLoadingUser
@@ -321,7 +321,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
                       width: 14, height: 14,
                       child: CircularProgressIndicator(
                         strokeWidth: 1.5,
-                        color: AppColors.neonCyan.withOpacity(0.6),
+                        color: AppColors.neonCyan.withValues(alpha: 0.6),
                       ),
                     )
                   : Row(
@@ -385,7 +385,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
           decoration: BoxDecoration(
             color: const Color(0xFF0D1A26),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.neonCyan.withOpacity(0.15)),
+            border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.15)),
           ),
           child: Center(
             child: SizedBox(
@@ -393,7 +393,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
               height: 24,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: AppColors.neonCyan.withOpacity(0.6),
+                color: AppColors.neonCyan.withValues(alpha: 0.6),
               ),
             ),
           ),
@@ -429,7 +429,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
                 decoration: BoxDecoration(
                   color: isActive
                       ? AppColors.neonCyan
-                      : AppColors.textMuted.withOpacity(0.3),
+                      : AppColors.textMuted.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(3),
                 ),
               );
@@ -455,13 +455,13 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
               : null,
           color: b.imageUrl.isNotEmpty ? const Color(0xFF0D2233) : null,
           border: Border.all(
-            color: AppColors.neonCyan.withOpacity(0.2)),
+            color: AppColors.neonCyan.withValues(alpha: 0.2)),
           image: b.imageUrl.isNotEmpty
               ? DecorationImage(
                   image: NetworkImage(b.imageUrl),
                   fit: BoxFit.cover,
                   colorFilter: ColorFilter.mode(
-                    Colors.black.withOpacity(0.4),
+                    Colors.black.withValues(alpha: 0.4),
                     BlendMode.darken,
                   ),
                 )
@@ -475,10 +475,10 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: AppColors.neonCyan.withOpacity(0.15),
+                color: AppColors.neonCyan.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                  color: AppColors.neonCyan.withOpacity(0.3)),
+                  color: AppColors.neonCyan.withValues(alpha: 0.3)),
               ),
               child: Text(
                 _actionLabel(b.actionValue),
@@ -547,9 +547,9 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                   decoration: BoxDecoration(
-                    color: AppColors.orange.withOpacity(0.15),
+                    color: AppColors.orange.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.orange.withOpacity(0.4)),
+                    border: Border.all(color: AppColors.orange.withValues(alpha: 0.4)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -568,7 +568,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
             else
               const SizedBox(height: 16),
 
-            Divider(color: AppColors.textMuted.withOpacity(0.15)),
+            Divider(color: AppColors.textMuted.withValues(alpha: 0.15)),
             const SizedBox(height: 8),
 
             _drawerTile(Icons.home_rounded, 'Home',
@@ -607,7 +607,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
               ),
 
             const Spacer(),
-            Divider(color: AppColors.textMuted.withOpacity(0.15)),
+            Divider(color: AppColors.textMuted.withValues(alpha: 0.15)),
 
             if (_isLoggedIn)
               _drawerTile(
@@ -668,14 +668,14 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(width: 30, height: 1,
-            color: AppColors.neonCyan.withOpacity(0.3)),
+            color: AppColors.neonCyan.withValues(alpha: 0.3)),
           const SizedBox(width: 10),
           Text('Enter the Tunnel. Master Speed Math.',
             style: GoogleFonts.poppins(
               fontSize: 11, color: AppColors.textMuted, letterSpacing: 0.5)),
           const SizedBox(width: 10),
           Container(width: 30, height: 1,
-            color: AppColors.neonCyan.withOpacity(0.3)),
+            color: AppColors.neonCyan.withValues(alpha: 0.3)),
         ],
       ),
     );
@@ -736,7 +736,7 @@ class _HubCardState extends State<_HubCard>
             color: AppColors.darkCard,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: widget.borderColor.withOpacity(0.25), width: 1.2),
+              color: widget.borderColor.withValues(alpha: 0.25), width: 1.2),
           ),
           child: Row(
             children: [
@@ -769,9 +769,9 @@ class _HubCardState extends State<_HubCard>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.orange.withOpacity(0.15),
+                    color: AppColors.orange.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.orange.withOpacity(0.4)),
+                    border: Border.all(color: AppColors.orange.withValues(alpha: 0.4)),
                   ),
                   child: Text(widget.priceBadge!,
                     style: GoogleFonts.poppins(

@@ -249,7 +249,7 @@ class _SplashScreenState extends State<SplashScreen>
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
-            color: AppColors.neonCyan.withOpacity(0.3),
+            color: AppColors.neonCyan.withValues(alpha: 0.3),
           ),
         ),
         title: const Text(
@@ -354,7 +354,7 @@ class _SplashScreenState extends State<SplashScreen>
                     boxShadow: [
                       BoxShadow(
                         color: AppColors.neonCyan
-                            .withOpacity(0.12 * _glowAnim.value),
+                            .withValues(alpha: 0.12 * _glowAnim.value),
                         blurRadius: 90,
                         spreadRadius: 40,
                       ),
@@ -375,7 +375,7 @@ class _SplashScreenState extends State<SplashScreen>
                   child: _Ring(
                     diameter: 160,
                     strokeWidth: 1.2,
-                    color: AppColors.neonCyan.withOpacity(0.25),
+                    color: AppColors.neonCyan.withValues(alpha: 0.25),
                     dashed: false,
                   ),
                 ),
@@ -386,7 +386,7 @@ class _SplashScreenState extends State<SplashScreen>
                     shape: BoxShape.circle,
                     color: const Color(0xFF0B1A27),
                     border: Border.all(
-                      color: AppColors.neonCyan.withOpacity(0.12),
+                      color: AppColors.neonCyan.withValues(alpha: 0.12),
                       width: 1,
                     ),
                   ),
@@ -399,7 +399,7 @@ class _SplashScreenState extends State<SplashScreen>
                     boxShadow: [
                       BoxShadow(
                         color: AppColors.neonCyan
-                            .withOpacity(0.2 * _glowAnim.value),
+                            .withValues(alpha: 0.2 * _glowAnim.value),
                         blurRadius: 35,
                         spreadRadius: 12,
                       ),
@@ -440,7 +440,7 @@ class _SplashScreenState extends State<SplashScreen>
           letterSpacing: 10,
           shadows: [
             Shadow(
-              color: AppColors.neonCyan.withOpacity(0.25),
+              color: AppColors.neonCyan.withValues(alpha: 0.25),
               blurRadius: 24,
             ),
           ],
@@ -457,7 +457,7 @@ class _SplashScreenState extends State<SplashScreen>
         children: [
           Container(
             width: 44, height: 1,
-            color: AppColors.textMuted.withOpacity(0.5),
+            color: AppColors.textMuted.withValues(alpha: 0.5),
           ),
           const SizedBox(width: 10),
           Container(
@@ -470,7 +470,7 @@ class _SplashScreenState extends State<SplashScreen>
           const SizedBox(width: 10),
           Container(
             width: 44, height: 1,
-            color: AppColors.textMuted.withOpacity(0.5),
+            color: AppColors.textMuted.withValues(alpha: 0.5),
           ),
         ],
       ),
@@ -510,7 +510,7 @@ class _SplashScreenState extends State<SplashScreen>
                       height: 3,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: AppColors.textMuted.withOpacity(0.25),
+                        color: AppColors.textMuted.withValues(alpha: 0.25),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -523,7 +523,7 @@ class _SplashScreenState extends State<SplashScreen>
                           borderRadius: BorderRadius.circular(2),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.neonCyan.withOpacity(0.7),
+                              color: AppColors.neonCyan.withValues(alpha: 0.7),
                               blurRadius: 8,
                               spreadRadius: 1,
                             ),
@@ -733,7 +733,7 @@ class _BracketPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.textMuted.withOpacity(0.4)
+      ..color = AppColors.textMuted.withValues(alpha: 0.4)
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.square;

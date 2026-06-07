@@ -257,7 +257,7 @@ class _HistoryScreenState extends State<HistoryScreen>
           color: AppColors.darkCard,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: AppColors.neonCyan.withOpacity(0.3)),
+            color: AppColors.neonCyan.withValues(alpha: 0.3)),
         ),
         child: TextField(
           controller:   _searchCtrl,
@@ -459,7 +459,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                 border: Border.all(
                   color: isActive
                       ? AppColors.neonCyan
-                      : AppColors.textMuted.withOpacity(0.2)),
+                      : AppColors.textMuted.withValues(alpha: 0.2)),
               ),
               child: Text(_filters[i],
                 style: GoogleFonts.poppins(
@@ -495,7 +495,7 @@ class _HistoryScreenState extends State<HistoryScreen>
         color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: scoreColor.withOpacity(0.15), width: 1),
+          color: scoreColor.withValues(alpha: 0.15), width: 1),
       ),
       child: Column(
         children: [
@@ -505,10 +505,10 @@ class _HistoryScreenState extends State<HistoryScreen>
               Container(
                 width: 44, height: 44,
                 decoration: BoxDecoration(
-                  color: scoreColor.withOpacity(0.1),
+                  color: scoreColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: scoreColor.withOpacity(0.2))),
+                    color: scoreColor.withValues(alpha: 0.2))),
                 child: Center(
                   child: Text(
                     (h['category'] ?? 'Q').toString().substring(0, 1),
@@ -575,7 +575,7 @@ class _HistoryScreenState extends State<HistoryScreen>
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
               value: progress,
-              backgroundColor: AppColors.textMuted.withOpacity(0.15),
+              backgroundColor: AppColors.textMuted.withValues(alpha: 0.15),
               valueColor: AlwaysStoppedAnimation<Color>(scoreColor),
               minHeight: 4,
             ),
@@ -593,7 +593,7 @@ class _HistoryScreenState extends State<HistoryScreen>
         child: Column(
           children: [
             Icon(Icons.history_rounded,
-              color: AppColors.textMuted.withOpacity(0.3), size: 60),
+              color: AppColors.textMuted.withValues(alpha: 0.3), size: 60),
             const SizedBox(height: 12),
             Text(
               _searchQuery.isNotEmpty
@@ -634,8 +634,8 @@ class _StatCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: highlighted
-              ? AppColors.neonCyan.withOpacity(0.4)
-              : AppColors.textMuted.withOpacity(0.1),
+              ? AppColors.neonCyan.withValues(alpha: 0.4)
+              : AppColors.textMuted.withValues(alpha: 0.1),
           width: highlighted ? 1.5 : 1),
       ),
       child: Column(

@@ -251,7 +251,7 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
                 color: AppColors.darkCard,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: AppColors.yellow.withOpacity(0.3),
+                  color: AppColors.yellow.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -293,7 +293,7 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
           ),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: AppColors.yellow.withOpacity(0.4),
+            color: AppColors.yellow.withValues(alpha: 0.4),
             width: 1.5,
           ),
         ),
@@ -304,9 +304,9 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
               height: 70,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.yellow.withOpacity(0.12),
+                color: AppColors.yellow.withValues(alpha: 0.12),
                 border: Border.all(
-                  color: AppColors.yellow.withOpacity(0.4),
+                  color: AppColors.yellow.withValues(alpha: 0.4),
                   width: 2,
                 ),
               ),
@@ -345,10 +345,10 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
                 padding: const EdgeInsets.symmetric(
                     horizontal: 20, vertical: 10),
                 decoration: BoxDecoration(
-                  color: AppColors.yellow.withOpacity(0.12),
+                  color: AppColors.yellow.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(
-                    color: AppColors.yellow.withOpacity(0.4),
+                    color: AppColors.yellow.withValues(alpha: 0.4),
                     width: 1,
                   ),
                 ),
@@ -385,7 +385,7 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
         color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: AppColors.neonCyan.withOpacity(0.15),
+          color: AppColors.neonCyan.withValues(alpha: 0.15),
           width: 1,
         ),
       ),
@@ -396,9 +396,9 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
             height: 44,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.neonCyan.withOpacity(0.1),
+              color: AppColors.neonCyan.withValues(alpha: 0.1),
               border: Border.all(
-                color: AppColors.neonCyan.withOpacity(0.3),
+                color: AppColors.neonCyan.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
@@ -455,7 +455,7 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
       decoration: BoxDecoration(
         color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.yellow.withOpacity(0.15)),
+        border: Border.all(color: AppColors.yellow.withValues(alpha: 0.15)),
       ),
       child: Row(
         children: [
@@ -499,13 +499,13 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.neonCyan.withOpacity(0.08),
-            AppColors.neonCyan.withOpacity(0.02),
+            AppColors.neonCyan.withValues(alpha: 0.08),
+            AppColors.neonCyan.withValues(alpha: 0.02),
           ],
         ),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: AppColors.neonCyan.withOpacity(0.3),
+          color: AppColors.neonCyan.withValues(alpha: 0.3),
           width: 1.2,
         ),
       ),
@@ -550,10 +550,10 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
               padding:
                   const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: AppColors.neonCyan.withOpacity(0.1),
+                color: AppColors.neonCyan.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: AppColors.neonCyan.withOpacity(0.3),
+                  color: AppColors.neonCyan.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -588,7 +588,7 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
         color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.textMuted.withOpacity(0.1),
+          color: AppColors.textMuted.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -624,7 +624,7 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
                     margin: const EdgeInsets.only(top: 1, right: 10),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.neonCyan.withOpacity(0.1),
+                      color: AppColors.neonCyan.withValues(alpha: 0.1),
                     ),
                     child: Center(
                       child: Text(
@@ -704,7 +704,7 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
               borderRadius: BorderRadius.circular(28),
               border: disabled
                   ? Border.all(
-                      color: AppColors.textMuted.withOpacity(0.2), width: 1)
+                      color: AppColors.textMuted.withValues(alpha: 0.2), width: 1)
                   : null,
             ),
             child: Row(
@@ -747,7 +747,7 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
               color: AppColors.darkCard,
               borderRadius: BorderRadius.circular(26),
               border: Border.all(
-                color: AppColors.neonCyan.withOpacity(0.3),
+                color: AppColors.neonCyan.withValues(alpha: 0.3),
                 width: 1.2,
               ),
             ),
@@ -790,10 +790,10 @@ class _TimeBox extends StatelessWidget {
       width: 44,
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.neonCyan.withOpacity(0.08),
+        color: AppColors.neonCyan.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: AppColors.neonCyan.withOpacity(0.25),
+          color: AppColors.neonCyan.withValues(alpha: 0.25),
           width: 1,
         ),
       ),

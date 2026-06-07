@@ -187,10 +187,10 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
             padding: const EdgeInsets.symmetric(
                 horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: diffColor.withOpacity(0.1),
+              color: diffColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: diffColor.withOpacity(0.3),
+                color: diffColor.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
@@ -218,7 +218,7 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
           color: AppColors.darkCard,
           borderRadius: BorderRadius.circular(22),
           border: Border.all(
-            color: AppColors.textMuted.withOpacity(0.15),
+            color: AppColors.textMuted.withValues(alpha: 0.15),
             width: 1,
           ),
         ),
@@ -394,7 +394,7 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
                 color: AppColors.darkCard,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: const Color(0xFFFF6B6B).withOpacity(0.3),
+                  color: const Color(0xFFFF6B6B).withValues(alpha: 0.3),
                   width: 1.2,
                 ),
               ),
@@ -423,7 +423,7 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
                         boxShadow: [
                           BoxShadow(
                             color: const Color(0xFFFF6B6B)
-                                .withOpacity(0.4),
+                                .withValues(alpha: 0.4),
                             blurRadius: 20,
                             spreadRadius: 4,
                           ),
@@ -444,7 +444,7 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.7),
+                          color: Colors.black.withValues(alpha: 0.7),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -464,7 +464,7 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFF6B6B).withOpacity(0.9),
+                        color: const Color(0xFFFF6B6B).withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -492,7 +492,7 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
               color: AppColors.darkCard,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: AppColors.textMuted.withOpacity(0.1),
+                color: AppColors.textMuted.withValues(alpha: 0.1),
                 width: 1,
               ),
             ),
@@ -550,10 +550,10 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
               height: 52,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: const Color(0xFFFF0000).withOpacity(0.1),
+                color: const Color(0xFFFF0000).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(26),
                 border: Border.all(
-                  color: const Color(0xFFFF0000).withOpacity(0.4),
+                  color: const Color(0xFFFF0000).withValues(alpha: 0.4),
                   width: 1.2,
                 ),
               ),

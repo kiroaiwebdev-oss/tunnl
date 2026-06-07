@@ -175,7 +175,7 @@ Future<void> _loadFromApi() async {
         margin: const EdgeInsets.all(16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: color.withOpacity(0.4), width: 1),
+          side: BorderSide(color: color.withValues(alpha: 0.4), width: 1),
         ),
         duration: const Duration(seconds: 2),
       ),
@@ -219,7 +219,7 @@ Future<void> _loadFromApi() async {
                 child: Container(
                   width: 40, height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.textMuted.withOpacity(0.3),
+                    color: AppColors.textMuted.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(10)),
                 ),
               ),
@@ -302,7 +302,7 @@ Future<void> _loadFromApi() async {
               Center(child: Container(
                 width: 40, height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.textMuted.withOpacity(0.3),
+                  color: AppColors.textMuted.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(10)),
               )),
               const SizedBox(height: 20),
@@ -346,7 +346,7 @@ Future<void> _loadFromApi() async {
             Center(child: Container(
               width: 40, height: 4,
               decoration: BoxDecoration(
-                color: AppColors.textMuted.withOpacity(0.3),
+                color: AppColors.textMuted.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(10)),
             )),
             const SizedBox(height: 20),
@@ -417,7 +417,7 @@ Future<void> _loadFromApi() async {
         backgroundColor: AppColors.darkCard,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: AppColors.error.withOpacity(0.4))),
+          side: BorderSide(color: AppColors.error.withValues(alpha: 0.4))),
         title: Text('Logout?',
           style: GoogleFonts.poppins(
             color: Colors.white, fontWeight: FontWeight.w700)),
@@ -537,7 +537,7 @@ Future<void> _loadFromApi() async {
                 color: AppColors.darkCard,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: AppColors.neonCyan.withOpacity(0.2)),
+                  color: AppColors.neonCyan.withValues(alpha: 0.2)),
               ),
               child: const Icon(Icons.edit_rounded,
                 color: AppColors.neonCyan, size: 16),
@@ -556,7 +556,7 @@ Future<void> _loadFromApi() async {
         color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(
-          color: AppColors.neonCyan.withOpacity(0.15), width: 1.2),
+          color: AppColors.neonCyan.withValues(alpha: 0.15), width: 1.2),
       ),
       child: _isLoading
           ? _shimmerRow()
@@ -570,14 +570,14 @@ Future<void> _loadFromApi() async {
                         shape: BoxShape.circle,
                         gradient: LinearGradient(
                           colors: [
-                            AppColors.neonCyan.withOpacity(0.3),
-                            AppColors.neonCyan.withOpacity(0.1),
+                            AppColors.neonCyan.withValues(alpha: 0.3),
+                            AppColors.neonCyan.withValues(alpha: 0.1),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         border: Border.all(
-                          color: AppColors.neonCyan.withOpacity(0.5),
+                          color: AppColors.neonCyan.withValues(alpha: 0.5),
                           width: 2),
                       ),
                       child: ClipOval(
@@ -643,10 +643,10 @@ Future<void> _loadFromApi() async {
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 7, vertical: 3),
                               decoration: BoxDecoration(
-                                color: AppColors.yellow.withOpacity(0.15),
+                                color: AppColors.yellow.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: AppColors.yellow.withOpacity(0.4))),
+                                  color: AppColors.yellow.withValues(alpha: 0.4))),
                               child: Text('PRO',
                                 style: GoogleFonts.poppins(
                                   fontSize: 9, fontWeight: FontWeight.w700,
@@ -727,7 +727,7 @@ Future<void> _loadFromApi() async {
             decoration: BoxDecoration(
               color: AppColors.darkCard,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: color.withOpacity(0.15)),
+              border: Border.all(color: color.withValues(alpha: 0.15)),
             ),
             child: _isLoading
                 ? Column(children: [
@@ -765,7 +765,7 @@ Future<void> _loadFromApi() async {
       decoration: BoxDecoration(
         color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.neonCyan.withOpacity(0.1)),
+        border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -795,7 +795,7 @@ Future<void> _loadFromApi() async {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: _accuracy / 100,
-              backgroundColor: AppColors.error.withOpacity(0.2),
+              backgroundColor: AppColors.error.withValues(alpha: 0.2),
               valueColor:
                   const AlwaysStoppedAnimation<Color>(AppColors.success),
               minHeight: 8,
@@ -842,8 +842,8 @@ Future<void> _loadFromApi() async {
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: _isPremium
-                ? AppColors.yellow.withOpacity(0.4)
-                : AppColors.textMuted.withOpacity(0.2),
+                ? AppColors.yellow.withValues(alpha: 0.4)
+                : AppColors.textMuted.withValues(alpha: 0.2),
             width: 1.2,
           ),
         ),
@@ -854,7 +854,7 @@ Future<void> _loadFromApi() async {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: _isPremium
-                    ? AppColors.yellow.withOpacity(0.15)
+                    ? AppColors.yellow.withValues(alpha: 0.15)
                     : AppColors.darkBg,
               ),
               child: Icon(
@@ -903,10 +903,10 @@ Future<void> _loadFromApi() async {
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.1),
+                  color: AppColors.success.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: AppColors.success.withOpacity(0.3)),
+                    color: AppColors.success.withValues(alpha: 0.3)),
                 ),
                 child: Text('ACTIVE',
                   style: GoogleFonts.poppins(
@@ -975,7 +975,7 @@ Future<void> _loadFromApi() async {
               color: AppColors.darkCard,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: AppColors.textMuted.withOpacity(0.1)),
+                color: AppColors.textMuted.withValues(alpha: 0.1)),
             ),
             child: Row(
               children: [
@@ -983,7 +983,7 @@ Future<void> _loadFromApi() async {
                   width: 38, height: 38,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                   ),
                   child: Icon(item['icon'] as IconData,
                     color: color, size: 18),
@@ -1021,9 +1021,9 @@ Future<void> _loadFromApi() async {
       child: Container(
         height: 54, width: double.infinity,
         decoration: BoxDecoration(
-          color: AppColors.error.withOpacity(0.08),
+          color: AppColors.error.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: AppColors.error.withOpacity(0.4), width: 1.2),
+          border: Border.all(color: AppColors.error.withValues(alpha: 0.4), width: 1.2),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1101,7 +1101,7 @@ class _VertDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 1, height: 40,
-      color: AppColors.textMuted.withOpacity(0.2),
+      color: AppColors.textMuted.withValues(alpha: 0.2),
     );
   }
 }
@@ -1128,7 +1128,7 @@ class _NotifTile extends StatelessWidget {
           Container(
             width: 36, height: 36,
             decoration: BoxDecoration(
-              shape: BoxShape.circle, color: color.withOpacity(0.1)),
+              shape: BoxShape.circle, color: color.withValues(alpha: 0.1)),
             child: Icon(icon, color: color, size: 16),
           ),
           const SizedBox(width: 12),
@@ -1150,7 +1150,7 @@ class _NotifTile extends StatelessWidget {
             value: value,
             onChanged: onChanged,
             activeThumbColor: AppColors.neonCyan,
-            inactiveTrackColor: AppColors.textMuted.withOpacity(0.2),
+            inactiveTrackColor: AppColors.textMuted.withValues(alpha: 0.2),
           ),
         ],
       ),
@@ -1180,14 +1180,14 @@ class _SupportTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.darkBg,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.15)),
+          border: Border.all(color: color.withValues(alpha: 0.15)),
         ),
         child: Row(
           children: [
             Container(
               width: 38, height: 38,
               decoration: BoxDecoration(
-                shape: BoxShape.circle, color: color.withOpacity(0.1)),
+                shape: BoxShape.circle, color: color.withValues(alpha: 0.1)),
               child: Icon(icon, color: color, size: 18),
             ),
             const SizedBox(width: 12),
@@ -1206,7 +1206,7 @@ class _SupportTile extends StatelessWidget {
               ),
             ),
             Icon(Icons.arrow_forward_ios_rounded,
-              color: color.withOpacity(0.5), size: 14),
+              color: color.withValues(alpha: 0.5), size: 14),
           ],
         ),
       ),

@@ -160,7 +160,7 @@ class _LoginScreenState extends State<LoginScreen>
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
-          side: BorderSide(color: const Color(0xFF00E5FF).withOpacity(0.3)),
+          side: BorderSide(color: const Color(0xFF00E5FF).withValues(alpha: 0.3)),
         ),
         duration: const Duration(seconds: 4),
       ),
@@ -228,7 +228,7 @@ class _LoginScreenState extends State<LoginScreen>
             child: Text('+',
               style: GoogleFonts.poppins(
                 fontSize: 22,
-                color: AppColors.textMuted.withOpacity(0.5),
+                color: AppColors.textMuted.withValues(alpha: 0.5),
                 fontWeight: FontWeight.w300,
               )),
           ),
@@ -237,7 +237,7 @@ class _LoginScreenState extends State<LoginScreen>
             child: Text('÷',
               style: GoogleFonts.poppins(
                 fontSize: 20,
-                color: AppColors.textMuted.withOpacity(0.5),
+                color: AppColors.textMuted.withValues(alpha: 0.5),
                 fontWeight: FontWeight.w300,
               )),
           ),
@@ -261,7 +261,7 @@ class _LoginScreenState extends State<LoginScreen>
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.neonCyan.withOpacity(0.12 * _glowAnim.value),
+                      color: AppColors.neonCyan.withValues(alpha: 0.12 * _glowAnim.value),
                       blurRadius: 70, spreadRadius: 25,
                     ),
                   ],
@@ -272,7 +272,7 @@ class _LoginScreenState extends State<LoginScreen>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: AppColors.neonCyan.withOpacity(0.5), width: 1.5,
+                    color: AppColors.neonCyan.withValues(alpha: 0.5), width: 1.5,
                   ),
                 ),
               ),
@@ -281,7 +281,7 @@ class _LoginScreenState extends State<LoginScreen>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: AppColors.neonCyan.withOpacity(0.35), width: 1.2,
+                    color: AppColors.neonCyan.withValues(alpha: 0.35), width: 1.2,
                   ),
                 ),
               ),
@@ -291,7 +291,7 @@ class _LoginScreenState extends State<LoginScreen>
                   width: 145, height: 145,
                   child: CustomPaint(
                     painter: _DashedRingPainter(
-                      color: AppColors.neonCyan.withOpacity(0.2),
+                      color: AppColors.neonCyan.withValues(alpha: 0.2),
                       strokeWidth: 1.0,
                     ),
                   ),
@@ -304,7 +304,7 @@ class _LoginScreenState extends State<LoginScreen>
                   color: const Color(0xFF0B1520),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.neonCyan.withOpacity(0.15 * _glowAnim.value),
+                      color: AppColors.neonCyan.withValues(alpha: 0.15 * _glowAnim.value),
                       blurRadius: 25, spreadRadius: 5,
                     ),
                   ],
@@ -316,7 +316,7 @@ class _LoginScreenState extends State<LoginScreen>
                   color: const Color(0xFF0D1A26),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: AppColors.neonCyan.withOpacity(0.3), width: 1,
+                    color: AppColors.neonCyan.withValues(alpha: 0.3), width: 1,
                   ),
                 ),
                 padding: const EdgeInsets.all(14),
@@ -351,7 +351,7 @@ class _LoginScreenState extends State<LoginScreen>
                 letterSpacing: 8,
                 shadows: [
                   Shadow(
-                    color: AppColors.neonCyan.withOpacity(0.2),
+                    color: AppColors.neonCyan.withValues(alpha: 0.2),
                     blurRadius: 20,
                   ),
                 ],
@@ -458,9 +458,9 @@ class _LoginScreenState extends State<LoginScreen>
         borderRadius: BorderRadius.circular(30),
         border: Border.all(
           color: _hasError
-              ? AppColors.error.withOpacity(0.5)
+              ? AppColors.error.withValues(alpha: 0.5)
               : _phoneFocus.hasFocus
-                  ? AppColors.neonCyan.withOpacity(0.4)
+                  ? AppColors.neonCyan.withValues(alpha: 0.4)
                   : Colors.transparent,
           width: 1.2,
         ),
@@ -483,7 +483,7 @@ class _LoginScreenState extends State<LoginScreen>
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 12),
             width: 1, height: 24,
-            color: AppColors.textMuted.withOpacity(0.4),
+            color: AppColors.textMuted.withValues(alpha: 0.4),
           ),
           Expanded(
             child: TextField(
@@ -530,8 +530,8 @@ class _LoginScreenState extends State<LoginScreen>
         decoration: BoxDecoration(
           gradient: _isLoading
               ? LinearGradient(colors: [
-                  AppColors.neonCyan.withOpacity(0.5),
-                  const Color(0xFF00ACC1).withOpacity(0.5),
+                  AppColors.neonCyan.withValues(alpha: 0.5),
+                  const Color(0xFF00ACC1).withValues(alpha: 0.5),
                 ])
               : const LinearGradient(
                   colors: [Color(0xFF00E5FF), Color(0xFF00ACC1)],
@@ -541,7 +541,7 @@ class _LoginScreenState extends State<LoginScreen>
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              color: AppColors.neonCyan.withOpacity(_isLoading ? 0.15 : 0.35),
+              color: AppColors.neonCyan.withValues(alpha: _isLoading ? 0.15 : 0.35),
               blurRadius: 20, spreadRadius: 2,
               offset: const Offset(0, 4),
             ),
@@ -621,7 +621,7 @@ class _FeatureIcon extends StatelessWidget {
             color: const Color(0xFF0D2233),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: AppColors.neonCyan.withOpacity(0.2), width: 1,
+              color: AppColors.neonCyan.withValues(alpha: 0.2), width: 1,
             ),
           ),
           child: Icon(icon, color: AppColors.neonCyan, size: 28),

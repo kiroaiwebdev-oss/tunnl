@@ -183,7 +183,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                 color: AppColors.darkCard,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                    color: AppColors.neonCyan.withOpacity(0.2), width: 1)),
+                    color: AppColors.neonCyan.withValues(alpha: 0.2), width: 1)),
             child: Row(
               children: [
                 const Icon(Icons.people_rounded,
@@ -212,7 +212,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
             color: AppColors.darkCard,
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
-                color: AppColors.textMuted.withOpacity(0.15), width: 1)),
+                color: AppColors.textMuted.withValues(alpha: 0.15), width: 1)),
         child: Row(
           children: tabs.asMap().entries.map((entry) {
             final i = entry.key;
@@ -322,12 +322,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                         height: i == 1 ? 58 : 48,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: colors[i].withOpacity(0.15),
+                          color: colors[i].withValues(alpha: 0.15),
                           border: Border.all(
-                              color: colors[i].withOpacity(0.6), width: 2),
+                              color: colors[i].withValues(alpha: 0.6), width: 2),
                           boxShadow: [
                             BoxShadow(
-                                color: colors[i].withOpacity(0.3),
+                                color: colors[i].withValues(alpha: 0.3),
                                 blurRadius: 12,
                                 spreadRadius: 2),
                           ],
@@ -361,11 +361,11 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                           height: heights[i],
                           margin: const EdgeInsets.symmetric(horizontal: 6),
                           decoration: BoxDecoration(
-                            color: colors[i].withOpacity(0.12),
+                            color: colors[i].withValues(alpha: 0.12),
                             borderRadius: const BorderRadius.vertical(
                                 top: Radius.circular(10)),
                             border: Border.all(
-                                color: colors[i].withOpacity(0.3), width: 1),
+                                color: colors[i].withValues(alpha: 0.3), width: 1),
                           ),
                           child: Center(
                             child: Text(
@@ -377,7 +377,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                                 style: GoogleFonts.orbitron(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
-                                    color: colors[i].withOpacity(0.8))),
+                                    color: colors[i].withValues(alpha: 0.8))),
                           ),
                         ),
                       ),
@@ -419,12 +419,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         gradient: LinearGradient(colors: [
-          AppColors.neonCyan.withOpacity(0.12),
-          AppColors.neonCyan.withOpacity(0.05),
+          AppColors.neonCyan.withValues(alpha: 0.12),
+          AppColors.neonCyan.withValues(alpha: 0.05),
         ]),
         borderRadius: BorderRadius.circular(16),
         border:
-            Border.all(color: AppColors.neonCyan.withOpacity(0.4), width: 1.5),
+            Border.all(color: AppColors.neonCyan.withValues(alpha: 0.4), width: 1.5),
       ),
       child: Row(
         children: [
@@ -505,13 +505,13 @@ class _RankItem extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: isMe
-            ? AppColors.neonCyan.withOpacity(0.05)
+            ? AppColors.neonCyan.withValues(alpha: 0.05)
             : AppColors.darkCard,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isMe
-              ? AppColors.neonCyan.withOpacity(0.3)
-              : AppColors.textMuted.withOpacity(0.1),
+              ? AppColors.neonCyan.withValues(alpha: 0.3)
+              : AppColors.textMuted.withValues(alpha: 0.1),
           width: isMe ? 1.3 : 1,
         ),
       ),
@@ -532,12 +532,12 @@ class _RankItem extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: isMe
-                  ? AppColors.neonCyan.withOpacity(0.15)
+                  ? AppColors.neonCyan.withValues(alpha: 0.15)
                   : AppColors.darkSurface,
               border: Border.all(
                 color: isMe
-                    ? AppColors.neonCyan.withOpacity(0.4)
-                    : AppColors.textMuted.withOpacity(0.2),
+                    ? AppColors.neonCyan.withValues(alpha: 0.4)
+                    : AppColors.textMuted.withValues(alpha: 0.2),
                 width: 1,
               ),
             ),
