@@ -443,13 +443,11 @@ foreach ($settingsRaw as $row) {
 
     <div class="setting-row">
       <div class="setting-info">
-        <div class="setting-title">Monthly Price</div>
-        <div class="setting-desc">Same as <code>premium_price</code> above when used as monthly</div>
+        <div class="setting-title">Monthly / Default Price</div>
+        <div class="setting-desc">Controlled by <strong>Premium Price</strong> field above (<code>premium_price</code>). This is the price the app charges.</div>
       </div>
       <div class="setting-control">
-        <input type="number" name="premium_price" class="form-input"
-          value="<?= htmlspecialchars($s['premium_price'] ?? '50') ?>"
-          placeholder="50" style="width:140px">
+        <div style="font-size:18px;font-weight:700;color:var(--cyan)">₹<?= htmlspecialchars($s['premium_price'] ?? '50') ?></div>
       </div>
     </div>
 

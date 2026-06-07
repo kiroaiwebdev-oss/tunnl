@@ -5,7 +5,7 @@ require_once dirname(__DIR__) . '/includes/header.php';
 $success = $error = '';
 $imported = 0;
 
-$sets = $pdo->query("SELECT id, set_number, category FROM sets ORDER BY category, set_number")->fetchAll();
+$sets = $pdo->query("SELECT id, set_number, category, title, exam_name FROM sets ORDER BY category, set_number")->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
     try {
@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Category *</label>
-        <select name="category" class="form-select" required>
+        <select name="category" id="categorySelect" class="form-select" required onchange="filterSets()">
           <option value="mcq">5000 Speed Math MCQ</option>
           <option value="simplification">500 Simplification</option>
           <option value="previous_year">Previous Year</option>
@@ -109,14 +109,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
       </div>
       <div class="form-group">
         <label class="form-label">Target Set *</label>
-        <select name="set_id" class="form-select" required>
+        <select name="set_id" id="setSelect" class="form-select" required>
           <option value="">Select Set</option>
-          <?php foreach ($sets as $set): ?>
-          <option value="<?= $set['id'] ?>">
-            [<?= strtoupper($set['category']) ?>] Set <?= $set['set_number'] ?>
+          <?php foreach ($sets as $set):
+            $label = '[' . strtoupper($set['category']) . '] ';
+            if (!empty($set['exam_name'])) $label .= $set['exam_name'] . ' • ';
+            $label .= 'Set ' . $set['set_number'];
+            if (!empty($set['title'])) $label .= ' — ' . $set['title'];
+          ?>
+          <option value="<?= $set['id'] ?>" data-category="<?= htmlspecialchars($set['category']) ?>">
+            <?= htmlspecialchars($label) ?>
           </option>
           <?php endforeach; ?>
         </select>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">
+          Sets are filtered by the selected category. <code>previous_year</code> sets show their exam name.
+        </div>
       </div>
     </div>
 
@@ -140,6 +148,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
 </div>
 
 <script>
+// Show only sets that belong to the selected category
+function filterSets() {
+  const cat = document.getElementById('categorySelect').value;
+  const setSel = document.getElementById('setSelect');
+  let firstVisible = '';
+  Array.from(setSel.options).forEach(opt => {
+    if (!opt.value) return; // keep placeholder
+    const match = opt.getAttribute('data-category') === cat;
+    opt.hidden = !match;
+    opt.disabled = !match;
+    if (match && !firstVisible) firstVisible = opt.value;
+  });
+  // Reset selection if current pick doesn't match category
+  const cur = setSel.options[setSel.selectedIndex];
+  if (!cur || cur.hidden) setSel.value = '';
+}
+
 function downloadSample() {
   const csv = `question_text,option_a,option_b,option_c,option_d,correct_option,explanation,difficulty
 "What is 15% of 200?","25","30","35","40","B","15/100 × 200 = 30","easy"
@@ -164,6 +189,9 @@ dz.addEventListener('drop', e => {
     document.getElementById('fileName').textContent = f.name;
   }
 });
+
+// Filter sets on initial load to match the default category
+filterSets();
 </script>
 
 <?php require_once dirname(__DIR__) . '/includes/footer.php'; ?>

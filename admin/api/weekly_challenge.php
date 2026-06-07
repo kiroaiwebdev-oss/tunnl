@@ -8,7 +8,10 @@ $user   = requireAuth($pdo);
 // GET — Active challenge
 if ($method === 'GET') {
     $challenge = $pdo->query("
-        SELECT * FROM weekly_challenges WHERE status='active' LIMIT 1
+        SELECT * FROM weekly_challenges
+        WHERE status='active'
+        ORDER BY COALESCE(start_date, created_at) DESC, id DESC
+        LIMIT 1
     ")->fetch();
 
     if (!$challenge) {

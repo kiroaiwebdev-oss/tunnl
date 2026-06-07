@@ -75,9 +75,20 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
     final filtered = <String, List<Map<String, dynamic>>>{};
     _exams.forEach((examName, list) {
       final n = examName.toLowerCase();
-      final match = (keyFilter == 'ssc' && n.contains('ssc')) ||
-          (keyFilter == 'railway' && (n.contains('railway') || n.contains('rrb'))) ||
-          (keyFilter == 'bank' && (n.contains('bank') || n.contains('ibps') || n.contains('sbi')));
+      // Prefer the admin-set exam_category; fall back to name matching.
+      final cat = list.isNotEmpty
+          ? (list.first['exam_category'] ?? '').toString().toLowerCase()
+          : '';
+      bool match;
+      if (keyFilter == 'ssc') {
+        match = cat == 'ssc' || n.contains('ssc');
+      } else if (keyFilter == 'railway') {
+        match = cat == 'railway' || n.contains('railway') || n.contains('rrb');
+      } else if (keyFilter == 'bank') {
+        match = cat == 'bank' || n.contains('bank') || n.contains('ibps') || n.contains('sbi');
+      } else {
+        match = false;
+      }
       if (match) filtered[examName] = list;
     });
     return filtered;

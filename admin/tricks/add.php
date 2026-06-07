@@ -4,6 +4,11 @@ require_once dirname(__DIR__) . '/includes/header.php';
 
 $success = $error = '';
 
+// Existing distinct categories (so admin can reuse or type a brand-new one)
+$existingCats = array_column($pdo->query(
+    "SELECT DISTINCT category FROM tricks WHERE category <> '' ORDER BY category"
+)->fetchAll(), 'category');
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $pdo->prepare("
@@ -17,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             intval($_POST['chapter_number']),
             trim($_POST['title']),
             trim($_POST['subtitle'] ?? ''),
-            $_POST['category'],
+            strtoupper(trim($_POST['category'])),
             $_POST['difficulty'],
             isset($_POST['has_video'])   ? 1 : 0,
             trim($_POST['video_url']     ?? ''),
@@ -63,13 +68,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     <div class="form-group">
       <label class="form-label">Category *</label>
-      <select name="category" class="form-select" required>
-        <option value="MULTIPLICATION">⚡ Multiplication</option>
-        <option value="DIVISION">➗ Division</option>
-        <option value="SQUARES">² Squares</option>
-        <option value="FRACTIONS">½ Fractions</option>
-        <option value="SHORTCUTS">🚀 Shortcuts</option>
-      </select>
+      <input type="text" name="category" class="form-input" required list="catList"
+        value="<?= htmlspecialchars($_POST['category'] ?? '') ?>"
+        placeholder="Type new or pick existing (e.g. MULTIPLICATION)"
+        style="text-transform:uppercase">
+      <datalist id="catList">
+        <?php foreach ($existingCats as $c): ?>
+        <option value="<?= htmlspecialchars($c) ?>"></option>
+        <?php endforeach; ?>
+        <option value="MULTIPLICATION"></option>
+        <option value="DIVISION"></option>
+        <option value="SQUARES"></option>
+        <option value="FRACTIONS"></option>
+        <option value="SHORTCUTS"></option>
+        <option value="PERCENTAGE"></option>
+        <option value="ALGEBRA"></option>
+      </datalist>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">
+        Create your own category — it appears as a filter tab in the app automatically.
+      </div>
     </div>
     <div class="form-group">
       <label class="form-label">Difficulty *</label>
