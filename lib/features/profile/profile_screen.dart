@@ -39,6 +39,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   // ── Stats (from API) ──────────────────────────────
   int    _totalAttempted = 0;
   int    _correctAnswers = 0;
+  int    _wrongAnswers   = 0;
   int    _totalXP        = 0;
   int    _currentStreak  = 0;
   int    _rank           = 0;
@@ -101,8 +102,10 @@ Future<void> _loadFromApi() async {
         _currentStreak  = int.tryParse('${user['current_streak']}') ?? 0;
         _totalXP        = int.tryParse('${user['total_xp']}')       ?? 0;
 
-        _totalAttempted = int.tryParse('${stats['total_tests']}')   ?? 0;
+        _totalAttempted = int.tryParse('${stats['total_questions']}') ??
+            (int.tryParse('${stats['total_tests']}') ?? 0);
         _correctAnswers = int.tryParse('${stats['total_correct']}') ?? 0;
+        _wrongAnswers   = int.tryParse('${stats['total_wrong']}')   ?? 0;
         _accuracy       = double.tryParse('${stats['avg_accuracy']}') ?? 0.0;
       });
 
@@ -786,7 +789,7 @@ Future<void> _loadFromApi() async {
               _VertDivider(),
               _PerfItem(
                 label: 'Wrong',
-                value: '${_totalAttempted - _correctAnswers}',
+                value: '$_wrongAnswers',
                 color: AppColors.error),
             ],
           ),

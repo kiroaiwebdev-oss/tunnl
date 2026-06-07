@@ -46,7 +46,11 @@ $sets = $sets->fetchAll();
 $isPremium = $user ? !empty($user['is_premium']) : false;
 
 $result = array_map(function ($s) use ($isPremium) {
-    $premium = !empty($s['is_premium']);
+    // First 2 sets of practice categories are ALWAYS free (preview), so free
+    // users always have something to try even if admin marked everything premium.
+    $freePreview = in_array($s['category'], ['mcq', 'simplification'], true)
+                   && intval($s['set_number']) <= 2;
+    $premium = !empty($s['is_premium']) && !$freePreview;
     return [
         'id'              => intval($s['id']),
         'set_number'      => intval($s['set_number']),

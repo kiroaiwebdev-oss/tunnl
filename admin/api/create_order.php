@@ -45,12 +45,15 @@ if (!$keyId || !$keySecret ||
 }
 
 // ── Resolve amount ──────────────────────────────────
+// The app displays `premium_price` and only sells a one-time unlock, so the
+// charged amount MUST match `premium_price` to avoid display/charge mismatch.
+$basePrice = intval($settings['premium_price'] ?? 50);
 $priceMap = [
-    'monthly'  => intval($settings['premium_price']          ?? 50),
-    'yearly'   => intval($settings['premium_yearly_price']   ?? 499),
-    'lifetime' => intval($settings['premium_lifetime_price'] ?? intval($settings['premium_price'] ?? 50)),
+    'monthly'  => $basePrice,
+    'yearly'   => intval($settings['premium_yearly_price'] ?? 499),
+    'lifetime' => $basePrice,
 ];
-$amountRupees = $priceMap[$plan];
+$amountRupees = $priceMap[$plan] ?? $basePrice;
 if ($amountRupees < 1) error('Invalid amount configuration', 500);
 
 $amountPaise = $amountRupees * 100;

@@ -10,6 +10,10 @@ $trick->execute([$id]);
 $trick = $trick->fetch();
 if (!$trick) { header('Location: ' . ADMIN_URL . '/tricks/index.php'); exit; }
 
+$existingCats = array_column($pdo->query(
+    "SELECT DISTINCT category FROM tricks WHERE category <> '' ORDER BY category"
+)->fetchAll(), 'category');
+
 $success = $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -25,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             intval($_POST['chapter_number']),
             trim($_POST['title']),
             trim($_POST['subtitle'] ?? ''),
-            $_POST['category'],
+            strtoupper(trim($_POST['category'])),
             $_POST['difficulty'],
             isset($_POST['has_video'])   ? 1 : 0,
             trim($_POST['video_url']     ?? ''),
@@ -70,11 +74,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     <div class="form-group">
       <label class="form-label">Category *</label>
-      <select name="category" class="form-select" required>
-        <?php foreach (['MULTIPLICATION','DIVISION','SQUARES','FRACTIONS','SHORTCUTS'] as $c): ?>
-        <option value="<?= $c ?>" <?= $trick['category']===$c?'selected':'' ?>><?= ucfirst(strtolower($c)) ?></option>
+      <input type="text" name="category" class="form-input" required list="catList"
+        value="<?= htmlspecialchars($trick['category']) ?>"
+        placeholder="Type new or pick existing" style="text-transform:uppercase">
+      <datalist id="catList">
+        <?php foreach ($existingCats as $c): ?>
+        <option value="<?= htmlspecialchars($c) ?>"></option>
         <?php endforeach; ?>
-      </select>
+        <option value="MULTIPLICATION"></option>
+        <option value="DIVISION"></option>
+        <option value="SQUARES"></option>
+        <option value="FRACTIONS"></option>
+        <option value="SHORTCUTS"></option>
+      </datalist>
     </div>
     <div class="form-group">
       <label class="form-label">Difficulty *</label>

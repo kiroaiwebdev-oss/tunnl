@@ -824,12 +824,15 @@ class _DashboardScreenState extends State<DashboardScreen>
           final isActive = _selectedTab == i;
 
           return GestureDetector(
-            onTap: () {
+            onTap: () async {
+              if (i == 0) {
+                setState(() => _selectedTab = 0);
+                return;
+              }
               setState(() => _selectedTab = i);
               switch (i) {
-                case 0: break;
                 case 1:
-                  Navigator.of(context).push(MaterialPageRoute(
+                  await Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => SetsScreen(
                       title: '5000 Speed Math MCQs',
                       category: 'mcq',
@@ -841,16 +844,18 @@ class _DashboardScreenState extends State<DashboardScreen>
                   ));
                   break;
                 case 2:
-                  Navigator.of(context).push(MaterialPageRoute(
+                  await Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => const SolveEarnLeaderboardScreen(),
                   ));
                   break;
                 case 3:
-                  Navigator.of(context).push(MaterialPageRoute(
+                  await Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => const ProfileScreen(),
                   ));
                   break;
               }
+              // Back on the dashboard → Home (LEARN) is the active tab.
+              if (mounted) setState(() => _selectedTab = 0);
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),

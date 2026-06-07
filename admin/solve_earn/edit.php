@@ -51,6 +51,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->prepare("UPDATE weekly_challenges SET " . implode(', ', $sets) . " WHERE id = ?")
             ->execute($params);
 
+        // Only ONE challenge can be active at a time — demote any other actives.
+        if (($_POST['status'] ?? '') === 'active') {
+            $pdo->prepare("UPDATE weekly_challenges SET status='ended' WHERE status='active' AND id != ?")
+                ->execute([$id]);
+        }
+
         // Re-assign questions: clear then re-insert the selected ones.
         $pdo->prepare("DELETE FROM challenge_questions WHERE challenge_id = ?")->execute([$id]);
         if (!empty($_POST['question_ids'])) {
