@@ -1,12 +1,11 @@
 // lib/features/profile/edit_profile_screen.dart
 //
-// Full-page editor for the user's profile.
+// Full-page editor for the user's profile (name + class/exam).
+// Note: no image_picker / dart:io here so the screen builds on web AND android.
 
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/user_service.dart';
@@ -34,11 +33,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
 
   late final TextEditingController _nameCtrl;
   final FocusNode _nameFocus = FocusNode();
-  final ImagePicker _picker = ImagePicker();
 
   String? _selectedStandard;
   String _currentImageUrl = '';
-  File? _localImage;
   bool _isLoading = false;
   bool _hasNameError = false;
 
@@ -86,11 +83,10 @@ class _EditProfileScreenState extends State<EditProfileScreen>
   bool get _hasChanges {
     final nameChanged = _nameCtrl.text.trim() != widget.initialName.trim();
     final stdChanged = (_selectedStandard ?? '') != widget.initialStandard;
-    final imgChanged = _localImage != null;
-    return nameChanged || stdChanged || imgChanged;
+    return nameChanged || stdChanged;
   }
 
-  Future<bool> _onWillPop() async {
+  Future<bool> _confirmDiscard() async {
     if (!_hasChanges || _isLoading) return true;
     final result = await showDialog<bool>(
       context: context,
@@ -121,85 +117,6 @@ class _EditProfileScreenState extends State<EditProfileScreen>
       ),
     );
     return result ?? false;
-  }
-
-  Future<void> _pickImage() async {
-    try {
-      showModalBottomSheet(
-        context: context,
-        backgroundColor: AppColors.darkCard,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        builder: (ctx) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              Container(
-                width: 40, height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.textMuted.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: const Icon(Icons.photo_camera_rounded,
-                    color: AppColors.neonCyan),
-                title: Text('Take Photo',
-                    style: GoogleFonts.poppins(color: Colors.white)),
-                onTap: () async {
-                  Navigator.pop(ctx);
-                  await _pickFrom(ImageSource.camera);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library_rounded,
-                    color: AppColors.neonCyan),
-                title: Text('Choose from Gallery',
-                    style: GoogleFonts.poppins(color: Colors.white)),
-                onTap: () async {
-                  Navigator.pop(ctx);
-                  await _pickFrom(ImageSource.gallery);
-                },
-              ),
-              if (_localImage != null || _currentImageUrl.isNotEmpty)
-                ListTile(
-                  leading: const Icon(Icons.delete_outline_rounded,
-                      color: AppColors.error),
-                  title: Text('Remove Photo',
-                      style: GoogleFonts.poppins(color: AppColors.error)),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    setState(() {
-                      _localImage = null;
-                      _currentImageUrl = '';
-                    });
-                  },
-                ),
-              const SizedBox(height: 12),
-            ],
-          ),
-        ),
-      );
-    } catch (_) {}
-  }
-
-  Future<void> _pickFrom(ImageSource src) async {
-    try {
-      final XFile? f = await _picker.pickImage(
-        source: src,
-        maxWidth: 800,
-        maxHeight: 800,
-        imageQuality: 85,
-      );
-      if (f != null && mounted) {
-        setState(() => _localImage = File(f.path));
-      }
-    } catch (e) {
-      if (mounted) _toast('Could not pick image: $e', isError: true);
-    }
   }
 
   void _toast(String msg, {bool isError = false}) {
@@ -240,19 +157,10 @@ class _EditProfileScreenState extends State<EditProfileScreen>
 
     setState(() => _isLoading = true);
 
-    // 1. If user picked a new image, upload it first
-    String? newImageUrl;
-    if (_localImage != null) {
-      newImageUrl = await UserService.uploadProfileImage(_localImage!.path);
-      if (newImageUrl == null) {
-        if (!mounted) return;
-        setState(() => _isLoading = false);
-        _toast('Failed to upload image. Try again.', isError: true);
-        return;
-      }
-    }
+    // Capture context-bound objects before the await to avoid using
+    // BuildContext across an async gap.
+    final navigator = Navigator.of(context);
 
-    // 2. Update name + standard (and the new image URL if uploaded)
     final ok = await UserService.updateProfile(
       name: name,
       standard: _selectedStandard,
@@ -265,8 +173,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
       if (_selectedStandard != null) {
         await AuthService.setCachedStandard(_selectedStandard!);
       }
+      if (!mounted) return;
       _toast('Profile updated!');
-      Navigator.of(context).pop(true);
+      navigator.pop(true);
     } else {
       setState(() => _isLoading = false);
       _toast('Failed to update. Try again.', isError: true);
@@ -279,8 +188,14 @@ class _EditProfileScreenState extends State<EditProfileScreen>
         ? widget.initialName[0].toUpperCase()
         : '?';
 
-    return WillPopScope(
-      onWillPop: _onWillPop,
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        if (didPop) return;
+        final navigator = Navigator.of(context);
+        final shouldPop = await _confirmDiscard();
+        if (shouldPop && mounted) navigator.pop();
+      },
       child: Scaffold(
         backgroundColor: AppColors.darkBg,
         body: GestureDetector(
@@ -339,8 +254,9 @@ class _EditProfileScreenState extends State<EditProfileScreen>
         children: [
           GestureDetector(
             onTap: () async {
-              final ok = await _onWillPop();
-              if (ok && mounted) Navigator.of(context).pop();
+              final navigator = Navigator.of(context);
+              final ok = await _confirmDiscard();
+              if (ok && mounted) navigator.pop();
             },
             child: const Icon(Icons.arrow_back_ios_new_rounded,
                 color: AppColors.neonCyan, size: 20),
@@ -358,53 +274,32 @@ class _EditProfileScreenState extends State<EditProfileScreen>
   }
 
   Widget _buildAvatar(String letter) {
-    final hasImage = _localImage != null || _currentImageUrl.isNotEmpty;
+    final hasImage = _currentImageUrl.isNotEmpty;
     return Center(
-      child: GestureDetector(
-        onTap: _pickImage,
-        child: Stack(
-          alignment: Alignment.bottomRight,
-          children: [
-            Container(
-              width: 110,
-              height: 110,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.neonCyan.withValues(alpha: 0.12),
-                border: Border.all(
-                    color: AppColors.neonCyan.withValues(alpha: 0.4), width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.neonCyan.withValues(alpha: 0.15),
-                    blurRadius: 24,
-                    spreadRadius: 4,
-                  ),
-                ],
-              ),
-              child: ClipOval(
-                child: hasImage
-                    ? (_localImage != null
-                        ? Image.file(_localImage!, fit: BoxFit.cover)
-                        : Image.network(
-                            _currentImageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => _initialFallback(letter),
-                          ))
-                    : _initialFallback(letter),
-              ),
-            ),
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.neonCyan,
-                border: Border.all(color: AppColors.darkBg, width: 2),
-              ),
-              child: const Icon(Icons.camera_alt_rounded,
-                  color: AppColors.darkBg, size: 18),
+      child: Container(
+        width: 110,
+        height: 110,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.neonCyan.withValues(alpha: 0.12),
+          border: Border.all(
+              color: AppColors.neonCyan.withValues(alpha: 0.4), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.neonCyan.withValues(alpha: 0.15),
+              blurRadius: 24,
+              spreadRadius: 4,
             ),
           ],
+        ),
+        child: ClipOval(
+          child: hasImage
+              ? Image.network(
+                  _currentImageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => _initialFallback(letter),
+                )
+              : _initialFallback(letter),
         ),
       ),
     );
@@ -444,6 +339,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
       maxLength: 32,
       onChanged: (_) {
         if (_hasNameError) setState(() => _hasNameError = false);
+        setState(() {}); // refresh save-bar enabled state
       },
       decoration: InputDecoration(
         hintText: 'Enter your name',

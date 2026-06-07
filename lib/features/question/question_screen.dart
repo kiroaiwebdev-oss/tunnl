@@ -442,8 +442,14 @@ class _QuestionScreenState extends State<QuestionScreen>
     final q = _questions[_currentIndex];
     final stage = 'STAGE ${(_currentIndex + 1).toString().padLeft(2, '0')}';
 
-    return WillPopScope(
-      onWillPop: _onWillPop,
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        if (didPop) return;
+        final navigator = Navigator.of(context);
+        final exit = await _onWillPop();
+        if (exit && mounted) navigator.pop();
+      },
       child: Scaffold(
         backgroundColor: AppColors.darkBg,
         body: Container(
