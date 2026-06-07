@@ -78,6 +78,7 @@ $qCount = $qCount->fetchColumn();
         <option value="mcq"            <?= $set['category']==='mcq'            ?'selected':'' ?>>5000 Speed Math MCQ</option>
         <option value="simplification" <?= $set['category']==='simplification' ?'selected':'' ?>>500 Simplification</option>
         <option value="previous_year"  <?= $set['category']==='previous_year'  ?'selected':'' ?>>Previous Year</option>
+        <option value="tunnlity"        <?= $set['category']==='tunnlity'        ?'selected':'' ?>>Test Your Tunnlity</option>
       </select>
     </div>
     <div class="form-group">

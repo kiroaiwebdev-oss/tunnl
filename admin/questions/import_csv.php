@@ -104,6 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
           <option value="mcq">5000 Speed Math MCQ</option>
           <option value="simplification">500 Simplification</option>
           <option value="previous_year">Previous Year</option>
+          <option value="tunnlity">Test Your Tunnlity</option>
           <option value="daily_practice">Daily Practice</option>
         </select>
       </div>

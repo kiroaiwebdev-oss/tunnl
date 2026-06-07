@@ -8,7 +8,7 @@ $page     = max(1, intval($_GET['page'] ?? 1));
 $perPage  = max(1, intval($_GET['per_page'] ?? 50));
 $offset   = ($page - 1) * $perPage;
 
-$validCats = ['mcq','simplification','previous_year'];
+$validCats = ['mcq','simplification','previous_year','tunnlity'];
 if (!in_array($category, $validCats, true)) error('Invalid category');
 
 $where  = ['s.category = ?'];
@@ -46,10 +46,11 @@ $sets = $sets->fetchAll();
 $isPremium = $user ? !empty($user['is_premium']) : false;
 
 $result = array_map(function ($s) use ($isPremium) {
-    // First 2 sets of practice categories are ALWAYS free (preview), so free
-    // users always have something to try even if admin marked everything premium.
-    $freePreview = in_array($s['category'], ['mcq', 'simplification'], true)
-                   && intval($s['set_number']) <= 2;
+    // First 2 sets of practice categories are ALWAYS free (preview). The
+    // "Tunnlity" speed-test sets are fully free (guest feature).
+    $freePreview = $s['category'] === 'tunnlity'
+                   || (in_array($s['category'], ['mcq', 'simplification'], true)
+                       && intval($s['set_number']) <= 2);
     $premium = !empty($s['is_premium']) && !$freePreview;
     return [
         'id'              => intval($s['id']),

@@ -232,7 +232,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
                             onTap: () => Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (_) => const QuestionScreen(
-                                  mode: 'tunnelity', category: 'mcq',
+                                  mode: 'tunnelity', category: 'tunnlity',
                                   setNumber: 1, totalQuestions: 10,
                                 ),
                               ),
