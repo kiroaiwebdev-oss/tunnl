@@ -129,7 +129,7 @@ $shorts = $pdo->query("SELECT * FROM shorts ORDER BY created_at DESC")->fetchAll
 <script>
 function deleteShort(id) {
   if (!confirm('Delete this short?')) return;
-  fetch('/admin/shorts/delete.php', {
+  fetch('delete.php', {
     method:'POST',
     headers:{'Content-Type':'application/x-www-form-urlencoded'},
     body:'id='+id

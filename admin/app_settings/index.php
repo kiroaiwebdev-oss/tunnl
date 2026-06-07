@@ -626,7 +626,7 @@ foreach ($settingsRaw as $row) {
         <div class="setting-desc">Force logout all users from app</div>
       </div>
       <button type="button" class="btn btn-danger btn-sm"
-        onclick="if(confirm('Clear all sessions?')) window.location='/admin/app_settings/clear_sessions.php'">
+        onclick="if(confirm('Clear all sessions?')) window.location='clear_sessions.php'">
         <i class="fas fa-sign-out-alt"></i> Clear Sessions
       </button>
     </div>

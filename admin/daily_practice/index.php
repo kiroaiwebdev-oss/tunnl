@@ -115,7 +115,7 @@ $todayExists = $todayExists->fetch();
 <script>
 function deletePractice(id) {
   if (!confirm('Delete this practice set and all its questions?')) return;
-  fetch('/admin/daily_practice/delete.php', {
+  fetch('delete.php', {
     method:'POST',
     headers:{'Content-Type':'application/x-www-form-urlencoded'},
     body:'id='+id
