@@ -18,6 +18,8 @@ import '../question/question_screen.dart';
 import '../premium/premium_screen.dart';
 import '../previous_year/previous_year_screen.dart';
 import '../profile/profile_screen.dart';
+import '../tricks/tricks_screen.dart';
+import '../solve_earn/solve_earn_screen.dart';
 
 class HubScreen extends StatefulWidget {
   const HubScreen({super.key});
@@ -45,55 +47,6 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
 
   List<BannerModel> _apiBanners     = [];
   bool              _bannersLoading = true;
-
-  // Static fallback — sirf tab jab API fail ho
-  final List<Map<String, dynamic>> _staticBanners = [
-    {
-      'title':       'NEW! SSC CGL 2024',
-      'subtitle':    'Previous year papers live now',
-      'gradient':    [const Color(0xFF0D2233), const Color(0xFF1A3A4A)],
-      'borderColor': AppColors.neonCyan,
-      'icon':        Icons.history_edu_rounded,
-      'iconColor':   AppColors.neonCyan,
-      'actionValue': 'previous_year',
-    },
-    {
-      'title':       'TUNNL TRICKS',
-      'subtitle':    '8 powerful math shortcuts added',
-      'gradient':    [const Color(0xFF1A1040), const Color(0xFF2A1A60)],
-      'borderColor': const Color(0xFF9C6FFF),
-      'icon':        Icons.layers_rounded,
-      'iconColor':   const Color(0xFF9C6FFF),
-      'actionValue': 'tricks',
-    },
-    {
-      'title':       'SOLVE & EARN 🎁',
-      'subtitle':    'Win rewards — top 3 get prizes!',
-      'gradient':    [const Color(0xFF1A1A00), const Color(0xFF2A2A00)],
-      'borderColor': AppColors.yellow,
-      'icon':        Icons.card_giftcard_rounded,
-      'iconColor':   AppColors.yellow,
-      'actionValue': 'solve_earn',
-    },
-    {
-      'title':       'UPGRADE TO PREMIUM',
-      'subtitle':    'Full access for just ₹50 only',
-      'gradient':    [const Color(0xFF1A0A00), const Color(0xFF2A1200)],
-      'borderColor': AppColors.orange,
-      'icon':        Icons.workspace_premium_rounded,
-      'iconColor':   AppColors.orange,
-      'actionValue': 'premium',
-    },
-    {
-      'title':       '5000 MCQs UPDATED',
-      'subtitle':    'New speed math questions added',
-      'gradient':    [const Color(0xFF0D1A26), const Color(0xFF1A2A3A)],
-      'borderColor': AppColors.neonCyan,
-      'icon':        Icons.quiz_rounded,
-      'iconColor':   AppColors.neonCyan,
-      'actionValue': 'mcq',
-    },
-  ];
 
   @override
   void initState() {
@@ -174,10 +127,8 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
     _autoScrollTimer?.cancel();
     _autoScrollTimer = Timer.periodic(const Duration(seconds: 3), (_) {
       if (!mounted || !_pageCtrl.hasClients) return;
-      final total = _apiBanners.isNotEmpty
-          ? _apiBanners.length
-          : _staticBanners.length;
-      if (total == 0) return;
+      final total = _apiBanners.length;
+      if (total <= 1) return;
       final next = (_currentPage + 1) % total;
       _pageCtrl.animateToPage(
         next,
@@ -210,6 +161,14 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
       case 'shorts':
         Navigator.of(context).push(MaterialPageRoute(
           builder: (_) => const ShortsScreen()));
+        break;
+      case 'tricks':
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => TricksScreen(isPremium: _isPremium)));
+        break;
+      case 'solve_earn':
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => const SolveEarnScreen()));
         break;
     }
   }
@@ -411,48 +370,49 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildCarousel() {
-    final bool useApi = _apiBanners.isNotEmpty;
-    final int  total  = useApi ? _apiBanners.length : _staticBanners.length;
+    final int total = _apiBanners.length;
+
+    // Loading → show a placeholder shimmer box.
+    if (_bannersLoading) {
+      return SizedBox(
+        height: 160,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0D1A26),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.neonCyan.withOpacity(0.15)),
+          ),
+          child: Center(
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.neonCyan.withOpacity(0.6),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // No admin banners → render nothing (no hardcoded fallback content).
+    if (total == 0) return const SizedBox.shrink();
 
     return Column(
       children: [
         SizedBox(
           height: 160,
-          child: _bannersLoading
-              ? Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0D1A26),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: AppColors.neonCyan.withOpacity(0.15)),
-                  ),
-                  child: Center(
-                    child: SizedBox(
-                      width: 24, height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.neonCyan.withOpacity(0.6),
-                      ),
-                    ),
-                  ),
-                )
-              : PageView.builder(
-                  controller: _pageCtrl,
-                  itemCount: total,
-                  onPageChanged: (i) => setState(() => _currentPage = i),
-                  itemBuilder: (_, i) {
-                    if (useApi) return _buildApiBanner(_apiBanners[i]);
-                    return GestureDetector(
-                      onTap: () => _onBannerTap(
-                          _staticBanners[i]['actionValue'] as String),
-                      child: _buildPlaceholderBanner(i),
-                    );
-                  },
-                ),
+          child: PageView.builder(
+            controller: _pageCtrl,
+            itemCount: total,
+            onPageChanged: (i) => setState(() => _currentPage = i),
+            itemBuilder: (_, i) => _buildApiBanner(_apiBanners[i]),
+          ),
         ),
         const SizedBox(height: 10),
-        if (!_bannersLoading)
+        if (total > 1)
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(total, (i) {
@@ -460,7 +420,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
               return AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 margin: const EdgeInsets.symmetric(horizontal: 3),
-                width:  isActive ? 18 : 5,
+                width: isActive ? 18 : 5,
                 height: 5,
                 decoration: BoxDecoration(
                   color: isActive
@@ -554,58 +514,6 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
       'solve_earn':    'CONTEST',
     };
     return labels[action] ?? action.toUpperCase();
-  }
-
-  Widget _buildPlaceholderBanner(int index) {
-    final banner = _staticBanners[index];
-    final List<Color> gradient = List<Color>.from(banner['gradient']);
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        gradient: LinearGradient(
-          colors: gradient,
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        border: Border.all(
-          color: (banner['borderColor'] as Color).withOpacity(0.35)),
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        children: [
-          Container(
-            width: 52, height: 52,
-            decoration: BoxDecoration(
-              color: (banner['borderColor'] as Color).withOpacity(0.15),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(banner['icon'] as IconData,
-              color: banner['iconColor'] as Color, size: 26),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(banner['title'] as String,
-                  style: GoogleFonts.poppins(
-                    fontSize: 15, fontWeight: FontWeight.w700,
-                    color: Colors.white, height: 1.2)),
-                const SizedBox(height: 4),
-                Text(banner['subtitle'] as String,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12, color: AppColors.textSecondary)),
-              ],
-            ),
-          ),
-          Icon(Icons.arrow_forward_ios_rounded,
-            color: (banner['borderColor'] as Color).withOpacity(0.6),
-            size: 14),
-        ],
-      ),
-    );
   }
 
   Widget _buildDrawer() {

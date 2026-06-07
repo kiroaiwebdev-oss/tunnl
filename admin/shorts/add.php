@@ -6,13 +6,32 @@ $success = $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
+        $platform  = strtolower(trim($_POST['platform'] ?? 'youtube'));
+        if (!in_array($platform, ['youtube', 'instagram', 'facebook'], true)) {
+            $platform = 'youtube';
+        }
+        $videoUrl  = trim($_POST['video_url'] ?? '');
+        $thumbnail = trim($_POST['thumbnail_url'] ?? '');
+
+        // Auto-derive YouTube thumbnail if admin left it empty.
+        if ($thumbnail === '' && $platform === 'youtube') {
+            if (preg_match('/(?:v=|\/shorts\/|youtu\.be\/|\/embed\/)([a-zA-Z0-9_-]{11})/', $videoUrl, $m)) {
+                $thumbnail = 'https://img.youtube.com/vi/' . $m[1] . '/mqdefault.jpg';
+            }
+        }
+
+        // Store the URL in BOTH columns so the API (which prefers youtube_url
+        // then falls back to url) always finds it, regardless of platform.
         $pdo->prepare("
             INSERT INTO shorts
-              (title, youtube_url, category, duration, is_active)
-            VALUES (?,?,?,?,1)
+              (platform, title, url, youtube_url, thumbnail_url, category, duration, is_active)
+            VALUES (?,?,?,?,?,?,?,1)
         ")->execute([
+            $platform,
             trim($_POST['title']),
-            trim($_POST['youtube_url']),
+            $videoUrl,
+            $videoUrl,
+            $thumbnail,
             $_POST['category'],
             intval($_POST['duration'] ?? 0),
         ]);
@@ -32,12 +51,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <i class="fas fa-check-circle"></i> <?= $success ?>
 </div>
 <?php endif; ?>
+<?php if ($error): ?>
+<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#FCA5A5;
+  padding:12px 16px;border-radius:12px;margin-bottom:20px;display:flex;align-items:center;gap:8px">
+  <i class="fas fa-exclamation-circle"></i> <?= htmlspecialchars($error) ?>
+</div>
+<?php endif; ?>
 
 <div style="max-width:600px">
 <div class="flex-between mb-24">
   <div>
     <h2 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700">Add Short</h2>
-    <p class="text-muted">Add a YouTube short video</p>
+    <p class="text-muted">Add a video from YouTube, Instagram or Facebook</p>
   </div>
   <a href="<?= ADMIN_URL ?>/shorts/index.php" class="btn btn-secondary">
     <i class="fas fa-arrow-left"></i> Back
@@ -47,6 +72,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <form method="POST">
 <div class="card mb-16">
   <div class="form-group">
+    <label class="form-label">Platform *</label>
+    <select name="platform" id="platform" class="form-select" required onchange="onPlatformChange()">
+      <option value="youtube">▶️ YouTube</option>
+      <option value="instagram">📸 Instagram</option>
+      <option value="facebook">📘 Facebook</option>
+    </select>
+    <div id="platformHint" style="font-size:11px;color:var(--muted);margin-top:4px">
+      Paste a YouTube Shorts/video link.
+    </div>
+  </div>
+
+  <div class="form-group">
     <label class="form-label">Title *</label>
     <input type="text" name="title" class="form-input" required
       value="<?= htmlspecialchars($_POST['title'] ?? '') ?>"
@@ -54,13 +91,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </div>
 
   <div class="form-group">
-    <label class="form-label">YouTube URL *</label>
-    <input type="url" name="youtube_url" id="ytUrl" class="form-input" required
-      value="<?= htmlspecialchars($_POST['youtube_url'] ?? '') ?>"
+    <label class="form-label">Video URL *</label>
+    <input type="url" name="video_url" id="videoUrl" class="form-input" required
+      value="<?= htmlspecialchars($_POST['video_url'] ?? '') ?>"
       placeholder="https://youtube.com/shorts/..."
-      oninput="updatePreview(this.value)">
+      oninput="updatePreview()">
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Thumbnail URL <span id="thumbReq" style="color:var(--muted)">(optional)</span></label>
+    <input type="url" name="thumbnail_url" id="thumbUrl" class="form-input"
+      value="<?= htmlspecialchars($_POST['thumbnail_url'] ?? '') ?>"
+      placeholder="https://..."
+      oninput="updatePreview()">
     <div style="font-size:11px;color:var(--muted);margin-top:4px">
-      Paste YouTube Shorts or regular video URL
+      YouTube auto-generates a thumbnail. For Instagram & Facebook, paste an image URL
+      so the app card shows a preview.
     </div>
   </div>
 
@@ -88,8 +134,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <img id="thumbPreview" src="" alt="Preview"
       style="width:100%;max-height:200px;object-fit:cover">
     <div style="padding:10px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px">
-      <i class="fab fa-youtube" style="color:#EF4444"></i>
-      <span id="thumbVideoId"></span>
+      <i id="platformIcon" class="fab fa-youtube" style="color:#EF4444"></i>
+      <span id="previewLabel"></span>
     </div>
   </div>
 </div>
@@ -109,20 +155,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 
 <script>
-function updatePreview(url) {
-  const m = url.match(/(?:v=|\/shorts\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-  if (m) {
-    const vid = m[1];
-    document.getElementById('thumbPreview').src = `https://img.youtube.com/vi/${vid}/mqdefault.jpg`;
-    document.getElementById('thumbVideoId').textContent = 'Video ID: ' + vid;
-    document.getElementById('previewBox').style.display = 'block';
+function ytIdFromUrl(url) {
+  const m = url.match(/(?:v=|\/shorts\/|youtu\.be\/|\/embed\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+function onPlatformChange() {
+  const p = document.getElementById('platform').value;
+  const url = document.getElementById('videoUrl');
+  const hint = document.getElementById('platformHint');
+  const thumbReq = document.getElementById('thumbReq');
+  const icon = document.getElementById('platformIcon');
+
+  if (p === 'youtube') {
+    url.placeholder = 'https://youtube.com/shorts/...';
+    hint.textContent = 'Paste a YouTube Shorts/video link. Thumbnail is auto-generated.';
+    thumbReq.textContent = '(optional)';
+    icon.className = 'fab fa-youtube'; icon.style.color = '#EF4444';
+  } else if (p === 'instagram') {
+    url.placeholder = 'https://www.instagram.com/reel/...';
+    hint.textContent = 'Paste an Instagram Reel/post link. Add a thumbnail image URL below.';
+    thumbReq.textContent = '(recommended)';
+    icon.className = 'fab fa-instagram'; icon.style.color = '#E1306C';
+  } else if (p === 'facebook') {
+    url.placeholder = 'https://www.facebook.com/watch/?v=... or https://fb.watch/...';
+    hint.textContent = 'Paste a Facebook video/reel link. Add a thumbnail image URL below.';
+    thumbReq.textContent = '(recommended)';
+    icon.className = 'fab fa-facebook'; icon.style.color = '#1877F2';
+  }
+  updatePreview();
+}
+
+function updatePreview() {
+  const p = document.getElementById('platform').value;
+  const url = document.getElementById('videoUrl').value.trim();
+  const thumb = document.getElementById('thumbUrl').value.trim();
+  const box = document.getElementById('previewBox');
+  const img = document.getElementById('thumbPreview');
+  const label = document.getElementById('previewLabel');
+
+  let thumbSrc = thumb;
+  let labelText = p.charAt(0).toUpperCase() + p.slice(1);
+
+  if (p === 'youtube' && !thumbSrc) {
+    const vid = ytIdFromUrl(url);
+    if (vid) { thumbSrc = `https://img.youtube.com/vi/${vid}/mqdefault.jpg`; labelText = 'YouTube • ' + vid; }
+  }
+
+  if (thumbSrc) {
+    img.src = thumbSrc;
+    label.textContent = labelText;
+    box.style.display = 'block';
   } else {
-    document.getElementById('previewBox').style.display = 'none';
+    box.style.display = 'none';
   }
 }
-// Init if editing
-const v = document.getElementById('ytUrl').value;
-if (v) updatePreview(v);
+
+// Init
+onPlatformChange();
+updatePreview();
 </script>
 
 <?php require_once dirname(__DIR__) . '/includes/footer.php'; ?>

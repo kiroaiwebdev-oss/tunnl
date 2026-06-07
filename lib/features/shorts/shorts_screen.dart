@@ -23,7 +23,7 @@ class _ShortsScreenState extends State<ShortsScreen>
   late AnimationController _entryCtrl;
   late Animation<double> _fadeAnim;
 
-  final List<String> _filters = ['ALL', 'YOUTUBE', 'INSTAGRAM', 'TELEGRAM'];
+  final List<String> _filters = ['ALL', 'YOUTUBE', 'INSTAGRAM', 'FACEBOOK'];
 
   List<ShortModel> _allShorts = [];
   bool _isLoading = true;
@@ -38,6 +38,8 @@ class _ShortsScreenState extends State<ShortsScreen>
     switch (platform) {
       case 'INSTAGRAM':
         return Icons.camera_alt_rounded;
+      case 'FACEBOOK':
+        return Icons.facebook;
       case 'TELEGRAM':
         return Icons.send_rounded;
       case 'YOUTUBE':
@@ -50,6 +52,8 @@ class _ShortsScreenState extends State<ShortsScreen>
     switch (platform) {
       case 'INSTAGRAM':
         return const Color(0xFFE1306C);
+      case 'FACEBOOK':
+        return const Color(0xFF1877F2);
       case 'TELEGRAM':
         return const Color(0xFF0088CC);
       case 'YOUTUBE':
@@ -236,7 +240,7 @@ class _ShortsScreenState extends State<ShortsScreen>
       AppColors.neonCyan,
       const Color(0xFFFF0000),
       const Color(0xFFE1306C),
-      const Color(0xFF0088CC),
+      const Color(0xFF1877F2),
     ];
     return SizedBox(
       height: 40,
@@ -280,7 +284,7 @@ class _ShortsScreenState extends State<ShortsScreen>
   Widget _buildStatsRow() {
     final ytCount = _allShorts.where((s) => s.platform == 'YOUTUBE').length;
     final igCount = _allShorts.where((s) => s.platform == 'INSTAGRAM').length;
-    final tgCount = _allShorts.where((s) => s.platform == 'TELEGRAM').length;
+    final fbCount = _allShorts.where((s) => s.platform == 'FACEBOOK').length;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
@@ -298,10 +302,10 @@ class _ShortsScreenState extends State<ShortsScreen>
               icon: Icons.camera_alt_rounded),
           const SizedBox(width: 8),
           _StatChip(
-              label: 'Telegram',
-              count: tgCount,
-              color: const Color(0xFF0088CC),
-              icon: Icons.send_rounded),
+              label: 'Facebook',
+              count: fbCount,
+              color: const Color(0xFF1877F2),
+              icon: Icons.facebook),
         ],
       ),
     );

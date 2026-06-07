@@ -1,6 +1,12 @@
+// lib/features/solve_earn/solve_earn_leaderboard_screen.dart
+//
+// Weekly Solve & Earn leaderboard. All entries come from the admin panel via
+// weekly_challenge.php (UserService.getWeeklyChallenge()). No hardcoded users.
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/user_service.dart';
 
 class SolveEarnLeaderboardScreen extends StatefulWidget {
   const SolveEarnLeaderboardScreen({super.key});
@@ -19,23 +25,27 @@ class _SolveEarnLeaderboardScreenState
   late AnimationController _podiumCtrl;
   late Animation<double> _podiumAnim;
 
-  // Weekly Solve & Earn leaderboard data
-  final List<Map<String, dynamic>> _leaderboard = [
-    {'rank': 1, 'name': 'Rahul Sharma',  'score': 980, 'solved': 49, 'reward': '₹500 Amazon', 'isMe': false},
-    {'rank': 2, 'name': 'Priya Singh',   'score': 950, 'solved': 47, 'reward': '₹300 Flipkart', 'isMe': false},
-    {'rank': 3, 'name': 'Amit Kumar',    'score': 920, 'solved': 46, 'reward': '₹200 Paytm', 'isMe': false},
-    {'rank': 4, 'name': 'You',           'score': 880, 'solved': 44, 'reward': '₹100 UPI', 'isMe': true},
-    {'rank': 5, 'name': 'Neha Gupta',    'score': 850, 'solved': 42, 'reward': '₹50 UPI', 'isMe': false},
-    {'rank': 6, 'name': 'Vikram Patil',  'score': 820, 'solved': 41, 'reward': '-', 'isMe': false},
-    {'rank': 7, 'name': 'Sneha Rao',     'score': 790, 'solved': 39, 'reward': '-', 'isMe': false},
-    {'rank': 8, 'name': 'Rohit Verma',   'score': 760, 'solved': 38, 'reward': '-', 'isMe': false},
-    {'rank': 9, 'name': 'Kavya Nair',    'score': 730, 'solved': 36, 'reward': '-', 'isMe': false},
-    {'rank': 10,'name': 'Arjun Mehta',   'score': 700, 'solved': 35, 'reward': '-', 'isMe': false},
-  ];
+  bool _isLoading = true;
+  Map<String, dynamic>? _challenge;
+  List<Map<String, dynamic>> _leaderboard = [];
 
-  // Days left in week
-  final int _daysLeft = 3;
-  final int _totalParticipants = 1240;
+  String get _title =>
+      (_challenge?['title'] ?? 'Weekly Challenge').toString();
+  double get _prizeAmount =>
+      (_challenge?['prize_amount'] as num?)?.toDouble() ?? 0.0;
+  int get _totalParticipants => _leaderboard.length;
+  bool get _hasAttempted => _challenge?['is_attempted'] == true;
+  Map<String, dynamic> get _myEntry =>
+      (_challenge?['my_entry'] as Map?)?.cast<String, dynamic>() ?? {};
+
+  int get _daysLeft {
+    final raw = (_challenge?['end_date'] ?? '').toString();
+    if (raw.isEmpty) return 0;
+    final end = DateTime.tryParse(raw);
+    if (end == null) return 0;
+    final d = end.difference(DateTime.now()).inDays;
+    return d < 0 ? 0 : d;
+  }
 
   @override
   void initState() {
@@ -56,9 +66,7 @@ class _SolveEarnLeaderboardScreenState
       CurvedAnimation(parent: _podiumCtrl, curve: Curves.easeOutCubic),
     );
 
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (mounted) _podiumCtrl.forward();
-    });
+    _load();
   }
 
   @override
@@ -66,6 +74,37 @@ class _SolveEarnLeaderboardScreenState
     _entryCtrl.dispose();
     _podiumCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _load() async {
+    setState(() => _isLoading = true);
+    final res = await UserService.getWeeklyChallenge();
+    if (!mounted) return;
+    final ok = res['success'] == true || res['status'] == true;
+    final challenge = res['challenge'];
+    final lb = res['leaderboard'];
+    setState(() {
+      _challenge = (ok && challenge is Map)
+          ? challenge.cast<String, dynamic>()
+          : null;
+      _leaderboard = (lb is List)
+          ? lb.whereType<Map>().map((e) => e.cast<String, dynamic>()).toList()
+          : [];
+      _isLoading = false;
+    });
+    _podiumCtrl
+      ..reset()
+      ..forward();
+  }
+
+  String _initial(String name) =>
+      name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : '?';
+
+  String _fmtTime(int seconds) {
+    if (seconds <= 0) return '--:--';
+    final m = seconds ~/ 60;
+    final s = seconds % 60;
+    return '$m:${s.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -79,63 +118,78 @@ class _SolveEarnLeaderboardScreenState
             opacity: _fadeAnim,
             child: Column(
               children: [
-                // ── AppBar
                 _buildAppBar(),
-
                 Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 10),
-
-                        // ── Weekly banner
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20),
-                          child: _buildWeeklyBanner(),
+                  child: _isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                              color: AppColors.yellow))
+                      : RefreshIndicator(
+                          color: AppColors.yellow,
+                          backgroundColor: AppColors.darkCard,
+                          onRefresh: _load,
+                          child: SingleChildScrollView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            child: Column(
+                              children: [
+                                const SizedBox(height: 10),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20),
+                                  child: _buildWeeklyBanner(),
+                                ),
+                                const SizedBox(height: 16),
+                                if (_leaderboard.isEmpty)
+                                  _buildEmpty()
+                                else ...[
+                                  _buildPodium(),
+                                  const SizedBox(height: 16),
+                                  if (_hasAttempted)
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 20),
+                                      child: _buildMyRankCard(),
+                                    ),
+                                  const SizedBox(height: 12),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20),
+                                    child: _buildRankList(),
+                                  ),
+                                ],
+                                const SizedBox(height: 30),
+                              ],
+                            ),
+                          ),
                         ),
-
-                        const SizedBox(height: 16),
-
-                        // ── Rewards info
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20),
-                          child: _buildRewardsInfo(),
-                        ),
-
-                        const SizedBox(height: 20),
-
-                        // ── Top 3 podium
-                        _buildPodium(),
-
-                        const SizedBox(height: 16),
-
-                        // ── My rank
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20),
-                          child: _buildMyRankCard(),
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        // ── Full list
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20),
-                          child: _buildRankList(),
-                        ),
-
-                        const SizedBox(height: 30),
-                      ],
-                    ),
-                  ),
                 ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildEmpty() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 40),
+      child: Column(
+        children: [
+          const Icon(Icons.emoji_events_outlined,
+              color: AppColors.textMuted, size: 56),
+          const SizedBox(height: 12),
+          Text('No entries yet',
+              style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white)),
+          const SizedBox(height: 6),
+          Text('Be the first to attempt this challenge!',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                  fontSize: 12, color: AppColors.textSecondary)),
+        ],
       ),
     );
   }
@@ -165,37 +219,34 @@ class _SolveEarnLeaderboardScreenState
             ),
           ),
           const Spacer(),
-          // Participants chip
-          Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: AppColors.darkCard,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: AppColors.yellow.withOpacity(0.3),
-                width: 1,
+          if (_totalParticipants > 0)
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppColors.darkCard,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: AppColors.yellow.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.people_rounded,
+                      color: AppColors.yellow, size: 13),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$_totalParticipants',
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      color: AppColors.yellow,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.people_rounded,
-                  color: AppColors.yellow,
-                  size: 13,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '$_totalParticipants',
-                  style: GoogleFonts.poppins(
-                    fontSize: 11,
-                    color: AppColors.yellow,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -207,10 +258,7 @@ class _SolveEarnLeaderboardScreenState
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [
-            Color(0xFF1A1400),
-            Color(0xFF2A2000),
-          ],
+          colors: [Color(0xFF1A1400), Color(0xFF2A2000)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -222,7 +270,6 @@ class _SolveEarnLeaderboardScreenState
       ),
       child: Row(
         children: [
-          // Trophy
           Container(
             width: 50,
             height: 50,
@@ -234,11 +281,8 @@ class _SolveEarnLeaderboardScreenState
                 width: 1.5,
               ),
             ),
-            child: const Icon(
-              Icons.emoji_events_rounded,
-              color: AppColors.yellow,
-              size: 26,
-            ),
+            child: const Icon(Icons.emoji_events_rounded,
+                color: AppColors.yellow, size: 26),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -246,17 +290,19 @@ class _SolveEarnLeaderboardScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'WEEKLY CHALLENGE',
+                  _title,
                   style: GoogleFonts.orbitron(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: AppColors.yellow,
-                    letterSpacing: 1.5,
+                    letterSpacing: 1,
                   ),
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'Top 5 winners get real rewards!',
+                  _prizeAmount > 0
+                      ? 'Prize pool ₹${_prizeAmount.toStringAsFixed(0)} — top performers win!'
+                      : 'Top performers win rewards!',
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     color: AppColors.textSecondary,
@@ -265,7 +311,6 @@ class _SolveEarnLeaderboardScreenState
               ],
             ),
           ),
-          // Days left
           Column(
             children: [
               Text(
@@ -292,78 +337,14 @@ class _SolveEarnLeaderboardScreenState
     );
   }
 
-  // ── REWARDS INFO ──────────────────────────────────
-  Widget _buildRewardsInfo() {
-    final rewards = [
-      {'rank': '1st', 'prize': '₹500', 'icon': '🥇', 'color': AppColors.yellow},
-      {'rank': '2nd', 'prize': '₹300', 'icon': '🥈', 'color': const Color(0xFFC0C0C0)},
-      {'rank': '3rd', 'prize': '₹200', 'icon': '🥉', 'color': const Color(0xFFCD7F32)},
-      {'rank': '4th', 'prize': '₹100', 'icon': '🎖️', 'color': AppColors.neonCyan},
-      {'rank': '5th', 'prize': '₹50',  'icon': '🎖️', 'color': AppColors.neonCyan},
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'PRIZE POOL',
-          style: GoogleFonts.poppins(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textSecondary,
-            letterSpacing: 2,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: rewards.map((r) {
-            final color = r['color'] as Color;
-            return Container(
-              width: (MediaQuery.of(context).size.width - 56) / 5,
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 4, vertical: 10),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: color.withOpacity(0.25),
-                  width: 1,
-                ),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    r['icon'] as String,
-                    style: const TextStyle(fontSize: 18),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    r['prize'] as String,
-                    style: GoogleFonts.orbitron(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: color,
-                    ),
-                  ),
-                  Text(
-                    r['rank'] as String,
-                    style: GoogleFonts.poppins(
-                      fontSize: 9,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
   // ── PODIUM ────────────────────────────────────────
   Widget _buildPodium() {
+    if (_leaderboard.length < 3) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(children: _leaderboard.map(_buildRankTile).toList()),
+      );
+    }
     final top3 = _leaderboard.take(3).toList();
     final podiumOrder = [top3[1], top3[0], top3[2]];
     final heights = [85.0, 115.0, 65.0];
@@ -385,6 +366,8 @@ class _SolveEarnLeaderboardScreenState
             children: List.generate(3, (i) {
               final user = podiumOrder[i];
               final color = colors[i];
+              final name = (user['name'] ?? 'User').toString();
+              final score = (user['score'] as num?)?.toInt() ?? 0;
 
               return Expanded(
                 child: Opacity(
@@ -405,17 +388,10 @@ class _SolveEarnLeaderboardScreenState
                             color: color.withOpacity(0.6),
                             width: 2,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: color.withOpacity(0.25),
-                              blurRadius: 12,
-                              spreadRadius: 2,
-                            ),
-                          ],
                         ),
                         child: Center(
                           child: Text(
-                            user['name'][0].toUpperCase(),
+                            _initial(name),
                             style: GoogleFonts.orbitron(
                               fontSize: i == 1 ? 20 : 16,
                               fontWeight: FontWeight.w700,
@@ -426,7 +402,7 @@ class _SolveEarnLeaderboardScreenState
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        user['name'].toString().split(' ')[0],
+                        name.split(' ').first,
                         style: GoogleFonts.poppins(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
@@ -434,7 +410,7 @@ class _SolveEarnLeaderboardScreenState
                         ),
                       ),
                       Text(
-                        '${user['score']}pts',
+                        '$score pts',
                         style: GoogleFonts.orbitron(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
@@ -447,8 +423,7 @@ class _SolveEarnLeaderboardScreenState
                         alignment: Alignment.bottomCenter,
                         child: Container(
                           height: heights[i],
-                          margin: const EdgeInsets.symmetric(
-                              horizontal: 6),
+                          margin: const EdgeInsets.symmetric(horizontal: 6),
                           decoration: BoxDecoration(
                             color: color.withOpacity(0.1),
                             borderRadius: const BorderRadius.vertical(
@@ -482,17 +457,16 @@ class _SolveEarnLeaderboardScreenState
     );
   }
 
-  // ── MY RANK ───────────────────────────────────────
+  // ── MY RANK CARD ──────────────────────────────────
   Widget _buildMyRankCard() {
-    final me = _leaderboard.firstWhere(
-      (u) => u['isMe'] == true,
-      orElse: () => _leaderboard[3],
-    );
-    final isWinner = (me['rank'] as int) <= 5;
+    final score = (_myEntry['score'] as num?)?.toInt() ?? 0;
+    final accuracy = (_myEntry['accuracy'] as num?)?.toDouble() ?? 0.0;
+    final timeTaken = (_myEntry['time_taken'] as num?)?.toInt() ?? 0;
+    final isWinner = _myEntry['is_winner'] == true;
+    final prizeWon = (_myEntry['prize_won'] as num?)?.toDouble() ?? 0.0;
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-          horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -509,8 +483,7 @@ class _SolveEarnLeaderboardScreenState
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: AppColors.neonCyan,
               borderRadius: BorderRadius.circular(8),
@@ -525,21 +498,12 @@ class _SolveEarnLeaderboardScreenState
             ),
           ),
           const SizedBox(width: 12),
-          Text(
-            '#${me['rank']}',
-            style: GoogleFonts.orbitron(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: AppColors.neonCyan,
-            ),
-          ),
-          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  me['name'],
+                  'Your attempt',
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -547,7 +511,7 @@ class _SolveEarnLeaderboardScreenState
                   ),
                 ),
                 Text(
-                  '${me['score']} pts  •  ${me['solved']} solved',
+                  '$score pts  •  ${accuracy.toStringAsFixed(0)}%  •  ${_fmtTime(timeTaken)}',
                   style: GoogleFonts.poppins(
                     fontSize: 11,
                     color: AppColors.textSecondary,
@@ -556,11 +520,10 @@ class _SolveEarnLeaderboardScreenState
               ],
             ),
           ),
-          // Reward badge
-          if (isWinner)
+          if (isWinner && prizeWon > 0)
             Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 10, vertical: 6),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: AppColors.yellow.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
@@ -570,7 +533,7 @@ class _SolveEarnLeaderboardScreenState
                 ),
               ),
               child: Text(
-                me['reward'],
+                '₹${prizeWon.toStringAsFixed(0)}',
                 style: GoogleFonts.poppins(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
@@ -585,151 +548,95 @@ class _SolveEarnLeaderboardScreenState
 
   // ── RANK LIST ─────────────────────────────────────
   Widget _buildRankList() {
-    return Column(
-      children: _leaderboard.map((user) {
-        final bool isMe = user['isMe'] == true;
-        final int rank = user['rank'] as int;
-        final bool isWinner = rank <= 5;
+    final rest =
+        _leaderboard.length > 3 ? _leaderboard.skip(3).toList() : <Map<String, dynamic>>[];
+    if (rest.isEmpty) return const SizedBox.shrink();
+    return Column(children: rest.map(_buildRankTile).toList());
+  }
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.symmetric(
-              horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: isMe
-                ? AppColors.neonCyan.withOpacity(0.05)
-                : AppColors.darkCard,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: isMe
-                  ? AppColors.neonCyan.withOpacity(0.3)
-                  : isWinner
-                      ? AppColors.yellow.withOpacity(0.15)
-                      : AppColors.textMuted.withOpacity(0.1),
-              width: isMe ? 1.3 : 1,
+  Widget _buildRankTile(Map<String, dynamic> user) {
+    final rank = (user['rank'] as num?)?.toInt() ?? 0;
+    final name = (user['name'] ?? 'User').toString();
+    final score = (user['score'] as num?)?.toInt() ?? 0;
+    final accuracy = (user['accuracy'] as num?)?.toDouble() ?? 0.0;
+    final timeTaken = (user['time_taken'] as num?)?.toInt() ?? 0;
+    final isTop = rank <= 3;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.darkCard,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isTop
+              ? AppColors.yellow.withOpacity(0.15)
+              : AppColors.textMuted.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 32,
+            child: Text(
+              '#$rank',
+              style: GoogleFonts.orbitron(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: isTop ? AppColors.yellow : AppColors.textSecondary,
+              ),
             ),
           ),
-          child: Row(
-            children: [
-              // Rank
-              SizedBox(
-                width: 32,
-                child: Text(
-                  '#$rank',
-                  style: GoogleFonts.orbitron(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: isMe
-                        ? AppColors.neonCyan
-                        : isWinner
-                            ? AppColors.yellow
-                            : AppColors.textSecondary,
-                  ),
+          const SizedBox(width: 10),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.darkSurface,
+              border: Border.all(
+                color: AppColors.textMuted.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: Center(
+              child: Text(
+                _initial(name),
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textSecondary,
                 ),
               ),
-              const SizedBox(width: 10),
-              // Avatar
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: isMe
-                      ? AppColors.neonCyan.withOpacity(0.12)
-                      : AppColors.darkSurface,
-                  border: Border.all(
-                    color: isMe
-                        ? AppColors.neonCyan.withOpacity(0.4)
-                        : AppColors.textMuted.withOpacity(0.2),
-                    width: 1,
-                  ),
-                ),
-                child: Center(
-                  child: Text(
-                    user['name'][0].toUpperCase(),
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: isMe
-                          ? AppColors.neonCyan
-                          : AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              // Name + solved
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          user['name'],
-                          style: GoogleFonts.poppins(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                        if (isMe) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 5, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppColors.neonCyan,
-                              borderRadius: BorderRadius.circular(5),
-                            ),
-                            child: Text(
-                              'YOU',
-                              style: GoogleFonts.poppins(
-                                fontSize: 8,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.darkBg,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    Text(
-                      '${user['solved']} solved  •  ${user['score']} pts',
-                      style: GoogleFonts.poppins(
-                        fontSize: 10,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Reward
-              if (isWinner && user['reward'] != '-')
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.yellow.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppColors.yellow.withOpacity(0.25),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    user['reward'],
-                    style: GoogleFonts.poppins(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.yellow,
-                    ),
-                  ),
-                ),
-            ],
+            ),
           ),
-        );
-      }).toList(),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  '$score pts  •  ${accuracy.toStringAsFixed(0)}%  •  ${_fmtTime(timeTaken)}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
