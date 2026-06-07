@@ -19,8 +19,10 @@ if (!defined('JWT_SECRET')) define('JWT_SECRET', 'tunnel_jwt_secret_change_me');
 
 // ── API Key Check ──────────────────────────────────────
 function checkApiKey() {
-    // Agar API_KEY constant defined nahi hai to skip
-    if (!defined('API_KEY') || !API_KEY) return;
+    // Disabled when API_KEY is empty OR still the placeholder value.
+    // (The mobile app does not send X-API-Key, so a real gate here would
+    // 401 every request. JWT auth on user endpoints provides real security.)
+    if (!defined('API_KEY') || !API_KEY || API_KEY === 'your_api_key_here') return;
 
     $key = $_SERVER['HTTP_X_API_KEY']
         ?? $_GET['api_key']

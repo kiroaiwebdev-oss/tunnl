@@ -174,19 +174,23 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _onTicketTap() async {
-    if (!_isLoadingUser) {
+    // Not logged in → login first.
+    final loggedIn = _isLoadingUser ? await AuthService.isLoggedIn() : _isLoggedIn;
+    if (!mounted) return;
+    if (!loggedIn) {
       Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => _isLoggedIn
-            ? const DashboardScreen()
-            : const LoginScreen(),
+        builder: (_) => const LoginScreen(),
       ));
       return;
     }
-    final loggedIn = await AuthService.isLoggedIn();
+    // This card sells the ₹50 premium upgrade — send NON-premium users to the
+    // Premium page. Already-premium users enter the full dashboard.
+    final premium = _isLoadingUser ? await AuthService.isPremium() : _isPremium;
     if (!mounted) return;
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => loggedIn ? const DashboardScreen() : const LoginScreen(),
+    await Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => premium ? const DashboardScreen() : const PremiumScreen(),
     ));
+    if (mounted) _loadAll();
   }
 
   @override

@@ -225,7 +225,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           builder: (_) => SetsScreen(
             title: '5000 Speed Math MCQs',
             category: 'mcq',
-            questionsPerSet: 50,
+            questionsPerSet: 20,
             totalSets: _isPremium ? 100 : 10,
             showLeaderboard: true,
           ),
@@ -236,7 +236,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           builder: (_) => SetsScreen(
             title: '500 Simplification',
             category: 'simplification',
-            questionsPerSet: 50,
+            questionsPerSet: 20,
             totalSets: _isPremium ? 10 : 1,
             showLeaderboard: false,
           ),
@@ -252,7 +252,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           builder: (_) => SetsScreen(
             title: 'Daily Practice MCQs',
             category: 'daily',
-            questionsPerSet: 10,
+            questionsPerSet: 20,
             totalSets: _isPremium ? 30 : 1,
             showLeaderboard: false,
             subtitle: _isPremium ? 'All daily sets' : "Today's set — Free",
@@ -835,7 +835,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                       category: 'mcq',
                       subtitle: 'Practice for Speed & Accuracy',
                       totalSets: _isPremium ? 100 : 10,
-                      questionsPerSet: 50,
+                      questionsPerSet: 20,
                       showLeaderboard: true,
                     ),
                   ));
