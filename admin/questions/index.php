@@ -244,7 +244,7 @@ $counts = $pdo->query("
 <script>
 function deleteQuestion(id) {
   if (!confirm('Delete this question permanently?')) return;
-  fetch('/admin/questions/delete.php', {
+  fetch('delete.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: 'id=' + id
@@ -252,8 +252,9 @@ function deleteQuestion(id) {
   .then(r => r.json())
   .then(d => {
     if (d.success) location.reload();
-    else alert('Error: ' + d.message);
-  });
+    else alert('Error: ' + (d.message || 'Could not delete'));
+  })
+  .catch(() => alert('Network error — could not delete.'));
 }
 </script>
 
