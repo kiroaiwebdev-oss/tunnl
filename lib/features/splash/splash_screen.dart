@@ -157,7 +157,10 @@ class _SplashScreenState extends State<SplashScreen>
     final prefs      = await SharedPreferences.getInstance();
     final isLoggedIn = prefs.getBool(AppConstants.prefIsLoggedIn) ?? false;
 
-    // ── 3. If logged in, verify token still valid
+    // ── 3. If logged in, refresh premium/name from server (best-effort).
+    //    IMPORTANT: never wipe the session here. The JWT is valid for 30 days;
+    //    a transient error (network/5xx/401) must NOT force the user to log in
+    //    again on every cold start. Real expiry is handled contextually.
     if (isLoggedIn) {
       _setStatus('VERIFYING USER');
       try {
@@ -166,12 +169,7 @@ class _SplashScreenState extends State<SplashScreen>
           auth: true,
         ).timeout(const Duration(seconds: 6));
 
-        // Token invalid — force logout
-        if ((profileRes['success'] == false && profileRes['status'] != true) &&
-            profileRes['message']?.toString().toLowerCase().contains('login') == true) {
-          await prefs.clear();
-        } else if (profileRes['success'] == true || profileRes['status'] == true) {
-          // Refresh premium status from server
+        if (profileRes['success'] == true || profileRes['status'] == true) {
           final user = profileRes['data']?['user'];
           if (user != null) {
             await prefs.setBool(
@@ -185,7 +183,7 @@ class _SplashScreenState extends State<SplashScreen>
           }
         }
       } catch (_) {
-        // Network error — use cached premium status
+        // Ignore — keep the cached session.
       }
     }
 
