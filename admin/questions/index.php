@@ -81,6 +81,7 @@ $counts = $pdo->query("
     'mcq'            => ['label'=>'5000 MCQ',       'icon'=>'fas fa-question',    'color'=>'var(--cyan)'],
     'simplification' => ['label'=>'500 Simplif.',   'icon'=>'fas fa-calculator',  'color'=>'var(--success)'],
     'previous_year'  => ['label'=>'Previous Year',  'icon'=>'fas fa-history',     'color'=>'var(--warning)'],
+    'tunnlity'       => ['label'=>'Tunnlity',       'icon'=>'fas fa-bolt',        'color'=>'var(--cyan)'],
     'daily_practice' => ['label'=>'Daily Practice', 'icon'=>'fas fa-calendar',    'color'=>'var(--purple)'],
   ];
   foreach ($cats as $key => $cat):
@@ -169,6 +170,7 @@ $counts = $pdo->query("
               'mcq'            => 'badge-cyan',
               'simplification' => 'badge-success',
               'previous_year'  => 'badge-warning',
+              'tunnlity'       => 'badge-cyan',
               'daily_practice' => 'badge-purple',
             ];
             ?>
