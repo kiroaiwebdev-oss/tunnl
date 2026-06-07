@@ -79,14 +79,18 @@ class _QuestionScreenState extends State<QuestionScreen>
     setState(() { _isLoading = true; _hasError = false; });
 
     if (widget.setId == 0) {
-      // No set_id provided (e.g. "tunnelity" speed test from hub) →
-      // fall back to first available MCQ set.
+      // No set_id provided (e.g. the "Tunnelity" speed test from hub) →
+      // load the first available set of THIS screen's category. Falls back to
+      // mcq only if the requested category has no sets yet.
       try {
-        final sets = await ContentService.getSets(
-          'mcq',
+        var sets = await ContentService.getSets(
+          widget.category.isEmpty ? 'mcq' : widget.category,
           page: 1,
           perPage: 1,
         );
+        if (sets.isEmpty && widget.category != 'mcq') {
+          sets = await ContentService.getSets('mcq', page: 1, perPage: 1);
+        }
         if (sets.isEmpty) {
           _showApiError(
               'No questions available yet. Admin will publish soon.');

@@ -52,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <option value="mcq">5000 Speed Math MCQ</option>
         <option value="simplification">500 Simplification</option>
         <option value="previous_year">Previous Year</option>
+        <option value="tunnlity">Test Your Tunnlity</option>
       </select>
     </div>
     <div class="form-group">

@@ -107,6 +107,16 @@ SET `youtube_url` = `url`
 WHERE (`youtube_url` IS NULL OR `youtube_url` = '')
   AND `url` IS NOT NULL AND `url` != '';
 
+-- ── Allow the "tunnlity" category (Test Your Tunnlity speed test) ──
+-- Widen the category enums so admin can create tunnlity sets/questions.
+ALTER TABLE `sets`
+  MODIFY COLUMN `category`
+  ENUM('mcq','simplification','previous_year','tunnlity') NOT NULL DEFAULT 'mcq';
+
+ALTER TABLE `questions`
+  MODIFY COLUMN `category`
+  ENUM('mcq','simplification','previous_year','daily_practice','tunnlity') NOT NULL;
+
 -- Backfill daily_practice_questions.order_num from legacy order_number
 -- (guarded: only runs if the legacy column actually exists).
 SET @has_on := (

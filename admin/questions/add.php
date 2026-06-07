@@ -79,6 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <option value="mcq"            <?= ($_POST['category']??'')==='mcq'            ?'selected':'' ?>>5000 Speed Math MCQ</option>
           <option value="simplification" <?= ($_POST['category']??'')==='simplification' ?'selected':'' ?>>500 Simplification</option>
           <option value="previous_year"  <?= ($_POST['category']??'')==='previous_year'  ?'selected':'' ?>>Previous Year</option>
+          <option value="tunnlity"        <?= ($_POST['category']??'')==='tunnlity'        ?'selected':'' ?>>Test Your Tunnlity</option>
           <option value="daily_practice" <?= ($_POST['category']??'')==='daily_practice' ?'selected':'' ?>>Daily Practice</option>
         </select>
       </div>
