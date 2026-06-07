@@ -215,7 +215,7 @@ class _ShortsScreenState extends State<ShortsScreen>
               color: AppColors.darkCard,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                  color: AppColors.neonCyan.withOpacity(0.2), width: 1),
+                  color: AppColors.neonCyan.withValues(alpha: 0.2), width: 1),
             ),
             child: Row(
               children: [
@@ -258,12 +258,12 @@ class _ShortsScreenState extends State<ShortsScreen>
               margin: const EdgeInsets.only(right: 8),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: isActive ? color.withOpacity(0.15) : AppColors.darkCard,
+                color: isActive ? color.withValues(alpha: 0.15) : AppColors.darkCard,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                     color: isActive
                         ? color
-                        : AppColors.textMuted.withOpacity(0.2),
+                        : AppColors.textMuted.withValues(alpha: 0.2),
                     width: 1.2),
               ),
               child: Text(
@@ -369,7 +369,7 @@ class _ShortCardState extends State<_ShortCard>
             color: AppColors.darkCard,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-                color: widget.platformColor.withOpacity(0.15), width: 1),
+                color: widget.platformColor.withValues(alpha: 0.15), width: 1),
           ),
           child: Row(
             children: [
@@ -378,7 +378,7 @@ class _ShortCardState extends State<_ShortCard>
                 width: 90,
                 height: 100,
                 decoration: BoxDecoration(
-                  color: widget.platformColor.withOpacity(0.08),
+                  color: widget.platformColor.withValues(alpha: 0.08),
                   borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(17),
                       bottomLeft: Radius.circular(17)),
@@ -387,7 +387,7 @@ class _ShortCardState extends State<_ShortCard>
                           image: NetworkImage(s.thumbnailUrl),
                           fit: BoxFit.cover,
                           colorFilter: ColorFilter.mode(
-                              Colors.black.withOpacity(0.3),
+                              Colors.black.withValues(alpha: 0.3),
                               BlendMode.darken))
                       : null,
                 ),
@@ -403,7 +403,7 @@ class _ShortCardState extends State<_ShortCard>
                           boxShadow: [
                             BoxShadow(
                                 color:
-                                    widget.platformColor.withOpacity(0.35),
+                                    widget.platformColor.withValues(alpha: 0.35),
                                 blurRadius: 12,
                                 spreadRadius: 2),
                           ],
@@ -420,7 +420,7 @@ class _ShortCardState extends State<_ShortCard>
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.6),
+                              color: Colors.black.withValues(alpha: 0.6),
                               borderRadius: BorderRadius.circular(4)),
                           child: Text(s.durationLabel,
                               style: GoogleFonts.poppins(
@@ -460,11 +460,11 @@ class _ShortCardState extends State<_ShortCard>
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: widget.platformColor.withOpacity(0.1),
+                              color: widget.platformColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
                                   color:
-                                      widget.platformColor.withOpacity(0.3),
+                                      widget.platformColor.withValues(alpha: 0.3),
                                   width: 1),
                             ),
                             child: Row(
@@ -482,7 +482,7 @@ class _ShortCardState extends State<_ShortCard>
                           ),
                           const Spacer(),
                           Icon(Icons.open_in_new_rounded,
-                              color: widget.platformColor.withOpacity(0.6),
+                              color: widget.platformColor.withValues(alpha: 0.6),
                               size: 16),
                         ],
                       ),
@@ -515,9 +515,9 @@ class _StatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.07),
+        color: color.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
       ),
       child: Row(
         children: [

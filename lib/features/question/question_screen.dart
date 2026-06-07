@@ -64,7 +64,6 @@ class _QuestionScreenState extends State<QuestionScreen>
   late AnimationController        _optionCtrl;
   late List<Animation<Offset>>    _optionAnims;
   late AnimationController        _answerCtrl;
-  late Animation<double>          _answerScaleAnim;
 
   @override
   void initState() {
@@ -169,8 +168,6 @@ class _QuestionScreenState extends State<QuestionScreen>
 
     _answerCtrl = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 300));
-    _answerScaleAnim = Tween<double>(begin: 1.0, end: 1.03).animate(
-      CurvedAnimation(parent: _answerCtrl, curve: Curves.easeOut));
 
     _questionSlideCtrl.forward();
     _optionCtrl.forward();
@@ -332,7 +329,7 @@ class _QuestionScreenState extends State<QuestionScreen>
         backgroundColor: AppColors.darkCard,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: AppColors.error.withOpacity(0.4))),
+          side: BorderSide(color: AppColors.error.withValues(alpha: 0.4))),
         title: Text('Exit Test?',
           style: GoogleFonts.poppins(
             color: Colors.white, fontWeight: FontWeight.w700)),
@@ -489,7 +486,7 @@ class _QuestionScreenState extends State<QuestionScreen>
               color: AppColors.darkCard,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: AppColors.neonCyan.withOpacity(0.2)),
+                color: AppColors.neonCyan.withValues(alpha: 0.2)),
             ),
             padding: const EdgeInsets.all(8),
             child: Image.asset(
@@ -562,7 +559,7 @@ class _QuestionScreenState extends State<QuestionScreen>
                 width: 56, height: 56,
                 child: CircularProgressIndicator(
                   value: 1.0, strokeWidth: 3,
-                  backgroundColor: AppColors.textMuted.withOpacity(0.2),
+                  backgroundColor: AppColors.textMuted.withValues(alpha: 0.2),
                   valueColor:
                       const AlwaysStoppedAnimation(Colors.transparent),
                 ),
@@ -572,7 +569,7 @@ class _QuestionScreenState extends State<QuestionScreen>
                 child: CircularProgressIndicator(
                   value: _timerRingAnim.value,
                   strokeWidth: 3,
-                  backgroundColor: AppColors.textMuted.withOpacity(0.2),
+                  backgroundColor: AppColors.textMuted.withValues(alpha: 0.2),
                   valueColor: AlwaysStoppedAnimation(ringColor),
                   strokeCap: StrokeCap.round,
                 ),
@@ -601,7 +598,7 @@ class _QuestionScreenState extends State<QuestionScreen>
             color: AppColors.darkCard,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: AppColors.neonCyan.withOpacity(0.1)),
+              color: AppColors.neonCyan.withValues(alpha: 0.1)),
           ),
           child: Column(
             children: [
@@ -609,7 +606,7 @@ class _QuestionScreenState extends State<QuestionScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(width: 40, height: 1,
-                    color: AppColors.textMuted.withOpacity(0.4)),
+                    color: AppColors.textMuted.withValues(alpha: 0.4)),
                   const SizedBox(width: 10),
                   Text(stage,
                     style: GoogleFonts.poppins(
@@ -617,7 +614,7 @@ class _QuestionScreenState extends State<QuestionScreen>
                       letterSpacing: 2, fontWeight: FontWeight.w500)),
                   const SizedBox(width: 10),
                   Container(width: 40, height: 1,
-                    color: AppColors.textMuted.withOpacity(0.4)),
+                    color: AppColors.textMuted.withValues(alpha: 0.4)),
                 ],
               ),
               const SizedBox(height: 20),
@@ -670,14 +667,14 @@ class _QuestionScreenState extends State<QuestionScreen>
     if (_isAnswered) {
       if (index == correctIndex) {
         borderColor  = AppColors.success;
-        bgColor      = AppColors.success.withOpacity(0.08);
+        bgColor      = AppColors.success.withValues(alpha: 0.08);
         labelBg      = AppColors.success;
         labelColor   = Colors.white;
         trailingIcon = const Icon(Icons.check_circle_rounded,
           color: AppColors.success, size: 22);
       } else if (index == _confirmedOption && index != correctIndex) {
         borderColor  = AppColors.error;
-        bgColor      = AppColors.error.withOpacity(0.08);
+        bgColor      = AppColors.error.withValues(alpha: 0.08);
         labelBg      = AppColors.error;
         labelColor   = Colors.white;
         trailingIcon = const Icon(Icons.cancel_rounded,
@@ -685,7 +682,7 @@ class _QuestionScreenState extends State<QuestionScreen>
       }
     } else if (index == _selectedOption) {
       borderColor  = AppColors.neonCyan;
-      bgColor      = AppColors.neonCyan.withOpacity(0.08);
+      bgColor      = AppColors.neonCyan.withValues(alpha: 0.08);
       labelBg      = AppColors.neonCyan;
       labelColor   = AppColors.darkBg;
       trailingIcon = const Icon(Icons.check_circle_outline_rounded,
@@ -701,13 +698,13 @@ class _QuestionScreenState extends State<QuestionScreen>
           color: bgColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: borderColor.withOpacity(
+            color: borderColor.withValues(alpha: 
               _isAnswered || index == _selectedOption ? 0.8 : 0.15),
             width: 1.5,
           ),
           boxShadow: (index == _selectedOption && !_isAnswered)
               ? [BoxShadow(
-                  color: AppColors.neonCyan.withOpacity(0.15),
+                  color: AppColors.neonCyan.withValues(alpha: 0.15),
                   blurRadius: 12, spreadRadius: 1)]
               : null,
         ),
@@ -763,7 +760,7 @@ class _QuestionScreenState extends State<QuestionScreen>
             borderRadius: BorderRadius.circular(30),
             boxShadow: canContinue
                 ? [BoxShadow(
-                    color: AppColors.neonCyan.withOpacity(0.35),
+                    color: AppColors.neonCyan.withValues(alpha: 0.35),
                     blurRadius: 20, spreadRadius: 2,
                     offset: const Offset(0, 4))]
                 : null,

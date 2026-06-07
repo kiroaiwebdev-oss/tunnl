@@ -227,7 +227,7 @@ class _SolveEarnLeaderboardScreenState
                 color: AppColors.darkCard,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: AppColors.yellow.withOpacity(0.3),
+                  color: AppColors.yellow.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -264,7 +264,7 @@ class _SolveEarnLeaderboardScreenState
         ),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: AppColors.yellow.withOpacity(0.3),
+          color: AppColors.yellow.withValues(alpha: 0.3),
           width: 1.2,
         ),
       ),
@@ -275,9 +275,9 @@ class _SolveEarnLeaderboardScreenState
             height: 50,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.yellow.withOpacity(0.1),
+              color: AppColors.yellow.withValues(alpha: 0.1),
               border: Border.all(
-                color: AppColors.yellow.withOpacity(0.3),
+                color: AppColors.yellow.withValues(alpha: 0.3),
                 width: 1.5,
               ),
             ),
@@ -383,9 +383,9 @@ class _SolveEarnLeaderboardScreenState
                         height: i == 1 ? 54 : 44,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: color.withOpacity(0.12),
+                          color: color.withValues(alpha: 0.12),
                           border: Border.all(
-                            color: color.withOpacity(0.6),
+                            color: color.withValues(alpha: 0.6),
                             width: 2,
                           ),
                         ),
@@ -425,12 +425,12 @@ class _SolveEarnLeaderboardScreenState
                           height: heights[i],
                           margin: const EdgeInsets.symmetric(horizontal: 6),
                           decoration: BoxDecoration(
-                            color: color.withOpacity(0.1),
+                            color: color.withValues(alpha: 0.1),
                             borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(10),
                             ),
                             border: Border.all(
-                              color: color.withOpacity(0.3),
+                              color: color.withValues(alpha: 0.3),
                               width: 1,
                             ),
                           ),
@@ -440,7 +440,7 @@ class _SolveEarnLeaderboardScreenState
                               style: GoogleFonts.orbitron(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
-                                color: color.withOpacity(0.8),
+                                color: color.withValues(alpha: 0.8),
                               ),
                             ),
                           ),
@@ -470,13 +470,13 @@ class _SolveEarnLeaderboardScreenState
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.neonCyan.withOpacity(0.1),
-            AppColors.neonCyan.withOpacity(0.03),
+            AppColors.neonCyan.withValues(alpha: 0.1),
+            AppColors.neonCyan.withValues(alpha: 0.03),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.neonCyan.withOpacity(0.4),
+          color: AppColors.neonCyan.withValues(alpha: 0.4),
           width: 1.5,
         ),
       ),
@@ -525,10 +525,10 @@ class _SolveEarnLeaderboardScreenState
               padding:
                   const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: AppColors.yellow.withOpacity(0.1),
+                color: AppColors.yellow.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: AppColors.yellow.withOpacity(0.3),
+                  color: AppColors.yellow.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -570,8 +570,8 @@ class _SolveEarnLeaderboardScreenState
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isTop
-              ? AppColors.yellow.withOpacity(0.15)
-              : AppColors.textMuted.withOpacity(0.1),
+              ? AppColors.yellow.withValues(alpha: 0.15)
+              : AppColors.textMuted.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -596,7 +596,7 @@ class _SolveEarnLeaderboardScreenState
               shape: BoxShape.circle,
               color: AppColors.darkSurface,
               border: Border.all(
-                color: AppColors.textMuted.withOpacity(0.2),
+                color: AppColors.textMuted.withValues(alpha: 0.2),
                 width: 1,
               ),
             ),

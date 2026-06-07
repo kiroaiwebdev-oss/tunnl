@@ -98,7 +98,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
         backgroundColor: AppColors.darkCard,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: AppColors.error.withOpacity(0.3)),
+          side: BorderSide(color: AppColors.error.withValues(alpha: 0.3)),
         ),
         title: Text('Discard changes?',
             style: GoogleFonts.poppins(
@@ -139,7 +139,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
               Container(
                 width: 40, height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.textMuted.withOpacity(0.3),
+                  color: AppColors.textMuted.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
@@ -211,7 +211,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
             borderRadius: BorderRadius.circular(12),
             side: BorderSide(
                 color: (isError ? AppColors.error : AppColors.success)
-                    .withOpacity(0.4),
+                    .withValues(alpha: 0.4),
                 width: 1)),
         content: Row(
           children: [
@@ -370,12 +370,12 @@ class _EditProfileScreenState extends State<EditProfileScreen>
               height: 110,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.neonCyan.withOpacity(0.12),
+                color: AppColors.neonCyan.withValues(alpha: 0.12),
                 border: Border.all(
-                    color: AppColors.neonCyan.withOpacity(0.4), width: 2),
+                    color: AppColors.neonCyan.withValues(alpha: 0.4), width: 2),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.neonCyan.withOpacity(0.15),
+                    color: AppColors.neonCyan.withValues(alpha: 0.15),
                     blurRadius: 24,
                     spreadRadius: 4,
                   ),
@@ -456,7 +456,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide:
-              BorderSide(color: AppColors.neonCyan.withOpacity(0.18)),
+              BorderSide(color: AppColors.neonCyan.withValues(alpha: 0.18)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -465,7 +465,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: AppColors.error.withOpacity(0.5)),
+          borderSide: BorderSide(color: AppColors.error.withValues(alpha: 0.5)),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -486,7 +486,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
         color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-            color: AppColors.textMuted.withOpacity(0.15), width: 1),
+            color: AppColors.textMuted.withValues(alpha: 0.15), width: 1),
       ),
       child: Row(
         children: [
@@ -514,7 +514,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                 color: AppColors.darkBg,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                    color: AppColors.textMuted.withOpacity(0.2), width: 1),
+                    color: AppColors.textMuted.withValues(alpha: 0.2), width: 1),
               ),
               child: Row(
                 children: [
@@ -549,13 +549,13 @@ class _EditProfileScreenState extends State<EditProfileScreen>
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: selected
-                  ? AppColors.neonCyan.withOpacity(0.13)
+                  ? AppColors.neonCyan.withValues(alpha: 0.13)
                   : AppColors.darkCard,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: selected
                     ? AppColors.neonCyan
-                    : AppColors.neonCyan.withOpacity(0.1),
+                    : AppColors.neonCyan.withValues(alpha: 0.1),
                 width: selected ? 1.5 : 1,
               ),
             ),
@@ -609,7 +609,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
             boxShadow: canSave
                 ? [
                     BoxShadow(
-                      color: AppColors.neonCyan.withOpacity(0.35),
+                      color: AppColors.neonCyan.withValues(alpha: 0.35),
                       blurRadius: 16,
                       spreadRadius: 1,
                       offset: const Offset(0, 4),

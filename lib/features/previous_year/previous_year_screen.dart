@@ -232,7 +232,7 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
                 border: Border.all(
                     color: isActive
                         ? AppColors.yellow
-                        : AppColors.textMuted.withOpacity(0.2),
+                        : AppColors.textMuted.withValues(alpha: 0.2),
                     width: 1),
               ),
               child: Text(f.toUpperCase(),
@@ -261,10 +261,10 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
         margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-            color: AppColors.orange.withOpacity(0.08),
+            color: AppColors.orange.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-                color: AppColors.orange.withOpacity(0.3), width: 1)),
+                color: AppColors.orange.withValues(alpha: 0.3), width: 1)),
         child: Row(
           children: [
             const Icon(Icons.lock_open_rounded,
@@ -371,7 +371,7 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
             decoration: BoxDecoration(
               color: AppColors.darkCard,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: color.withOpacity(0.18), width: 1),
+              border: Border.all(color: color.withValues(alpha: 0.18), width: 1),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,7 +382,7 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
                       width: 46,
                       height: 46,
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.1),
+                        color: color.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(icon, color: color, size: 22),
@@ -421,13 +421,13 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
                             horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
                           color: canAccess
-                              ? color.withOpacity(0.08)
-                              : AppColors.orange.withOpacity(0.08),
+                              ? color.withValues(alpha: 0.08)
+                              : AppColors.orange.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: canAccess
-                                ? color.withOpacity(0.3)
-                                : AppColors.orange.withOpacity(0.3),
+                                ? color.withValues(alpha: 0.3)
+                                : AppColors.orange.withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -446,7 +446,7 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 5, vertical: 2),
                               decoration: BoxDecoration(
-                                color: _diffColor(difficulty).withOpacity(0.15),
+                                color: _diffColor(difficulty).withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(difficulty.toUpperCase(),

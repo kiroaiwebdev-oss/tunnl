@@ -206,7 +206,7 @@ class _PremiumScreenState extends State<PremiumScreen>
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side:
-                BorderSide(color: AppColors.error.withOpacity(0.4), width: 1)),
+                BorderSide(color: AppColors.error.withValues(alpha: 0.4), width: 1)),
         content: Row(
           children: [
             const Icon(Icons.error_outline_rounded,
@@ -234,7 +234,7 @@ class _PremiumScreenState extends State<PremiumScreen>
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
           side: BorderSide(
-            color: AppColors.success.withOpacity(0.5),
+            color: AppColors.success.withValues(alpha: 0.5),
             width: 1.5,
           ),
         ),
@@ -247,9 +247,9 @@ class _PremiumScreenState extends State<PremiumScreen>
               height: 72,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.success.withOpacity(0.1),
+                color: AppColors.success.withValues(alpha: 0.1),
                 border: Border.all(
-                  color: AppColors.success.withOpacity(0.5),
+                  color: AppColors.success.withValues(alpha: 0.5),
                   width: 2,
                 ),
               ),
@@ -282,10 +282,10 @@ class _PremiumScreenState extends State<PremiumScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.08),
+                color: AppColors.success.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                    color: AppColors.success.withOpacity(0.2), width: 1),
+                    color: AppColors.success.withValues(alpha: 0.2), width: 1),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -477,13 +477,13 @@ class _PremiumScreenState extends State<PremiumScreen>
               ),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: AppColors.yellow.withOpacity(0.4),
+                color: AppColors.yellow.withValues(alpha: 0.4),
                 width: 1.5,
               ),
               boxShadow: [
                 BoxShadow(
                   color:
-                      AppColors.yellow.withOpacity(0.1 * _glowAnim.value),
+                      AppColors.yellow.withValues(alpha: 0.1 * _glowAnim.value),
                   blurRadius: 30,
                   spreadRadius: 4,
                 ),
@@ -496,9 +496,9 @@ class _PremiumScreenState extends State<PremiumScreen>
                   height: 60,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.yellow.withOpacity(0.15),
+                    color: AppColors.yellow.withValues(alpha: 0.15),
                     border: Border.all(
-                      color: AppColors.yellow.withOpacity(0.4),
+                      color: AppColors.yellow.withValues(alpha: 0.4),
                       width: 1.5,
                     ),
                   ),
@@ -571,9 +571,9 @@ class _PremiumScreenState extends State<PremiumScreen>
           height: 34,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             border: Border.all(
-              color: color.withOpacity(0.3),
+              color: color.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -611,7 +611,7 @@ class _PremiumScreenState extends State<PremiumScreen>
         Expanded(
           child: Container(
             height: 1,
-            color: AppColors.textMuted.withOpacity(0.2),
+            color: AppColors.textMuted.withValues(alpha: 0.2),
           ),
         ),
         const SizedBox(width: 12),
@@ -622,7 +622,7 @@ class _PremiumScreenState extends State<PremiumScreen>
             color: AppColors.darkCard,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: AppColors.orange.withOpacity(0.4),
+              color: AppColors.orange.withValues(alpha: 0.4),
               width: 1,
             ),
           ),
@@ -640,7 +640,7 @@ class _PremiumScreenState extends State<PremiumScreen>
         Expanded(
           child: Container(
             height: 1,
-            color: AppColors.textMuted.withOpacity(0.2),
+            color: AppColors.textMuted.withValues(alpha: 0.2),
           ),
         ),
       ],
@@ -655,7 +655,7 @@ class _PremiumScreenState extends State<PremiumScreen>
         color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: AppColors.yellow.withOpacity(0.3),
+          color: AppColors.yellow.withValues(alpha: 0.3),
           width: 1.2,
         ),
       ),
@@ -724,7 +724,7 @@ class _PremiumScreenState extends State<PremiumScreen>
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              color: AppColors.yellow.withOpacity(0.4),
+              color: AppColors.yellow.withValues(alpha: 0.4),
               blurRadius: 20,
               spreadRadius: 2,
               offset: const Offset(0, 4),
@@ -809,7 +809,7 @@ class _BenefitRow extends StatelessWidget {
         color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: color.withOpacity(0.12),
+          color: color.withValues(alpha: 0.12),
           width: 1,
         ),
       ),
@@ -820,7 +820,7 @@ class _BenefitRow extends StatelessWidget {
             height: 38,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
             ),
             child: Icon(
               data['icon'] as IconData,
@@ -884,10 +884,10 @@ class _PriceChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(
           horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: color.withOpacity(0.3),
+          color: color.withValues(alpha: 0.3),
           width: 1,
         ),
       ),

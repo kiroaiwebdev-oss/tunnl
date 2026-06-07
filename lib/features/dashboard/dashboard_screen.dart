@@ -387,10 +387,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                 padding: const EdgeInsets.symmetric(
                     horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: AppColors.orange.withOpacity(0.12),
+                  color: AppColors.orange.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: AppColors.orange.withOpacity(0.3),
+                    color: AppColors.orange.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Row(
@@ -414,10 +414,10 @@ class _DashboardScreenState extends State<DashboardScreen>
               padding: const EdgeInsets.symmetric(
                   horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: AppColors.neonCyan.withOpacity(0.1),
+                color: AppColors.neonCyan.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: AppColors.neonCyan.withOpacity(0.3),
+                  color: AppColors.neonCyan.withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
@@ -475,14 +475,14 @@ class _DashboardScreenState extends State<DashboardScreen>
                   borderRadius: BorderRadius.circular(16),
                   color: const Color(0xFF0D2233),
                   border: Border.all(
-                    color: AppColors.neonCyan.withOpacity(0.15),
+                    color: AppColors.neonCyan.withValues(alpha: 0.15),
                   ),
                   image: b.imageUrl.isNotEmpty
                       ? DecorationImage(
                           image: NetworkImage(b.imageUrl),
                           fit: BoxFit.cover,
                           colorFilter: ColorFilter.mode(
-                            Colors.black.withOpacity(0.35),
+                            Colors.black.withValues(alpha: 0.35),
                             BlendMode.darken,
                           ),
                         )
@@ -530,7 +530,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 decoration: BoxDecoration(
                   color: _currentBanner == i
                       ? AppColors.neonCyan
-                      : AppColors.textMuted.withOpacity(0.4),
+                      : AppColors.textMuted.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(2),
                 ),
               );
@@ -586,7 +586,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 shape: BoxShape.circle,
                 color: AppColors.darkCard,
                 border: Border.all(
-                  color: AppColors.neonCyan.withOpacity(0.3),
+                  color: AppColors.neonCyan.withValues(alpha: 0.3),
                   width: 1.5,
                 ),
               ),
@@ -650,10 +650,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                   padding: const EdgeInsets.symmetric(
                       horizontal: 12, vertical: 5),
                   decoration: BoxDecoration(
-                    color: AppColors.orange.withOpacity(0.15),
+                    color: AppColors.orange.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: AppColors.orange.withOpacity(0.4),
+                      color: AppColors.orange.withValues(alpha: 0.4),
                     ),
                   ),
                   child: Row(
@@ -676,7 +676,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             else
               const SizedBox(height: 16),
 
-            Divider(color: AppColors.textMuted.withOpacity(0.15)),
+            Divider(color: AppColors.textMuted.withValues(alpha: 0.15)),
             const SizedBox(height: 8),
 
             _drawerTile(Icons.home_rounded, 'Home', () {
@@ -717,7 +717,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
             const Spacer(),
 
-            Divider(color: AppColors.textMuted.withOpacity(0.15)),
+            Divider(color: AppColors.textMuted.withValues(alpha: 0.15)),
             _drawerTile(
               Icons.logout_rounded, 'Logout',
               () { Navigator.pop(context); _logout(); },
@@ -812,7 +812,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         color: AppColors.darkBg,
         border: Border(
           top: BorderSide(
-            color: AppColors.textMuted.withOpacity(0.15), width: 1,
+            color: AppColors.textMuted.withValues(alpha: 0.15), width: 1,
           ),
         ),
       ),
@@ -869,7 +869,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                             shape: BoxShape.circle,
                             boxShadow: isActive
                                 ? [BoxShadow(
-                                    color: AppColors.neonCyan.withOpacity(0.4),
+                                    color: AppColors.neonCyan.withValues(alpha: 0.4),
                                     blurRadius: 14, spreadRadius: 2,
                                   )]
                                 : null,
@@ -965,7 +965,7 @@ class _DashboardItemState extends State<_DashboardItem>
             color: AppColors.darkCard,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: borderColor.withOpacity(0.2), width: 1.2,
+              color: borderColor.withValues(alpha: 0.2), width: 1.2,
             ),
           ),
           child: Row(

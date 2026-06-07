@@ -241,7 +241,7 @@ class _TestListScreenState extends State<TestListScreen>
               color: AppColors.darkCard,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                  color: AppColors.neonCyan.withOpacity(0.15), width: 1),
+                  color: AppColors.neonCyan.withValues(alpha: 0.15), width: 1),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -270,7 +270,7 @@ class _TestListScreenState extends State<TestListScreen>
   }
 
   Widget _divider() => Container(
-      width: 1, height: 30, color: AppColors.textMuted.withOpacity(0.3));
+      width: 1, height: 30, color: AppColors.textMuted.withValues(alpha: 0.3));
 
   Widget _buildEmpty() {
     return Center(
@@ -320,7 +320,7 @@ class _TestListScreenState extends State<TestListScreen>
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
             side:
-                BorderSide(color: AppColors.orange.withOpacity(0.4), width: 1)),
+                BorderSide(color: AppColors.orange.withValues(alpha: 0.4), width: 1)),
         title: Text('🔒 Set Locked',
             style: GoogleFonts.poppins(
                 color: Colors.white, fontWeight: FontWeight.w700)),
@@ -359,17 +359,17 @@ class _TestSetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color borderColor = AppColors.neonCyan.withOpacity(0.2);
+    Color borderColor = AppColors.neonCyan.withValues(alpha: 0.2);
     Color accentColor = AppColors.neonCyan;
 
     if (isPremiumLocked) {
-      borderColor = AppColors.orange.withOpacity(0.4);
+      borderColor = AppColors.orange.withValues(alpha: 0.4);
       accentColor = AppColors.orange;
     } else if (isLocked) {
-      borderColor = AppColors.textMuted.withOpacity(0.2);
+      borderColor = AppColors.textMuted.withValues(alpha: 0.2);
       accentColor = AppColors.textMuted;
     } else if (isCompleted) {
-      borderColor = AppColors.success.withOpacity(0.4);
+      borderColor = AppColors.success.withValues(alpha: 0.4);
       accentColor = AppColors.success;
     }
 
@@ -390,9 +390,9 @@ class _TestSetCard extends StatelessWidget {
               height: 52,
               decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: accentColor.withOpacity(0.1),
+                  color: accentColor.withValues(alpha: 0.1),
                   border: Border.all(
-                      color: accentColor.withOpacity(0.4), width: 1.5)),
+                      color: accentColor.withValues(alpha: 0.4), width: 1.5)),
               child: isPremiumLocked
                   ? const Icon(Icons.workspace_premium_rounded,
                       color: AppColors.orange, size: 22)

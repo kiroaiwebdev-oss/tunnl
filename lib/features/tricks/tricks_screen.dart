@@ -203,10 +203,10 @@ class _TricksScreenState extends State<TricksScreen>
         margin: const EdgeInsets.fromLTRB(20, 8, 20, 4),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: AppColors.orange.withOpacity(0.08),
+          color: AppColors.orange.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12),
           border:
-              Border.all(color: AppColors.orange.withOpacity(0.3), width: 1),
+              Border.all(color: AppColors.orange.withValues(alpha: 0.3), width: 1),
         ),
         child: Row(
           children: [
@@ -288,7 +288,7 @@ class _TricksScreenState extends State<TricksScreen>
                 color: AppColors.darkCard,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                    color: AppColors.neonCyan.withOpacity(0.2), width: 1)),
+                    color: AppColors.neonCyan.withValues(alpha: 0.2), width: 1)),
             child: Text(
               widget.isPremium
                   ? '${_allTricks.length} Tricks'
@@ -329,7 +329,7 @@ class _TricksScreenState extends State<TricksScreen>
                 border: Border.all(
                     color: isActive
                         ? AppColors.neonCyan
-                        : AppColors.textMuted.withOpacity(0.2),
+                        : AppColors.textMuted.withValues(alpha: 0.2),
                     width: 1),
               ),
               child: Text(cats[i],
@@ -411,8 +411,8 @@ class _TrickCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: isLocked
-                ? AppColors.textMuted.withOpacity(0.08)
-                : AppColors.neonCyan.withOpacity(0.1),
+                ? AppColors.textMuted.withValues(alpha: 0.08)
+                : AppColors.neonCyan.withValues(alpha: 0.1),
             width: 1,
           ),
         ),
@@ -424,13 +424,13 @@ class _TrickCard extends StatelessWidget {
               height: 48,
               decoration: BoxDecoration(
                 color: isLocked
-                    ? AppColors.textMuted.withOpacity(0.06)
-                    : AppColors.neonCyan.withOpacity(0.1),
+                    ? AppColors.textMuted.withValues(alpha: 0.06)
+                    : AppColors.neonCyan.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isLocked
-                      ? AppColors.textMuted.withOpacity(0.1)
-                      : AppColors.neonCyan.withOpacity(0.2),
+                      ? AppColors.textMuted.withValues(alpha: 0.1)
+                      : AppColors.neonCyan.withValues(alpha: 0.2),
                   width: 1,
                 ),
               ),
@@ -468,10 +468,10 @@ class _TrickCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 7, vertical: 3),
                           decoration: BoxDecoration(
-                              color: AppColors.success.withOpacity(0.15),
+                              color: AppColors.success.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
-                                  color: AppColors.success.withOpacity(0.4),
+                                  color: AppColors.success.withValues(alpha: 0.4),
                                   width: 1)),
                           child: Text('NEW',
                               style: GoogleFonts.poppins(
@@ -490,7 +490,7 @@ class _TrickCard extends StatelessWidget {
                     style: GoogleFonts.poppins(
                       fontSize: 11,
                       color: isLocked
-                          ? AppColors.orange.withOpacity(0.8)
+                          ? AppColors.orange.withValues(alpha: 0.8)
                           : AppColors.textSecondary,
                     ),
                   ),
@@ -504,7 +504,7 @@ class _TrickCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 7, vertical: 3),
                           decoration: BoxDecoration(
-                              color: diffColor.withOpacity(0.1),
+                              color: diffColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(6)),
                           child: Text(trick.difficulty,
                               style: GoogleFonts.poppins(
@@ -565,7 +565,7 @@ class _FormatBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(6)),
       child: Row(
         mainAxisSize: MainAxisSize.min,

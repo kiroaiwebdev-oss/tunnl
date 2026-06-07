@@ -104,12 +104,12 @@ class _DailyDoseSheetState extends State<_DailyDoseSheet>
           color: const Color(0xFF0F1923),
           borderRadius: BorderRadius.circular(28),
           border: Border.all(
-            color: AppColors.neonCyan.withOpacity(0.2),
+            color: AppColors.neonCyan.withValues(alpha: 0.2),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.neonCyan.withOpacity(0.08),
+              color: AppColors.neonCyan.withValues(alpha: 0.08),
               blurRadius: 30,
               spreadRadius: 4,
             ),
@@ -160,7 +160,7 @@ class _DailyDoseSheetState extends State<_DailyDoseSheet>
           width: 40,
           height: 4,
           decoration: BoxDecoration(
-              color: AppColors.textMuted.withOpacity(0.4),
+              color: AppColors.textMuted.withValues(alpha: 0.4),
               borderRadius: BorderRadius.circular(2)),
         ),
       ),
@@ -190,9 +190,9 @@ class _DailyDoseSheetState extends State<_DailyDoseSheet>
               height: 38,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.yellow.withOpacity(0.12),
+                color: AppColors.yellow.withValues(alpha: 0.12),
                 border: Border.all(
-                    color: AppColors.yellow.withOpacity(0.3), width: 1),
+                    color: AppColors.yellow.withValues(alpha: 0.3), width: 1),
               ),
               child: const Icon(Icons.wb_sunny_rounded,
                   color: AppColors.yellow, size: 18),
@@ -238,7 +238,7 @@ class _DailyDoseSheetState extends State<_DailyDoseSheet>
           color: AppColors.darkCard,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-              color: AppColors.neonCyan.withOpacity(0.1), width: 1)),
+              color: AppColors.neonCyan.withValues(alpha: 0.1), width: 1)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -247,10 +247,10 @@ class _DailyDoseSheetState extends State<_DailyDoseSheet>
               padding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                  color: AppColors.neonCyan.withOpacity(0.1),
+                  color: AppColors.neonCyan.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                      color: AppColors.neonCyan.withOpacity(0.2), width: 1)),
+                      color: AppColors.neonCyan.withValues(alpha: 0.2), width: 1)),
               child: Text(d.type.toUpperCase(),
                   style: GoogleFonts.poppins(
                       fontSize: 9,
@@ -283,10 +283,10 @@ class _DailyDoseSheetState extends State<_DailyDoseSheet>
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.success.withOpacity(0.07),
+        color: AppColors.success.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(14),
         border:
-            Border.all(color: AppColors.success.withOpacity(0.3), width: 1),
+            Border.all(color: AppColors.success.withValues(alpha: 0.3), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -316,10 +316,10 @@ class _DailyDoseSheetState extends State<_DailyDoseSheet>
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.yellow.withOpacity(0.07),
+        color: AppColors.yellow.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(14),
         border:
-            Border.all(color: AppColors.yellow.withOpacity(0.3), width: 1),
+            Border.all(color: AppColors.yellow.withValues(alpha: 0.3), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -351,10 +351,10 @@ class _DailyDoseSheetState extends State<_DailyDoseSheet>
       child: Container(
         height: 48,
         decoration: BoxDecoration(
-            color: const Color(0xFFFF0000).withOpacity(0.1),
+            color: const Color(0xFFFF0000).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-                color: const Color(0xFFFF0000).withOpacity(0.3), width: 1)),
+                color: const Color(0xFFFF0000).withValues(alpha: 0.3), width: 1)),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -387,7 +387,7 @@ class _DailyDoseSheetState extends State<_DailyDoseSheet>
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-                color: AppColors.neonCyan.withOpacity(0.3),
+                color: AppColors.neonCyan.withValues(alpha: 0.3),
                 blurRadius: 12,
                 spreadRadius: 1,
                 offset: const Offset(0, 3)),
