@@ -1,12 +1,12 @@
 <?php
-$pageTitle = 'Add Question';
-require_once dirname(__DIR__) . '/includes/header.php';
+// ── Config FIRST (no HTML output yet) so header('Location') redirects work ──
+require_once dirname(__DIR__) . '/config/auth_check.php';
+require_once dirname(__DIR__) . '/config/db.php';
+require_once dirname(__DIR__) . '/config/constants.php';
 
 $success = $error = '';
 
-// Get sets for dropdown
-$sets = $pdo->query("SELECT id, set_number, title, category FROM sets ORDER BY category, set_number")->fetchAll();
-
+// Handle the submit BEFORE any HTML is sent to the browser.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $stmt = $pdo->prepare("
@@ -35,14 +35,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
     } catch (Exception $e) {
+        // Most common cause: the DB `category` enum doesn't include the chosen
+        // category yet (run migration v5). Show a clear message instead of a
+        // blank screen.
         $error = $e->getMessage();
+        if (stripos($error, 'Data truncated') !== false ||
+            stripos($error, 'Incorrect') !== false) {
+            $error = 'Could not save: the "' . htmlspecialchars($_POST['category'] ?? '')
+                   . '" category is not enabled in the database yet. '
+                   . 'Run admin/migrations/v5_complete_fix.sql, then try again.';
+        }
     }
 }
+
+$pageTitle = 'Add Question';
+require_once dirname(__DIR__) . '/includes/header.php';
+
+// Get sets for dropdown
+$sets = $pdo->query("SELECT id, set_number, title, category FROM sets ORDER BY category, set_number")->fetchAll();
 ?>
 
 <?php if ($success): ?>
 <div class="alert" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#6EE7B7;padding:12px 16px;border-radius:12px;margin-bottom:20px;display:flex;align-items:center;gap:8px">
   <i class="fas fa-check-circle"></i> <?= $success ?>
+</div>
+<?php endif; ?>
+<?php if ($error): ?>
+<div class="alert" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#FCA5A5;padding:12px 16px;border-radius:12px;margin-bottom:20px;display:flex;align-items:center;gap:8px">
+  <i class="fas fa-exclamation-circle"></i> <?= $error ?>
 </div>
 <?php endif; ?>
 

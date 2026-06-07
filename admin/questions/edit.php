@@ -72,6 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <option value="mcq"            <?= $question['category']==='mcq'            ?'selected':'' ?>>5000 MCQ</option>
           <option value="simplification" <?= $question['category']==='simplification' ?'selected':'' ?>>500 Simplification</option>
           <option value="previous_year"  <?= $question['category']==='previous_year'  ?'selected':'' ?>>Previous Year</option>
+          <option value="tunnlity"        <?= $question['category']==='tunnlity'        ?'selected':'' ?>>Test Your Tunnlity</option>
           <option value="daily_practice" <?= $question['category']==='daily_practice' ?'selected':'' ?>>Daily Practice</option>
         </select>
       </div>
