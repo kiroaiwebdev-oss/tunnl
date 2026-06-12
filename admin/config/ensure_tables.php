@@ -138,6 +138,15 @@ try {
         if ($type === 'enum') {
             $pdo->exec("ALTER TABLE `tricks` MODIFY `category` VARCHAR(50) NOT NULL DEFAULT 'SHORTCUTS'");
         }
+        // is_premium flag — lets admin mark a trick premium-only
+        $tp = $pdo->prepare(
+            "SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'tricks' AND COLUMN_NAME = 'is_premium'"
+        );
+        $tp->execute();
+        if ((int)$tp->fetchColumn() === 0) {
+            $pdo->exec("ALTER TABLE `tricks` ADD COLUMN `is_premium` TINYINT DEFAULT 0");
+        }
     } catch (Throwable $e) { /* ignore */ }
 } catch (Throwable $e) {
     // Never break the request. The calling page/API has its own fallback.

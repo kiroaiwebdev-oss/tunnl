@@ -12,17 +12,31 @@ $labels = [
 
 $cat = $_GET['cat'] ?? ($_GET['category'] ?? '');
 if ($cat !== '' && !isset($labels[$cat])) $cat = '';   // ignore unknown
-$catQS = $cat !== '' ? '&cat=' . urlencode($cat) : '';
+$ungrouped = !empty($_GET['ungrouped']) && $cat === 'mcq';
+$catQS = ($cat !== '' ? '&cat=' . urlencode($cat) : '') . ($ungrouped ? '&ungrouped=1' : '');
 
 if ($cat !== '') {
     [$sectionName, $sectionIcon, $sectionColor] = $labels[$cat];
-    $stmt = $pdo->prepare("
-        SELECT s.*,
-          (SELECT COUNT(*) FROM questions q WHERE q.set_id = s.id) as q_count
-        FROM sets s
-        WHERE s.category = ?
-        ORDER BY s.set_number
-    ");
+    if ($ungrouped) {
+        // "500 Free Practice MCQs" pool = mcq sets not tied to any exam.
+        $sectionName = 'Free Practice MCQs';
+        $sectionIcon = 'fa-quote-right';
+        $stmt = $pdo->prepare("
+            SELECT s.*,
+              (SELECT COUNT(*) FROM questions q WHERE q.set_id = s.id) as q_count
+            FROM sets s
+            WHERE s.category = ? AND (s.exam_name IS NULL OR s.exam_name = '')
+            ORDER BY s.set_number
+        ");
+    } else {
+        $stmt = $pdo->prepare("
+            SELECT s.*,
+              (SELECT COUNT(*) FROM questions q WHERE q.set_id = s.id) as q_count
+            FROM sets s
+            WHERE s.category = ?
+            ORDER BY s.set_number
+        ");
+    }
     $stmt->execute([$cat]);
     $sets = $stmt->fetchAll();
 } else {

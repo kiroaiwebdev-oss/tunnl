@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/app_settings_service.dart';
 import '../../core/services/content_service.dart';
 import '../../core/models/trick_model.dart';
 import '../premium/premium_screen.dart';
@@ -44,15 +45,13 @@ class _TricksScreenState extends State<TricksScreen>
     return _allTricks.where((t) => t.category == cat).toList();
   }
 
-  // Free user = first 10% of tricks unlocked, premium = all
-  int get _freeLimit {
-    final total = _allTricks.length;
-    return (total * 0.1).ceil().clamp(1, total);
-  }
+  // Premium gating is now per-trick: admin marks a trick "Premium Only".
+  int get _freeCount => _allTricks.where((t) => !t.isPremium).length;
+  int get _premiumCount => _allTricks.where((t) => t.isPremium).length;
 
-  bool _isLocked(int originalIndex) {
+  bool _isLockedTrick(TrickModel t) {
     if (widget.isPremium) return false;
-    return originalIndex >= _freeLimit;
+    return t.isPremium;
   }
 
   Color _difficultyColor(String d) {
@@ -131,7 +130,7 @@ class _TricksScreenState extends State<TricksScreen>
               children: [
                 _buildAppBar(),
                 _buildCategoryFilter(),
-                if (!widget.isPremium && _allTricks.isNotEmpty)
+                if (!widget.isPremium && _premiumCount > 0)
                   _buildFreeBanner(),
                 Expanded(
                   child: _isLoading
@@ -152,8 +151,7 @@ class _TricksScreenState extends State<TricksScreen>
                                 itemCount: filtered.length,
                                 itemBuilder: (_, i) {
                                   final t = filtered[i];
-                                  final originalIndex = _allTricks.indexOf(t);
-                                  final locked = _isLocked(originalIndex);
+                                  final locked = _isLockedTrick(t);
 
                                   return _TrickCard(
                                     trick: t,
@@ -220,15 +218,15 @@ class _TricksScreenState extends State<TricksScreen>
                       fontSize: 12, color: AppColors.textSecondary),
                   children: [
                     TextSpan(
-                      text: '$_freeLimit tricks free ',
+                      text: '$_freeCount tricks free ',
                       style: GoogleFonts.poppins(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: Colors.white),
                     ),
-                    const TextSpan(text: '— Upgrade for all '),
+                    const TextSpan(text: '— Upgrade for '),
                     TextSpan(
-                      text: '${_allTricks.length} tricks',
+                      text: '$_premiumCount premium tricks',
                       style: GoogleFonts.poppins(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -244,7 +242,7 @@ class _TricksScreenState extends State<TricksScreen>
               decoration: BoxDecoration(
                   color: AppColors.orange,
                   borderRadius: BorderRadius.circular(16)),
-              child: Text('₹50',
+              child: Text('₹${AppSettingsService.instance.getInt('premium_price', 50)}',
                   style: GoogleFonts.poppins(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -292,7 +290,7 @@ class _TricksScreenState extends State<TricksScreen>
             child: Text(
               widget.isPremium
                   ? '${_allTricks.length} Tricks'
-                  : '$_freeLimit/${_allTricks.length} Free',
+                  : '$_freeCount Free',
               style: GoogleFonts.poppins(
                   fontSize: 11,
                   color: widget.isPremium
@@ -485,7 +483,7 @@ class _TrickCard extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     isLocked
-                        ? 'Upgrade to Premium — ₹50 only'
+                        ? 'Upgrade to Premium — ₹${AppSettingsService.instance.getInt('premium_price', 50)} only'
                         : trick.subtitle,
                     style: GoogleFonts.poppins(
                       fontSize: 11,

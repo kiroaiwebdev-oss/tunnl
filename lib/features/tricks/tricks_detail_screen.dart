@@ -58,8 +58,14 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
   Future<void> _openVideo() async {
     if (_videoUrl.isEmpty) return;
     final uri = Uri.parse(_videoUrl);
+    // Play the video INSIDE the app (in-app browser) instead of launching the
+    // external YouTube app.
     if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      try {
+        await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+      } catch (_) {
+        await launchUrl(uri, mode: LaunchMode.inAppWebView);
+      }
     } else {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

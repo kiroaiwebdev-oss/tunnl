@@ -87,6 +87,10 @@ function renderTrickForm(array $cfg) {
         <input type="checkbox" name="is_new" style="accent-color:var(--success);width:16px;height:16px" <?= $t['is_new']?'checked':'' ?>>
         <span style="font-size:13px;color:var(--text2)">🆕 Mark as NEW</span>
       </label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" name="is_premium" style="accent-color:var(--warning);width:16px;height:16px" <?= !empty($t['is_premium'])?'checked':'' ?>>
+        <span style="font-size:13px;color:var(--text2)"><i class="fas fa-crown" style="color:var(--warning)"></i> Premium Only (locked for free users)</span>
+      </label>
       <?php if ($isEdit): ?>
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
         <input type="checkbox" name="is_active" style="accent-color:var(--cyan);width:16px;height:16px" <?= $t['is_active']?'checked':'' ?>>

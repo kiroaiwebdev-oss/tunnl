@@ -685,6 +685,8 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
                         category: 'mcq',
                         setNumber: 1,
                         totalQuestions: _totalQuestions,
+                        challengeId:
+                            (_challenge?['id'] as num?)?.toInt() ?? 0,
                       ),
                     ),
                   );

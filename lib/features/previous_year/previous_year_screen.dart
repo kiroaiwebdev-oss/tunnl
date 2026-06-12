@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/app_settings_service.dart';
 import '../../core/services/content_service.dart';
 import '../premium/premium_screen.dart';
 import '../sets/sets_screen.dart';
@@ -317,7 +318,7 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Free exams open. Premium ones need ₹50 upgrade.',
+                'Free exams open. Premium ones need ₹${AppSettingsService.instance.getInt('premium_price', 50)} upgrade.',
                 style: GoogleFonts.poppins(
                     fontSize: 12, color: AppColors.textSecondary),
               ),
@@ -327,7 +328,7 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
               decoration: BoxDecoration(
                   color: AppColors.orange,
                   borderRadius: BorderRadius.circular(16)),
-              child: Text('₹50',
+              child: Text('₹${AppSettingsService.instance.getInt('premium_price', 50)}',
                   style: GoogleFonts.poppins(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -386,7 +387,12 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
       );
     }
 
-    final entries = filtered.entries.toList();
+    // Flatten every exam paper into its own card → tapping opens its sets
+    // directly (no intermediate year picker / bottom sheet).
+    final flat = <Map<String, dynamic>>[];
+    for (final list in filtered.values) {
+      flat.addAll(list);
+    }
     return RefreshIndicator(
       color: AppColors.yellow,
       backgroundColor: AppColors.darkCard,
@@ -400,161 +406,25 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
           mainAxisSpacing: 12,
           childAspectRatio: 0.92,
         ),
-        itemCount: entries.length,
+        itemCount: flat.length,
         itemBuilder: (_, i) {
-          final examName = entries[i].key;
-          final years = entries[i].value;
-          final color = _examColor(examName);
-          final firstWithIcon = years.firstWhere(
-            (e) => (e['icon'] ?? '').toString().isNotEmpty,
-            orElse: () => years.isNotEmpty ? years.first : <String, dynamic>{},
-          );
-          final icon = _resolveIcon(firstWithIcon['icon']?.toString(), examName);
-          // The exam is "locked" only if EVERY year is premium-locked.
-          final allLocked = years.isNotEmpty &&
-              years.every((y) => y['can_access'] != true);
-
+          final exam = flat[i];
+          final name = (exam['exam_name'] ?? '').toString();
+          final year = (exam['exam_year'] as num?)?.toInt() ?? 0;
+          final color = _examColor(name);
+          final icon = _resolveIcon(exam['icon']?.toString(), name);
+          final locked = exam['can_access'] != true;
+          final setCount = (exam['set_count'] as num?)?.toInt() ?? 0;
           return _ExamSquare(
-            name: examName,
+            name: year > 0 ? '$name $year' : name,
             icon: icon,
             color: color,
-            yearCount: years.length,
-            locked: allLocked,
-            onTap: () => _showYears(examName, years, color, icon),
+            subtitle: '$setCount set${setCount == 1 ? '' : 's'}',
+            locked: locked,
+            onTap: () => _openExam(exam),
           );
         },
       ),
-    );
-  }
-
-  // Bottom sheet: pick a year for the tapped exam.
-  void _showYears(
-    String examName,
-    List<Map<String, dynamic>> years,
-    Color color,
-    IconData icon,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.darkCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.textMuted.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(icon, color: color, size: 22),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(examName,
-                            style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white)),
-                        Text('Select a year to start',
-                            style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                color: AppColors.textSecondary)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: years.map((y) {
-                  final yearLabel = '${y['exam_year'] ?? ''}';
-                  final canAccess = y['can_access'] == true;
-                  final difficulty = (y['difficulty'] ?? 'medium').toString();
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                      _openExam(y);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: canAccess
-                            ? color.withValues(alpha: 0.08)
-                            : AppColors.orange.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: canAccess
-                              ? color.withValues(alpha: 0.3)
-                              : AppColors.orange.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(yearLabel.isEmpty ? 'Paper' : yearLabel,
-                              style: GoogleFonts.orbitron(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: canAccess
-                                      ? Colors.white
-                                      : AppColors.orange)),
-                          const SizedBox(width: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 5, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: _diffColor(difficulty).withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(difficulty.toUpperCase(),
-                                style: GoogleFonts.poppins(
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.w700,
-                                    color: _diffColor(difficulty))),
-                          ),
-                          if (!canAccess) ...[
-                            const SizedBox(width: 4),
-                            const Icon(Icons.lock_rounded,
-                                size: 11, color: AppColors.orange),
-                          ],
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 }
@@ -564,7 +434,7 @@ class _ExamSquare extends StatelessWidget {
   final String name;
   final IconData icon;
   final Color color;
-  final int yearCount;
+  final String subtitle;
   final bool locked;
   final VoidCallback onTap;
 
@@ -572,7 +442,7 @@ class _ExamSquare extends StatelessWidget {
     required this.name,
     required this.icon,
     required this.color,
-    required this.yearCount,
+    required this.subtitle,
     required this.locked,
     required this.onTap,
   });
@@ -633,7 +503,7 @@ class _ExamSquare extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              '$yearCount year${yearCount == 1 ? '' : 's'}',
+              subtitle,
               style: GoogleFonts.poppins(
                 fontSize: 10,
                 color: AppColors.textSecondary,

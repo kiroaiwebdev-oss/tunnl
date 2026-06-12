@@ -76,6 +76,7 @@ class ContentService {
     String category, {
     int? examId,
     String? examName,
+    bool ungrouped = false,
     int page = 1,
     int perPage = 50,
   }) async {
@@ -87,6 +88,7 @@ class ContentService {
       };
       if (examId != null) params['exam_id'] = '$examId';
       if (examName != null && examName.isNotEmpty) params['exam_name'] = examName;
+      if (ungrouped) params['ungrouped'] = '1';
 
       final res = await ApiClient.get(
         ApiEndpoints.sets,

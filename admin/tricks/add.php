@@ -18,8 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               (chapter_number, title, subtitle, category, difficulty,
                has_video, video_url, video_duration,
                has_article, article_content, read_duration,
-               is_new, is_active)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1)
+               is_new, is_premium, is_active)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,1)
         ")->execute([
             intval($_POST['chapter_number']),
             trim($_POST['title']),
@@ -33,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             trim($_POST['article_content'] ?? ''),
             intval($_POST['read_duration']  ?? 5),
             isset($_POST['is_new'])      ? 1 : 0,
+            isset($_POST['is_premium'])  ? 1 : 0,
         ]);
         header('Location: ' . ADMIN_URL . '/tricks/index.php?added=1');
         exit;
@@ -67,6 +68,7 @@ renderTrickForm([
         'article_content'=> $_POST['article_content'] ?? '',
         'read_duration'  => $_POST['read_duration'] ?? 5,
         'is_new'         => isset($_POST['is_new']) ? 1 : 0,
+        'is_premium'     => isset($_POST['is_premium']) ? 1 : 0,
         'is_active'      => 1,
     ],
 ]);

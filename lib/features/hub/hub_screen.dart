@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/app_settings_service.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/content_service.dart';
@@ -263,7 +264,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
                                   icon:        Icons.workspace_premium_rounded,
                                   iconColor:   Colors.white,
                                   titleColor:  AppColors.orange,
-                                  priceBadge:  '₹50',
+                                  priceBadge:  '₹${AppSettingsService.instance.getInt('premium_price', 50)}',
                                   onTap:       _onTicketTap,
                                 ),
                           const SizedBox(height: 12),

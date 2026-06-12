@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/content_service.dart';
+import '../../core/services/user_service.dart';
 import '../../core/models/question_model.dart';
 import '../result/result_screen.dart';
 
@@ -14,6 +15,7 @@ class QuestionScreen extends StatefulWidget {
   final int setId;
   final int totalQuestions;
   final String category;
+  final int challengeId;
   final VoidCallback? onSetCompleted;
 
   const QuestionScreen({
@@ -23,6 +25,7 @@ class QuestionScreen extends StatefulWidget {
     this.setId = 0,
     this.setNumber = 1,
     this.totalQuestions = 10,
+    this.challengeId = 0,
     this.onSetCompleted,
   });
 
@@ -300,6 +303,17 @@ class _QuestionScreenState extends State<QuestionScreen>
         ? 0.0
         : (_correctCount / _questions.length) * 100;
     final totalTime = _timeTaken.fold<int>(0, (s, e) => s + e);
+
+    // Solve & Earn: record the attempt so it shows on the leaderboard.
+    // (Fire-and-forget — the server creates a challenge_entries row.)
+    if (widget.mode == 'solve_earn' && widget.challengeId > 0) {
+      UserService.submitWeeklyChallenge(
+        challengeId: widget.challengeId,
+        correct: _correctCount,
+        wrong: _wrongCount,
+        timeTaken: totalTime,
+      );
+    }
 
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(

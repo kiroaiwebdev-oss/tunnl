@@ -50,6 +50,7 @@ function formatTrick(array $t): array {
         'category'       => $t['category'],
         'difficulty'     => $t['difficulty'],
         'is_new'         => (bool)$t['is_new'],
+        'is_premium'     => !empty($t['is_premium']),
         'has_video'      => (bool)$t['has_video'],
         'video_url'      => $t['has_video'] ? $t['video_url'] : null,
         'video_duration' => intval($t['video_duration']),

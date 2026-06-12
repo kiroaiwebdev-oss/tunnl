@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/app_settings_service.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/user_service.dart';
@@ -881,7 +882,7 @@ Future<void> _loadFromApi() async {
                   Text(
                     _isPremium
                         ? 'Full access — Lifetime'
-                        : 'Get complete access @ ₹50',
+                        : 'Get complete access @ ₹${AppSettingsService.instance.getInt('premium_price', 50)}',
                     style: GoogleFonts.poppins(
                       fontSize: 12, color: AppColors.textSecondary)),
                 ],
@@ -896,7 +897,7 @@ Future<void> _loadFromApi() async {
                     colors: [Color(0xFFFFD600), Color(0xFFFF8F00)]),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text('₹50',
+                child: Text('₹${AppSettingsService.instance.getInt('premium_price', 50)}',
                   style: GoogleFonts.poppins(
                     fontSize: 13, fontWeight: FontWeight.w700,
                     color: AppColors.darkBg)),

@@ -28,6 +28,11 @@ if (!empty($_GET['exam_name'])) {
     $params[] = trim($_GET['exam_name']);
 }
 
+// Only sets NOT tied to any exam (the "500 Free Practice MCQs" pool).
+if (!empty($_GET['ungrouped'])) {
+    $where[] = "(s.exam_name IS NULL OR s.exam_name = '')";
+}
+
 $whereSQL = implode(' AND ', $where);
 
 $totalStmt = $pdo->prepare("SELECT COUNT(*) FROM sets s WHERE $whereSQL");

@@ -94,8 +94,14 @@ class _ShortsScreenState extends State<ShortsScreen>
   Future<void> _openLink(String url) async {
     if (url.isEmpty) return;
     final uri = Uri.parse(url);
+    // Open INSIDE the app (in-app browser / custom tab) instead of jumping to
+    // the external YouTube / Instagram app.
     if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      try {
+        await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+      } catch (_) {
+        await launchUrl(uri, mode: LaunchMode.inAppWebView);
+      }
     } else {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

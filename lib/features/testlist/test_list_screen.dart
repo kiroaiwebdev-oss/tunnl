@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/app_settings_service.dart';
 import '../../core/services/content_service.dart';
 import '../../core/models/set_model.dart';
 import '../question/question_screen.dart';
@@ -69,6 +70,7 @@ class _TestListScreenState extends State<TestListScreen>
 
     final sets = await ContentService.getSets(
       widget.category,
+      ungrouped: widget.category == 'mcq',
       page: 1,
       perPage: 50,
     );
@@ -427,7 +429,7 @@ class _TestSetCard extends StatelessWidget {
                           fontSize: 12, color: AppColors.textSecondary)),
                   if (isPremiumLocked) ...[
                     const SizedBox(height: 6),
-                    Text('Upgrade to unlock — ₹50 only',
+                    Text('Upgrade to unlock — ₹${AppSettingsService.instance.getInt('premium_price', 50)} only',
                         style: GoogleFonts.poppins(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,

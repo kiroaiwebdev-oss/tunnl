@@ -464,8 +464,12 @@ function navSectionActive($currentPage, $currentCat, $cat) {
 
     <div class="nav-section">Content</div>
     <a href="<?= ADMIN_URL ?>/mcq_exams/index.php"
-       class="nav-item <?= ($currentPage === 'mcq_exams' || navSectionActive($currentPage, $currentCat, 'mcq')) ? 'active' : '' ?>">
+       class="nav-item <?= $currentPage === 'mcq_exams' ? 'active' : '' ?>">
       <i class="fas fa-bolt"></i> Practice Sets (5000 MCQ)
+    </a>
+    <a href="<?= ADMIN_URL ?>/sets/index.php?cat=mcq&ungrouped=1"
+       class="nav-item <?= navSectionActive($currentPage, $currentCat, 'mcq') ?>">
+      <i class="fas fa-quote-right"></i> Free Practice MCQs
     </a>
     <a href="<?= ADMIN_URL ?>/sets/index.php?cat=simplification"
        class="nav-item <?= navSectionActive($currentPage, $currentCat, 'simplification') ?>">
