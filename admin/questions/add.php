@@ -14,10 +14,13 @@ $catLabels = [
 $cat   = $_GET['cat'] ?? ($_GET['category'] ?? '');
 if ($cat !== '' && !isset($catLabels[$cat])) $cat = '';
 $setId = intval($_GET['set_id'] ?? 0);
+$ret   = $_GET['ret'] ?? '';
+if ($ret !== '' && strpos($ret, 'manage_sets.php') === false) $ret = '';
 
 $scopeQS = '';
 if ($cat)   $scopeQS .= '&cat=' . urlencode($cat);
 if ($setId) $scopeQS .= '&set_id=' . $setId;
+if ($ret)   $scopeQS .= '&ret=' . urlencode($ret);
 
 $success = $error = '';
 

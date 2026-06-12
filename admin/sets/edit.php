@@ -6,14 +6,17 @@ require_once dirname(__DIR__) . '/config/constants.php';
 
 $cat   = $_GET['cat'] ?? '';
 $catQS = $cat !== '' ? '&cat=' . urlencode($cat) : '';
+$ret   = $_GET['ret'] ?? '';
+if ($ret !== '' && strpos($ret, 'manage_sets.php') === false) $ret = '';
+$backUrl = $ret !== '' ? $ret : (ADMIN_URL . '/sets/index.php?' . ltrim($catQS, '&'));
 
 $id = intval($_GET['id'] ?? 0);
-if (!$id) { header('Location: ' . ADMIN_URL . '/sets/index.php?' . ltrim($catQS, '&')); exit; }
+if (!$id) { header('Location: ' . $backUrl); exit; }
 
 $set = $pdo->prepare("SELECT * FROM sets WHERE id = ?");
 $set->execute([$id]);
 $set = $set->fetch();
-if (!$set) { header('Location: ' . ADMIN_URL . '/sets/index.php?' . ltrim($catQS, '&')); exit; }
+if (!$set) { header('Location: ' . $backUrl); exit; }
 
 $success = $error = '';
 
@@ -68,10 +71,10 @@ require_once dirname(__DIR__) . '/includes/header.php';
     <p class="text-muted"><?= $qCount ?> / 10 questions in this set</p>
   </div>
   <div style="display:flex;gap:8px">
-    <a href="<?= ADMIN_URL ?>/questions/index.php?cat=<?= urlencode($set['category']) ?>&set_id=<?= $id ?>" class="btn btn-primary">
+    <a href="<?= ADMIN_URL ?>/questions/index.php?cat=<?= urlencode($set['category']) ?>&set_id=<?= $id ?><?= $ret !== '' ? '&ret=' . urlencode($ret) : '' ?>" class="btn btn-primary">
       <i class="fas fa-list-ol"></i> Questions
     </a>
-    <a href="<?= ADMIN_URL ?>/sets/index.php?<?= ltrim($catQS, '&') ?>" class="btn btn-secondary">
+    <a href="<?= htmlspecialchars($backUrl) ?>" class="btn btn-secondary">
       <i class="fas fa-arrow-left"></i> Back
     </a>
   </div>
@@ -144,7 +147,7 @@ require_once dirname(__DIR__) . '/includes/header.php';
   </div>
   <div style="display:flex;gap:12px">
     <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Update Set</button>
-    <a href="<?= ADMIN_URL ?>/sets/index.php?<?= ltrim($catQS, '&') ?>" class="btn btn-secondary"><i class="fas fa-times"></i> Cancel</a>
+    <a href="<?= htmlspecialchars($backUrl) ?>" class="btn btn-secondary"><i class="fas fa-times"></i> Cancel</a>
   </div>
 </div>
 </form>

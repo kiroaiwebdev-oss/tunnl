@@ -64,7 +64,9 @@ $pageTitle = 'Manage Sets';
 require_once dirname(__DIR__) . '/includes/header.php';
 
 $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
-$catQS = 'cat=' . urlencode($category);
+$catQS  = 'cat=' . urlencode($category);
+// Return URL so the questions/CSV pages can come back to THIS exam's sets.
+$retEnc = urlencode($cfg['selfBase']);
 ?>
 
 <div class="flex-between mb-24">
@@ -76,7 +78,7 @@ $catQS = 'cat=' . urlencode($category);
   </div>
   <div style="display:flex;gap:10px;flex-wrap:wrap">
     <a href="<?= $h($cfg['backUrl']) ?>" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
-    <a href="<?= $ADMIN ?>/questions/import_csv.php?<?= $catQS ?>" class="btn btn-secondary"><i class="fas fa-file-csv"></i> Import CSV</a>
+    <a href="<?= $ADMIN ?>/questions/import_csv.php?<?= $catQS ?>&ret=<?= $retEnc ?>" class="btn btn-secondary"><i class="fas fa-file-csv"></i> Import CSV</a>
     <button onclick="openAddSet()" class="btn btn-primary"><i class="fas fa-plus"></i> Add Set</button>
   </div>
 </div>
@@ -138,13 +140,13 @@ $catQS = 'cat=' . urlencode($category);
           </td>
           <td>
             <div style="display:flex;gap:6px">
-              <a href="<?= $ADMIN ?>/questions/index.php?<?= $catQS ?>&set_id=<?= $s['id'] ?>" class="btn btn-primary btn-sm" title="Manage Questions">
+              <a href="<?= $ADMIN ?>/questions/index.php?<?= $catQS ?>&set_id=<?= $s['id'] ?>&ret=<?= $retEnc ?>" class="btn btn-primary btn-sm" title="Manage Questions">
                 <i class="fas fa-list-ol"></i> Questions
               </a>
-              <a href="<?= $ADMIN ?>/questions/import_csv.php?<?= $catQS ?>&set_id=<?= $s['id'] ?>" class="btn btn-secondary btn-sm" title="Import CSV into this set">
+              <a href="<?= $ADMIN ?>/questions/import_csv.php?<?= $catQS ?>&set_id=<?= $s['id'] ?>&ret=<?= $retEnc ?>" class="btn btn-secondary btn-sm" title="Import CSV into this set">
                 <i class="fas fa-file-csv"></i>
               </a>
-              <a href="<?= $ADMIN ?>/sets/edit.php?id=<?= $s['id'] ?>&<?= $catQS ?>" class="btn btn-secondary btn-sm" title="Edit set">
+              <a href="<?= $ADMIN ?>/sets/edit.php?id=<?= $s['id'] ?>&<?= $catQS ?>&ret=<?= $retEnc ?>" class="btn btn-secondary btn-sm" title="Edit set">
                 <i class="fas fa-edit"></i>
               </a>
               <button onclick="deleteSet(<?= $s['id'] ?>)" class="btn btn-danger btn-sm" title="Delete set">

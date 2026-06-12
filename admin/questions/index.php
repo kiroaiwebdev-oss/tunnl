@@ -13,6 +13,9 @@ $labels = [
 $cat        = $_GET['cat'] ?? ($_GET['category'] ?? '');
 if ($cat !== '' && !isset($labels[$cat])) $cat = '';
 $setId      = intval($_GET['set_id'] ?? 0);
+// Return URL — when we came from an exam's "Sets" page, go back THERE.
+$ret = $_GET['ret'] ?? '';
+if ($ret !== '' && strpos($ret, 'manage_sets.php') === false) $ret = '';
 $difficulty = $_GET['difficulty'] ?? '';
 $search     = $_GET['search']     ?? '';
 $page       = max(1, intval($_GET['page'] ?? 1));
@@ -60,6 +63,7 @@ $questions = $questions->fetchAll();
 $scopeQS = '';
 if ($cat)   $scopeQS .= '&cat=' . urlencode($cat);
 if ($setId) $scopeQS .= '&set_id=' . $setId;
+if ($ret)   $scopeQS .= '&ret=' . urlencode($ret);
 
 $sectionName = $cat !== '' ? ($labels[$cat] ?? ucfirst($cat)) : 'All';
 ?>
@@ -80,7 +84,11 @@ $sectionName = $cat !== '' ? ($labels[$cat] ?? ucfirst($cat)) : 'All';
     </p>
   </div>
   <div style="display:flex;gap:10px;flex-wrap:wrap">
-    <?php if ($cat !== ''): ?>
+    <?php if ($ret !== ''): ?>
+    <a href="<?= htmlspecialchars($ret) ?>" class="btn btn-secondary">
+      <i class="fas fa-arrow-left"></i> Back to Sets
+    </a>
+    <?php elseif ($cat !== ''): ?>
     <a href="<?= ADMIN_URL ?>/sets/index.php?cat=<?= urlencode($cat) ?>" class="btn btn-secondary">
       <i class="fas fa-arrow-left"></i> Back to Sets
     </a>

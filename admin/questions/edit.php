@@ -45,9 +45,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Preserve the section context for the Back/Cancel links.
 $cat   = $_GET['cat'] ?? ($_GET['category'] ?? $question['category']);
 $setId = intval($_GET['set_id'] ?? $question['set_id']);
+$ret   = $_GET['ret'] ?? '';
+if ($ret !== '' && strpos($ret, 'manage_sets.php') === false) $ret = '';
 $scopeQS = '';
 if ($cat)   $scopeQS .= '&cat=' . urlencode($cat);
 if ($setId) $scopeQS .= '&set_id=' . $setId;
+if ($ret)   $scopeQS .= '&ret=' . urlencode($ret);
 
 $pageTitle = 'Edit Question';
 require_once dirname(__DIR__) . '/includes/header.php';

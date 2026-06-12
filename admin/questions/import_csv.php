@@ -12,10 +12,13 @@ $catLabels = [
 $cat   = $_GET['cat'] ?? ($_GET['category'] ?? '');
 if ($cat !== '' && !isset($catLabels[$cat])) $cat = '';
 $setId = intval($_GET['set_id'] ?? 0);
+$ret   = $_GET['ret'] ?? '';
+if ($ret !== '' && strpos($ret, 'manage_sets.php') === false) $ret = '';
 
 $scopeQS = '';
 if ($cat)   $scopeQS .= '&cat=' . urlencode($cat);
 if ($setId) $scopeQS .= '&set_id=' . $setId;
+if ($ret)   $scopeQS .= '&ret=' . urlencode($ret);
 
 $success = $error = '';
 $imported = 0;
@@ -80,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
     <h2 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700">Import Questions via CSV</h2>
     <p class="text-muted"><?= $cat !== '' ? htmlspecialchars($catLabels[$cat]) . ' · bulk upload' : 'Bulk upload questions from Excel/CSV' ?></p>
   </div>
-  <a href="<?= ADMIN_URL ?>/questions/index.php?<?= ltrim($scopeQS, '&') ?>" class="btn btn-secondary">
+  <a href="<?= $ret !== '' ? htmlspecialchars($ret) : ADMIN_URL . '/questions/index.php?' . ltrim($scopeQS, '&') ?>" class="btn btn-secondary">
     <i class="fas fa-arrow-left"></i> Back
   </a>
 </div>
