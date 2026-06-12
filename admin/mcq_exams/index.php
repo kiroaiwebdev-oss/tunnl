@@ -3,15 +3,19 @@
 require_once dirname(__DIR__) . '/config/auth_check.php';
 require_once dirname(__DIR__) . '/config/db.php';
 
-$exams = $pdo->query("
-    SELECT e.*,
-      (SELECT COUNT(*) FROM sets s WHERE s.category='mcq' AND s.exam_name = e.exam_name) AS set_count,
-      (SELECT COUNT(*) FROM questions q
-         JOIN sets s ON q.set_id = s.id
-         WHERE s.category='mcq' AND s.exam_name = e.exam_name) AS q_count
-    FROM mcq_exams e
-    ORDER BY e.sort_order ASC, e.exam_name ASC
-")->fetchAll();
+try {
+    $exams = $pdo->query("
+        SELECT e.*,
+          (SELECT COUNT(*) FROM sets s WHERE s.category='mcq' AND s.exam_name = e.exam_name) AS set_count,
+          (SELECT COUNT(*) FROM questions q
+             JOIN sets s ON q.set_id = s.id
+             WHERE s.category='mcq' AND s.exam_name = e.exam_name) AS q_count
+        FROM mcq_exams e
+        ORDER BY e.sort_order ASC, e.exam_name ASC
+    ")->fetchAll();
+} catch (Throwable $e) {
+    $exams = [];
+}
 
 $pageTitle = '5000 MCQ Exams';
 require_once dirname(__DIR__) . '/includes/header.php';

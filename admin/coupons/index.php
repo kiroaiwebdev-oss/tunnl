@@ -17,7 +17,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_id'])) {
     }
 }
 
-$coupons = $pdo->query("SELECT * FROM coupons ORDER BY created_at DESC")->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $coupons = $pdo->query("SELECT * FROM coupons ORDER BY created_at DESC")->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {
+    $coupons = [];
+}
 
 $pageTitle = 'Coupons';
 require_once dirname(__DIR__) . '/includes/header.php';
