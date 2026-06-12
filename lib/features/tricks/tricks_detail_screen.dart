@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/in_app_video_player.dart';
 
 class TricksDetailScreen extends StatefulWidget {
   final Map<String, dynamic> data;
@@ -53,32 +53,6 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
   void dispose() {
     _entryCtrl.dispose();
     super.dispose();
-  }
-
-  Future<void> _openVideo() async {
-    if (_videoUrl.isEmpty) return;
-    final uri = Uri.parse(_videoUrl);
-    // Play the video INSIDE the app (in-app browser) instead of launching the
-    // external YouTube app.
-    if (await canLaunchUrl(uri)) {
-      try {
-        await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
-      } catch (_) {
-        await launchUrl(uri, mode: LaunchMode.inAppWebView);
-      }
-    } else {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.darkCard,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12)),
-          content: Text('Could not open video link!',
-              style: GoogleFonts.poppins(color: Colors.white)),
-        ),
-      );
-    }
   }
 
   @override
@@ -384,18 +358,20 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
     );
   }
 
-  // ── VIDEO SECTION (admin-driven) ──────────────────
+  // ── VIDEO SECTION (admin-driven, plays IN-APP) ───
   Widget _buildVideoSection() {
+    final inline = InAppVideoPlayer.canPlayInline(_videoUrl);
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Column(
         children: [
-          // Video thumbnail card
-          GestureDetector(
-            onTap: _openVideo,
-            child: Container(
+          // Inline player (YouTube embed or uploaded MP4) — never leaves app.
+          if (inline)
+            InAppVideoPlayer(url: _videoUrl, autoPlay: false)
+          else
+            Container(
               width: double.infinity,
-              height: 200,
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: AppColors.darkCard,
                 borderRadius: BorderRadius.circular(20),
@@ -404,90 +380,24 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
                   width: 1.2,
                 ),
               ),
-              child: Stack(
+              child: Column(
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      gradient: const LinearGradient(
-                        colors: [
-                          Color(0xFF1A0A0A),
-                          Color(0xFF2A1515),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                  ),
-                  Center(
-                    child: Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: const Color(0xFFFF6B6B),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFFFF6B6B)
-                                .withValues(alpha: 0.4),
-                            blurRadius: 20,
-                            spreadRadius: 4,
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.play_arrow_rounded,
-                        color: Colors.white,
-                        size: 36,
-                      ),
-                    ),
-                  ),
-                  if (_videoDuration.isNotEmpty)
-                    Positioned(
-                      bottom: 12,
-                      right: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.7),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          _videoDuration,
-                          style: GoogleFonts.poppins(
-                            fontSize: 11,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  Positioned(
-                    top: 12,
-                    left: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFF6B6B).withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        'TAP TO WATCH',
-                        style: GoogleFonts.poppins(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
+                  const Icon(Icons.videocam_off_rounded,
+                      color: AppColors.textMuted, size: 40),
+                  const SizedBox(height: 10),
+                  Text('No playable video set',
+                      style: GoogleFonts.poppins(
                           color: Colors.white,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                    ),
-                  ),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 4),
+                  Text('Admin can add a YouTube link or upload a video.',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                          color: AppColors.textSecondary, fontSize: 12)),
                 ],
               ),
             ),
-          ),
 
           const SizedBox(height: 16),
 
@@ -544,45 +454,6 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
                   ),
                 ],
               ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Open video button
-          GestureDetector(
-            onTap: _openVideo,
-            child: Container(
-              height: 52,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFF0000).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(26),
-                border: Border.all(
-                  color: const Color(0xFFFF0000).withValues(alpha: 0.4),
-                  width: 1.2,
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.play_circle_rounded,
-                    color: Color(0xFFFF0000),
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'WATCH VIDEO',
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFFFF0000),
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                ],
-              ),
             ),
           ),
 

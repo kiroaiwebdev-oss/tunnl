@@ -37,7 +37,7 @@ function renderTrickForm(array $cfg) {
   <a href="<?= $adminUrl ?>/tricks/index.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
 </div>
 
-<form method="POST" action="<?= $h($action) ?>">
+<form method="POST" enctype="multipart/form-data" action="<?= $h($action) ?>">
 
   <!-- Basic Info -->
   <div class="card mb-16">
@@ -113,7 +113,7 @@ function renderTrickForm(array $cfg) {
     <div id="videoFields" style="display:<?= $t['has_video']?'block':'none' ?>">
       <div class="form-row">
         <div class="form-group" style="flex:2">
-          <label class="form-label">YouTube URL</label>
+          <label class="form-label">YouTube URL <span style="color:var(--muted);font-weight:400">(or a direct .mp4 link)</span></label>
           <input type="url" name="video_url" id="videoUrl" class="form-input"
             value="<?= $h($t['video_url']) ?>" placeholder="https://youtube.com/watch?v=..."
             oninput="renderVideoPreview()">
@@ -123,6 +123,31 @@ function renderTrickForm(array $cfg) {
           <input type="number" name="video_duration" class="form-input" value="<?= $h($t['video_duration'] ?: 5) ?>" min="1">
         </div>
       </div>
+
+      <div style="display:flex;align-items:center;gap:10px;margin:6px 0 12px">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:11px;color:var(--muted)">OR UPLOAD A LOCAL VIDEO</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label"><i class="fas fa-upload" style="color:var(--cyan)"></i> Upload Video File (mp4 / mov / webm, max 60MB)</label>
+        <input type="file" name="video_file" accept="video/mp4,video/quicktime,video/webm,video/x-m4v" class="form-input">
+        <p style="font-size:11px;color:var(--muted);margin-top:4px">
+          If you upload a file it <strong>replaces the URL above</strong> and plays right inside the app.
+        </p>
+        <?php
+          $vu = (string)($t['video_url'] ?? '');
+          $isUploaded = strpos($vu, '/uploads/videos/') !== false;
+        ?>
+        <?php if ($isUploaded): ?>
+        <div style="margin-top:8px;font-size:12px;color:var(--success)">
+          <i class="fas fa-check-circle"></i> Current uploaded video:
+          <a href="<?= $h($vu) ?>" target="_blank" style="color:var(--cyan)"><?= $h(basename($vu)) ?></a>
+        </div>
+        <?php endif; ?>
+      </div>
+
       <div id="videoPreview" style="margin-top:8px"></div>
     </div>
   </div>

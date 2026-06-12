@@ -3,6 +3,7 @@
 require_once dirname(__DIR__) . '/config/auth_check.php';
 require_once dirname(__DIR__) . '/config/db.php';
 require_once dirname(__DIR__) . '/config/constants.php';
+require_once __DIR__ . '/_video_upload.php';
 
 $success = $error = '';
 
@@ -12,7 +13,11 @@ $existingCats = array_column($pdo->query(
 )->fetchAll(), 'category');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    try {
+    // Local upload (if any) overrides the typed URL.
+    $videoUrl = tunnl_trick_video_url($_POST['video_url'] ?? '', $error);
+    $hasVideo = ($videoUrl !== '') ? 1 : (isset($_POST['has_video']) ? 1 : 0);
+    if ($error === '') {
+      try {
         $pdo->prepare("
             INSERT INTO tricks
               (chapter_number, title, subtitle, category, difficulty,
@@ -26,8 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             trim($_POST['subtitle'] ?? ''),
             strtoupper(trim($_POST['category'])),
             $_POST['difficulty'],
-            isset($_POST['has_video'])   ? 1 : 0,
-            trim($_POST['video_url']     ?? ''),
+            $hasVideo,
+            $videoUrl,
             intval($_POST['video_duration'] ?? 0),
             isset($_POST['has_article']) ? 1 : 0,
             trim($_POST['article_content'] ?? ''),
@@ -37,12 +42,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
         header('Location: ' . ADMIN_URL . '/tricks/index.php?added=1');
         exit;
-    } catch (Exception $e) {
+      } catch (Exception $e) {
         $error = $e->getMessage();
         if (stripos($error, 'truncated') !== false || stripos($error, 'Incorrect') !== false) {
             $error = 'Could not save. If you used a custom category, open any admin page once '
                    . '(it auto-upgrades the category column), then try again.';
         }
+      }
     }
 }
 

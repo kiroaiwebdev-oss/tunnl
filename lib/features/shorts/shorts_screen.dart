@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/content_service.dart';
 import '../../core/models/short_model.dart';
+import '../../core/widgets/in_app_video_player.dart';
 
 class ShortsScreen extends StatefulWidget {
   const ShortsScreen({super.key});
@@ -89,6 +90,19 @@ class _ShortsScreenState extends State<ShortsScreen>
       _allShorts = shorts;
       _isLoading = false;
     });
+  }
+
+  // Play the short. YouTube + uploaded videos play INSIDE the app on a
+  // dedicated player screen. Instagram/Facebook pages (which can't be
+  // embedded) open in the in-app browser so the user still stays in the app.
+  void _openShort(ShortModel s) {
+    if (InAppVideoPlayer.canPlayInline(s.url)) {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => _ShortPlayerScreen(short: s),
+      ));
+    } else {
+      _openLink(s.url);
+    }
   }
 
   Future<void> _openLink(String url) async {
@@ -182,7 +196,7 @@ class _ShortsScreenState extends State<ShortsScreen>
             short: s,
             platformIcon: _platformIcon(s.platform),
             platformColor: _platformColor(s.platform),
-            onTap: () => _openLink(s.url),
+            onTap: () => _openShort(s),
           );
         },
       ),
@@ -533,6 +547,70 @@ class _StatChip extends StatelessWidget {
               style: GoogleFonts.poppins(
                   fontSize: 11, fontWeight: FontWeight.w600, color: color)),
         ],
+      ),
+    );
+  }
+}
+
+
+// Full-screen in-app player for a single short (YouTube embed or uploaded MP4).
+class _ShortPlayerScreen extends StatelessWidget {
+  final ShortModel short;
+  const _ShortPlayerScreen({required this.short});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // top bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                        color: AppColors.neonCyan, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      short.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Center(
+                child: InAppVideoPlayer(
+                  url: short.url,
+                  autoPlay: true,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            if (short.category.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  short.category,
+                  style: GoogleFonts.poppins(
+                      fontSize: 12, color: AppColors.textSecondary),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
