@@ -22,6 +22,12 @@ if (!empty($_GET['exam_id'])) {
     $params[] = intval($_GET['exam_id']);
 }
 
+// Filter mcq sets by exam_name (used by the 5000 MCQ exam-wise screen).
+if (!empty($_GET['exam_name'])) {
+    $where[]  = 's.exam_name = ?';
+    $params[] = trim($_GET['exam_name']);
+}
+
 $whereSQL = implode(' AND ', $where);
 
 $totalStmt = $pdo->prepare("SELECT COUNT(*) FROM sets s WHERE $whereSQL");
@@ -60,8 +66,9 @@ $result = array_map(function ($s) use ($isPremium) {
         'exam_name'       => $s['exam_name'] ?? '',
         'category'        => $s['category'],
         'level'           => $s['level']     ?? 'beginner',
-        'total_questions' => intval($s['total_questions'] ?? 0),
-        'question_count'  => intval($s['question_count']),
+        // Tunnl rule: every set is a 10-question set.
+        'total_questions' => 10,
+        'question_count'  => min(10, intval($s['question_count'])),
         'is_locked'       => !empty($s['is_locked']),
         'is_premium'      => $premium,
         'can_access'      => !$premium || $isPremium,

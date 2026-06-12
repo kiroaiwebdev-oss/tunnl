@@ -31,7 +31,35 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
   late Animation<Offset> _slideAnim;
 
   String _selectedFilter = 'All';
-  final List<String> _filters = ['All', 'SSC', 'Railway', 'Bank'];
+
+  /// Filter chips are built dynamically from the exam categories that actually
+  /// exist (so every exam shown below is reachable from a top chip).
+  List<String> get _filters {
+    final cats = <String>{};
+    _exams.forEach((_, list) {
+      final c = list.isNotEmpty
+          ? (list.first['exam_category'] ?? '').toString().trim()
+          : '';
+      if (c.isNotEmpty) cats.add(_prettyCat(c));
+    });
+    final sorted = cats.toList()..sort();
+    return ['All', ...sorted];
+  }
+
+  String _prettyCat(String c) {
+    switch (c.toUpperCase()) {
+      case 'SSC':
+        return 'SSC';
+      case 'RAILWAY':
+        return 'Railway';
+      case 'BANK':
+        return 'Bank';
+      case 'DEFENCE':
+        return 'Defence';
+      default:
+        return 'Other';
+    }
+  }
 
   /// API: { ExamName: [ {id, exam_year, set_count, total_questions, is_premium, can_access, ...} ] }
   Map<String, List<Map<String, dynamic>>> _exams = {};
@@ -71,23 +99,29 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
 
   Map<String, List<Map<String, dynamic>>> get _filteredExams {
     if (_selectedFilter == 'All') return _exams;
-    final keyFilter = _selectedFilter.toLowerCase();
     final filtered = <String, List<Map<String, dynamic>>>{};
     _exams.forEach((examName, list) {
       final n = examName.toLowerCase();
-      // Prefer the admin-set exam_category; fall back to name matching.
       final cat = list.isNotEmpty
-          ? (list.first['exam_category'] ?? '').toString().toLowerCase()
+          ? _prettyCat((list.first['exam_category'] ?? '').toString())
           : '';
-      bool match;
-      if (keyFilter == 'ssc') {
-        match = cat == 'ssc' || n.contains('ssc');
-      } else if (keyFilter == 'railway') {
-        match = cat == 'railway' || n.contains('railway') || n.contains('rrb');
-      } else if (keyFilter == 'bank') {
-        match = cat == 'bank' || n.contains('bank') || n.contains('ibps') || n.contains('sbi');
-      } else {
-        match = false;
+      bool match = cat == _selectedFilter;
+      // Fall back to name heuristics when the admin left the category blank.
+      if (!match) {
+        switch (_selectedFilter) {
+          case 'SSC':
+            match = n.contains('ssc');
+            break;
+          case 'Railway':
+            match = n.contains('railway') || n.contains('rrb');
+            break;
+          case 'Bank':
+            match = n.contains('bank') || n.contains('ibps') || n.contains('sbi');
+            break;
+          case 'Defence':
+            match = n.contains('cds') || n.contains('nda') || n.contains('defence') || n.contains('airforce');
+            break;
+        }
       }
       if (match) filtered[examName] = list;
     });
@@ -157,7 +191,7 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
           title: name,
           category: 'previous_year',
           examId: examId,
-          questionsPerSet: 100,
+          questionsPerSet: 10,
           totalSets: (exam['set_count'] as num?)?.toInt() ?? 10,
           showLeaderboard: true,
         ),
@@ -357,129 +391,256 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
       color: AppColors.yellow,
       backgroundColor: AppColors.darkCard,
       onRefresh: _loadExams,
-      child: ListView.builder(
+      child: GridView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 0.92,
+        ),
         itemCount: entries.length,
         itemBuilder: (_, i) {
           final examName = entries[i].key;
           final years = entries[i].value;
           final color = _examColor(examName);
-          // Prefer the admin-configured icon from the first year's entry,
-          // fall back to name-based heuristic if the admin hasn't set one.
           final firstWithIcon = years.firstWhere(
             (e) => (e['icon'] ?? '').toString().isNotEmpty,
             orElse: () => years.isNotEmpty ? years.first : <String, dynamic>{},
           );
-          final icon = _resolveIcon(
-            firstWithIcon['icon']?.toString(),
-            examName,
-          );
+          final icon = _resolveIcon(firstWithIcon['icon']?.toString(), examName);
+          // The exam is "locked" only if EVERY year is premium-locked.
+          final allLocked = years.isNotEmpty &&
+              years.every((y) => y['can_access'] != true);
 
-          return Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.darkCard,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: color.withValues(alpha: 0.18), width: 1),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 46,
-                      height: 46,
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(icon, color: color, size: 22),
+          return _ExamSquare(
+            name: examName,
+            icon: icon,
+            color: color,
+            yearCount: years.length,
+            locked: allLocked,
+            onTap: () => _showYears(examName, years, color, icon),
+          );
+        },
+      ),
+    );
+  }
+
+  // Bottom sheet: pick a year for the tapped exam.
+  void _showYears(
+    String examName,
+    List<Map<String, dynamic>> years,
+    Color color,
+    IconData icon,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.darkCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.textMuted.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Icon(icon, color: color, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(examName,
+                            style: GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white)),
+                        Text('Select a year to start',
+                            style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: AppColors.textSecondary)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: years.map((y) {
+                  final yearLabel = '${y['exam_year'] ?? ''}';
+                  final canAccess = y['can_access'] == true;
+                  final difficulty = (y['difficulty'] ?? 'medium').toString();
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                      _openExam(y);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: canAccess
+                            ? color.withValues(alpha: 0.08)
+                            : AppColors.orange.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: canAccess
+                              ? color.withValues(alpha: 0.3)
+                              : AppColors.orange.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(examName,
-                              style: GoogleFonts.poppins(
-                                  fontSize: 15,
+                          Text(yearLabel.isEmpty ? 'Paper' : yearLabel,
+                              style: GoogleFonts.orbitron(
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.white)),
-                          Text('${years.length} year${years.length == 1 ? '' : 's'} available',
-                              style: GoogleFonts.poppins(
-                                  fontSize: 11,
-                                  color: AppColors.textSecondary)),
+                                  color: canAccess
+                                      ? Colors.white
+                                      : AppColors.orange)),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 5, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: _diffColor(difficulty).withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(difficulty.toUpperCase(),
+                                style: GoogleFonts.poppins(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w700,
+                                    color: _diffColor(difficulty))),
+                          ),
+                          if (!canAccess) ...[
+                            const SizedBox(width: 4),
+                            const Icon(Icons.lock_rounded,
+                                size: 11, color: AppColors.orange),
+                          ],
                         ],
                       ),
                     ),
-                  ],
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// Square exam tile — 3 per line.
+class _ExamSquare extends StatelessWidget {
+  final String name;
+  final IconData icon;
+  final Color color;
+  final int yearCount;
+  final bool locked;
+  final VoidCallback onTap;
+
+  const _ExamSquare({
+    required this.name,
+    required this.icon,
+    required this.color,
+    required this.yearCount,
+    required this.locked,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.darkCard,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.25), width: 1.2),
+        ),
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 24),
                 ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: years.map((y) {
-                    final yearLabel = '${y['exam_year'] ?? ''}';
-                    final canAccess = y['can_access'] == true;
-                    final difficulty = (y['difficulty'] ?? 'medium').toString();
-                    return GestureDetector(
-                      onTap: () => _openExam(y),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: canAccess
-                              ? color.withValues(alpha: 0.08)
-                              : AppColors.orange.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: canAccess
-                                ? color.withValues(alpha: 0.3)
-                                : AppColors.orange.withValues(alpha: 0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(yearLabel,
-                                style: GoogleFonts.orbitron(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: canAccess
-                                        ? Colors.white
-                                        : AppColors.orange)),
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 5, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: _diffColor(difficulty).withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(difficulty.toUpperCase(),
-                                  style: GoogleFonts.poppins(
-                                      fontSize: 8,
-                                      fontWeight: FontWeight.w700,
-                                      color: _diffColor(difficulty))),
-                            ),
-                            const SizedBox(width: 4),
-                            if (!canAccess)
-                              const Icon(Icons.lock_rounded,
-                                  size: 11, color: AppColors.orange),
-                          ],
-                        ),
+                if (locked)
+                  Positioned(
+                    right: -4,
+                    top: -4,
+                    child: Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(
+                        color: AppColors.orange,
+                        shape: BoxShape.circle,
                       ),
-                    );
-                  }).toList(),
-                ),
+                      child: const Icon(Icons.lock_rounded,
+                          size: 10, color: Colors.white),
+                    ),
+                  ),
               ],
             ),
-          );
-        },
+            const SizedBox(height: 8),
+            Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '$yearCount year${yearCount == 1 ? '' : 's'}',
+              style: GoogleFonts.poppins(
+                fontSize: 10,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

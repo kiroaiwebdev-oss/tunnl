@@ -22,6 +22,7 @@ class SetsScreen extends StatefulWidget {
   final int totalSets;
   final bool showLeaderboard;
   final int? examId;
+  final String? examName;
 
   const SetsScreen({
     super.key,
@@ -33,6 +34,7 @@ class SetsScreen extends StatefulWidget {
     this.totalSets = 100,
     this.showLeaderboard = true,
     this.examId,
+    this.examName,
   });
 
   @override
@@ -86,6 +88,7 @@ class _SetsScreenState extends State<SetsScreen>
       final sets = await ContentService.getSets(
         mappedCategory,
         examId: widget.examId,
+        examName: widget.examName,
         page: 1,
         perPage: 100,
       );

@@ -12,6 +12,7 @@ import '../solve_earn/solve_earn_leaderboard_screen.dart';
 import '../solve_earn/solve_earn_screen.dart';
 import '../profile/profile_screen.dart';
 import '../sets/sets_screen.dart';
+import '../mcq/mcq_exams_screen.dart';
 import '../tricks/tricks_screen.dart';
 import '../shorts/shorts_screen.dart';
 import '../previous_year/previous_year_screen.dart';
@@ -229,13 +230,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         break;
       case 1:
         Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => SetsScreen(
-            title: '5000 Speed Math MCQs',
-            category: 'mcq',
-            questionsPerSet: 20,
-            totalSets: _isPremium ? 100 : 10,
-            showLeaderboard: true,
-          ),
+          builder: (_) => McqExamsScreen(isPremium: _isPremium),
         ));
         break;
       case 2:
@@ -470,7 +465,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     return Column(
       children: [
         SizedBox(
-          height: 130,
+          height: 175,
           child: PageView.builder(
             itemCount: _banners.length,
             onPageChanged: (i) => setState(() => _currentBanner = i),
@@ -550,7 +545,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   // ── BANNER SHIMMER ────────────────────────────────
   Widget _buildBannerShimmer() {
-    return _shimmerBox(double.infinity, 130, radius: 16);
+    return _shimmerBox(double.infinity, 175, radius: 16);
   }
 
   // ── SHIMMER HELPER ────────────────────────────────
@@ -840,14 +835,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               switch (i) {
                 case 1:
                   await Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => SetsScreen(
-                      title: '5000 Speed Math MCQs',
-                      category: 'mcq',
-                      subtitle: 'Practice for Speed & Accuracy',
-                      totalSets: _isPremium ? 100 : 10,
-                      questionsPerSet: 20,
-                      showLeaderboard: true,
-                    ),
+                    builder: (_) => McqExamsScreen(isPremium: _isPremium),
                   ));
                   break;
                 case 2:

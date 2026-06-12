@@ -399,25 +399,13 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
 
                       const SizedBox(height: 16),
 
-                      // ── Skip button ─────────────────────────
+                      // Profile completion is mandatory for new users — no skip.
                       Center(
-                        child: GestureDetector(
-                          onTap: () {
-                            Navigator.of(context).pushAndRemoveUntil(
-                              MaterialPageRoute(
-                                builder: (_) => const HubScreen(),
-                              ),
-                              (route) => false,
-                            );
-                          },
-                          child: Text(
-                            'Skip for now',
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              color: AppColors.textMuted,
-                              decoration: TextDecoration.underline,
-                              decorationColor: AppColors.textMuted,
-                            ),
+                        child: Text(
+                          'Complete your profile to continue',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: AppColors.textMuted,
                           ),
                         ),
                       ),

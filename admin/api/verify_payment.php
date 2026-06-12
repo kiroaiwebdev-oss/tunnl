@@ -95,6 +95,19 @@ try {
     } catch (Exception $_) {}
 }
 
+// ── Finalise coupon redemption (if any) ─────────────
+try {
+    $r = $pdo->prepare("SELECT * FROM coupon_redemptions WHERE order_id=? AND status='pending' LIMIT 1");
+    $r->execute([$orderId]);
+    $redemption = $r->fetch(PDO::FETCH_ASSOC);
+    if ($redemption) {
+        $pdo->prepare("UPDATE coupon_redemptions SET status='success' WHERE id=?")
+            ->execute([(int)$redemption['id']]);
+        $pdo->prepare("UPDATE coupons SET used_count = used_count + 1 WHERE id=?")
+            ->execute([(int)$redemption['coupon_id']]);
+    }
+} catch (Exception $_) {}
+
 response([
     'success' => true,
     'message' => 'Payment verified! Premium activated 🎉',

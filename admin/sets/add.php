@@ -84,7 +84,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     <div class="form-group">
       <label class="form-label">Total Questions *</label>
-      <input type="number" name="total_questions" class="form-input" value="50" required min="1">
+      <input type="number" name="total_questions" class="form-input" value="10" required min="1" max="10">
+      <p style="font-size:11px;color:var(--muted);margin-top:4px">Every set is capped at 10 questions.</p>
     </div>
   </div>
 

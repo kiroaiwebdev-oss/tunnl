@@ -109,7 +109,8 @@ $sets = $sets->fetchAll();
       <div class="form-group">
         <label class="form-label">Total Questions</label>
         <input type="number" name="set_questions" class="form-input"
-          value="<?= $exam['total_questions'] ?>" min="1">
+          value="10" min="1" max="10">
+        <p style="font-size:11px;color:var(--muted);margin-top:4px">Every set is a 10-question set.</p>
       </div>
       <button type="submit" name="add_set" class="btn btn-primary">
         <i class="fas fa-plus"></i> Add Set

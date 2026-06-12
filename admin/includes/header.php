@@ -319,6 +319,18 @@ $adminName   = $_SESSION['admin_username'] ?? 'Admin';
       color: var(--text);
     }
 
+    .btn-danger {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.25);
+      color: #FCA5A5;
+    }
+
+    .btn-danger:hover {
+      background: rgba(239,68,68,0.18);
+      border-color: rgba(239,68,68,0.45);
+      color: #FECACA;
+    }
+
     .btn-sm { padding: 6px 12px; font-size: 12px; }
 
     /* ── TABLE ── */
@@ -453,6 +465,10 @@ $adminName   = $_SESSION['admin_username'] ?? 'Admin';
        class="nav-item <?= $currentPage === 'sets' ? 'active' : '' ?>">
       <i class="fas fa-layer-group"></i> Sets
     </a>
+    <a href="<?= ADMIN_URL ?>/mcq_exams/index.php"
+       class="nav-item <?= $currentPage === 'mcq_exams' ? 'active' : '' ?>">
+      <i class="fas fa-bolt"></i> 5000 MCQ Exams
+    </a>
     <a href="<?= ADMIN_URL ?>/tricks/index.php"
        class="nav-item <?= $currentPage === 'tricks' ? 'active' : '' ?>">
       <i class="fas fa-magic"></i> Tricks
@@ -500,6 +516,10 @@ $adminName   = $_SESSION['admin_username'] ?? 'Admin';
     <a href="<?= ADMIN_URL ?>/premium/index.php"
        class="nav-item <?= $currentPage === 'premium' ? 'active' : '' ?>">
       <i class="fas fa-crown"></i> Premium
+    </a>
+    <a href="<?= ADMIN_URL ?>/coupons/index.php"
+       class="nav-item <?= $currentPage === 'coupons' ? 'active' : '' ?>">
+      <i class="fas fa-ticket-alt"></i> Coupons
     </a>
 
     <div class="nav-section">System</div>

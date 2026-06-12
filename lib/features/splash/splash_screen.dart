@@ -9,6 +9,7 @@ import '../../core/network/api_endpoints.dart';
 import '../../core/services/app_settings_service.dart';
 import '../hub/hub_screen.dart';
 import '../auth/login_screen.dart';
+import '../auth/profile_setup_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -193,10 +194,18 @@ class _SplashScreenState extends State<SplashScreen>
     await splashFuture;
     if (!mounted) return;
 
+    // Decide the landing screen:
+    //   • Not logged in            → Login
+    //   • Logged in, no name yet   → Profile setup (force completion)
+    //   • Logged in + profile done → Hub
+    final loggedIn = prefs.getBool(AppConstants.prefIsLoggedIn) ?? false;
+    if (!loggedIn) {
+      _navigateTo(const LoginScreen());
+      return;
+    }
+    final cachedName = (prefs.getString(AppConstants.prefUserName) ?? '').trim();
     _navigateTo(
-      prefs.getBool(AppConstants.prefIsLoggedIn) ?? false
-          ? const HubScreen()
-          : const LoginScreen(),
+      cachedName.isEmpty ? const ProfileSetupScreen() : const HubScreen(),
     );
   }
 

@@ -146,7 +146,9 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
         break;
       case 'premium':
         Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => const PremiumScreen())).then((_) {
+          builder: (_) => _isPremium
+              ? const DashboardScreen()
+              : const PremiumScreen())).then((_) {
             if (mounted) _loadAll();
           });
         break;
@@ -239,17 +241,31 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          _HubCard(
-                            title:       'Ticket to Tunnl',
-                            subtitle:    'Unlock full access & advanced features',
-                            borderColor: AppColors.orange,
-                            iconBgColor: AppColors.orange,
-                            icon:        Icons.workspace_premium_rounded,
-                            iconColor:   Colors.white,
-                            titleColor:  AppColors.orange,
-                            priceBadge:  '₹50',
-                            onTap:       _onTicketTap,
-                          ),
+                          _isPremium
+                              ? _HubCard(
+                                  title:       'Your Dashboard',
+                                  subtitle:    'Premium unlocked — explore everything',
+                                  borderColor: AppColors.neonCyan,
+                                  iconBgColor: AppColors.neonCyan,
+                                  icon:        Icons.dashboard_rounded,
+                                  iconColor:   AppColors.darkBg,
+                                  titleColor:  Colors.white,
+                                  onTap: () => Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => const DashboardScreen()),
+                                  ).then((_) { if (mounted) _loadAll(); }),
+                                )
+                              : _HubCard(
+                                  title:       'Ticket to Tunnl',
+                                  subtitle:    'Unlock full access & advanced features',
+                                  borderColor: AppColors.orange,
+                                  iconBgColor: AppColors.orange,
+                                  icon:        Icons.workspace_premium_rounded,
+                                  iconColor:   Colors.white,
+                                  titleColor:  AppColors.orange,
+                                  priceBadge:  '₹50',
+                                  onTap:       _onTicketTap,
+                                ),
                           const SizedBox(height: 12),
                           _HubCard(
                             title:       '500 Free Practice MCQs',
@@ -379,7 +395,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
     // Loading → show a placeholder shimmer box.
     if (_bannersLoading) {
       return SizedBox(
-        height: 160,
+        height: 200,
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 20),
           decoration: BoxDecoration(
@@ -407,7 +423,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
     return Column(
       children: [
         SizedBox(
-          height: 160,
+          height: 200,
           child: PageView.builder(
             controller: _pageCtrl,
             itemCount: total,

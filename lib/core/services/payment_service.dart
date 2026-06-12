@@ -48,7 +48,7 @@ class PaymentService {
   /// Step 1+2: ask server for an order, then open the checkout.
   ///
   /// Throws nothing — surfaces errors via [onError] callback.
-  Future<void> startUpgrade({String plan = 'lifetime'}) async {
+  Future<void> startUpgrade({String plan = 'lifetime', String couponCode = ''}) async {
     _currentPlan = plan;
 
     if (_razorpay == null) {
@@ -65,7 +65,10 @@ class PaymentService {
     try {
       orderRes = await ApiClient.post(
         'create_order.php',
-        {'plan': plan},
+        {
+          'plan': plan,
+          if (couponCode.trim().isNotEmpty) 'coupon_code': couponCode.trim(),
+        },
         auth: true,
       );
     } catch (e) {
