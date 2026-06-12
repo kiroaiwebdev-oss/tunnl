@@ -4,7 +4,13 @@ require_once dirname(__DIR__) . '/config/db.php';
 require_once dirname(__DIR__) . '/config/constants.php';
 
 $currentPage = basename(dirname($_SERVER['PHP_SELF']));
+$currentCat  = $_GET['cat'] ?? ($_GET['category'] ?? '');
 $adminName   = $_SESSION['admin_username'] ?? 'Admin';
+
+// Highlights a content section when on its sets/questions/import pages.
+function navSectionActive($currentPage, $currentCat, $cat) {
+    return (in_array($currentPage, ['sets', 'questions']) && $currentCat === $cat) ? 'active' : '';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -457,17 +463,21 @@ $adminName   = $_SESSION['admin_username'] ?? 'Admin';
     </a>
 
     <div class="nav-section">Content</div>
-    <a href="<?= ADMIN_URL ?>/questions/index.php"
-       class="nav-item <?= $currentPage === 'questions' ? 'active' : '' ?>">
-      <i class="fas fa-question-circle"></i> Questions
+    <a href="<?= ADMIN_URL ?>/sets/index.php?cat=mcq"
+       class="nav-item <?= navSectionActive($currentPage, $currentCat, 'mcq') ?>">
+      <i class="fas fa-layer-group"></i> Practice Sets
     </a>
-    <a href="<?= ADMIN_URL ?>/sets/index.php"
-       class="nav-item <?= $currentPage === 'sets' ? 'active' : '' ?>">
-      <i class="fas fa-layer-group"></i> Sets
+    <a href="<?= ADMIN_URL ?>/sets/index.php?cat=simplification"
+       class="nav-item <?= navSectionActive($currentPage, $currentCat, 'simplification') ?>">
+      <i class="fas fa-calculator"></i> 500 Simplification
+    </a>
+    <a href="<?= ADMIN_URL ?>/sets/index.php?cat=tunnlity"
+       class="nav-item <?= navSectionActive($currentPage, $currentCat, 'tunnlity') ?>">
+      <i class="fas fa-bolt"></i> Test Your Tunnlity
     </a>
     <a href="<?= ADMIN_URL ?>/mcq_exams/index.php"
        class="nav-item <?= $currentPage === 'mcq_exams' ? 'active' : '' ?>">
-      <i class="fas fa-bolt"></i> 5000 MCQ Exams
+      <i class="fas fa-graduation-cap"></i> 5000 MCQ Exams
     </a>
     <a href="<?= ADMIN_URL ?>/tricks/index.php"
        class="nav-item <?= $currentPage === 'tricks' ? 'active' : '' ?>">

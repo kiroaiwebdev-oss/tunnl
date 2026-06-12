@@ -1,6 +1,8 @@
 <?php
-$pageTitle = 'Manage PY Sets';
-require_once dirname(__DIR__) . '/includes/header.php';
+// Config FIRST so the JSON delete handler + redirects work (no HTML yet).
+require_once dirname(__DIR__) . '/config/auth_check.php';
+require_once dirname(__DIR__) . '/config/db.php';
+require_once dirname(__DIR__) . '/config/constants.php';
 
 $examId = intval($_GET['exam_id'] ?? 0);
 if (!$examId) { header('Location: ' . ADMIN_URL . '/previous_year/index.php'); exit; }
@@ -11,6 +13,19 @@ $exam = $exam->fetch();
 if (!$exam) { header('Location: ' . ADMIN_URL . '/previous_year/index.php'); exit; }
 
 $success = $error = '';
+
+// DELETE SET (JSON) — must run before any HTML output
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_set_id'])) {
+    header('Content-Type: application/json');
+    try {
+        $sid = intval($_POST['delete_set_id']);
+        $pdo->prepare("DELETE FROM questions WHERE set_id=?")->execute([$sid]);
+        $pdo->prepare("DELETE FROM sets WHERE id=? AND exam_id=?")->execute([$sid,$examId]);
+        echo json_encode(['success'=>true]); exit;
+    } catch (Exception $e) {
+        echo json_encode(['success'=>false,'message'=>$e->getMessage()]); exit;
+    }
+}
 
 // ADD SET
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_set'])) {
@@ -26,24 +41,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_set'])) {
             intval($_POST['set_number']),
             trim($_POST['set_title'] ?? ''),
             $_POST['level'],
-            intval($_POST['set_questions']),
+            min(10, max(1, intval($_POST['set_questions'] ?? 10))),
             $exam['is_premium'],
         ]);
         $success = 'Set added!';
     } catch (Exception $e) { $error = $e->getMessage(); }
-}
-
-// DELETE SET
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_set_id'])) {
-    header('Content-Type: application/json');
-    try {
-        $sid = intval($_POST['delete_set_id']);
-        $pdo->prepare("DELETE FROM questions WHERE set_id=?")->execute([$sid]);
-        $pdo->prepare("DELETE FROM sets WHERE id=? AND exam_id=?")->execute([$sid,$examId]);
-        echo json_encode(['success'=>true]); exit;
-    } catch (Exception $e) {
-        echo json_encode(['success'=>false,'message'=>$e->getMessage()]); exit;
-    }
 }
 
 $sets = $pdo->prepare("
@@ -54,6 +56,9 @@ $sets = $pdo->prepare("
 ");
 $sets->execute([$examId]);
 $sets = $sets->fetchAll();
+
+$pageTitle = 'Manage PY Sets';
+require_once dirname(__DIR__) . '/includes/header.php';
 ?>
 
 <?php if ($success): ?>
@@ -146,15 +151,19 @@ $sets = $sets->fetchAll();
           </div>
         </div>
         <div style="display:flex;gap:6px">
-          <a href="<?= ADMIN_URL ?>/questions/index.php?set_id=<?= $s['id'] ?>"
-             class="btn btn-secondary btn-sm" title="View Questions">
-            <i class="fas fa-list"></i>
+          <a href="<?= ADMIN_URL ?>/questions/index.php?cat=previous_year&set_id=<?= $s['id'] ?>"
+             class="btn btn-primary btn-sm" title="Manage Questions">
+            <i class="fas fa-list-ol"></i>
           </a>
-          <a href="<?= ADMIN_URL ?>/questions/add.php?set_id=<?= $s['id'] ?>&category=previous_year"
-             class="btn btn-secondary btn-sm" title="Add Questions">
+          <a href="<?= ADMIN_URL ?>/questions/add.php?cat=previous_year&set_id=<?= $s['id'] ?>"
+             class="btn btn-secondary btn-sm" title="Add Question">
             <i class="fas fa-plus"></i>
           </a>
-          <button onclick="deleteSet(<?= $s['id'] ?>)" class="btn btn-danger btn-sm">
+          <a href="<?= ADMIN_URL ?>/questions/import_csv.php?cat=previous_year&set_id=<?= $s['id'] ?>"
+             class="btn btn-secondary btn-sm" title="Import CSV">
+            <i class="fas fa-file-csv"></i>
+          </a>
+          <button onclick="deleteSet(<?= $s['id'] ?>)" class="btn btn-danger btn-sm" title="Delete Set">
             <i class="fas fa-trash"></i>
           </button>
         </div>

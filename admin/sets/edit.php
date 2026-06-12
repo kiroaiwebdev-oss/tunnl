@@ -1,14 +1,19 @@
 <?php
-$pageTitle = 'Edit Set';
-require_once dirname(__DIR__) . '/includes/header.php';
+// Config FIRST (no HTML output) so header('Location') redirects work.
+require_once dirname(__DIR__) . '/config/auth_check.php';
+require_once dirname(__DIR__) . '/config/db.php';
+require_once dirname(__DIR__) . '/config/constants.php';
+
+$cat   = $_GET['cat'] ?? '';
+$catQS = $cat !== '' ? '&cat=' . urlencode($cat) : '';
 
 $id = intval($_GET['id'] ?? 0);
-if (!$id) { header('Location: ' . ADMIN_URL . '/sets/index.php'); exit; }
+if (!$id) { header('Location: ' . ADMIN_URL . '/sets/index.php?' . ltrim($catQS, '&')); exit; }
 
 $set = $pdo->prepare("SELECT * FROM sets WHERE id = ?");
 $set->execute([$id]);
 $set = $set->fetch();
-if (!$set) { header('Location: ' . ADMIN_URL . '/sets/index.php'); exit; }
+if (!$set) { header('Location: ' . ADMIN_URL . '/sets/index.php?' . ltrim($catQS, '&')); exit; }
 
 $success = $error = '';
 
@@ -25,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             intval($_POST['set_number']),
             trim($_POST['title'] ?? ''),
             $_POST['level'],
-            intval($_POST['total_questions']),
+            min(10, max(1, intval($_POST['total_questions'] ?? 10))),
             isset($_POST['is_locked'])  ? 1 : 0,
             isset($_POST['is_premium']) ? 1 : 0,
             $id
@@ -40,6 +45,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $qCount = $pdo->prepare("SELECT COUNT(*) FROM questions WHERE set_id = ?");
 $qCount->execute([$id]);
 $qCount = $qCount->fetchColumn();
+
+$pageTitle = 'Edit Set';
+require_once dirname(__DIR__) . '/includes/header.php';
 ?>
 
 <?php if ($success): ?>
@@ -57,13 +65,13 @@ $qCount = $qCount->fetchColumn();
 <div class="flex-between mb-24">
   <div>
     <h2 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700">Edit Set #<?= $set['set_number'] ?></h2>
-    <p class="text-muted"><?= $qCount ?> questions in this set</p>
+    <p class="text-muted"><?= $qCount ?> / 10 questions in this set</p>
   </div>
   <div style="display:flex;gap:8px">
-    <a href="<?= ADMIN_URL ?>/questions/index.php?set_id=<?= $id ?>" class="btn btn-secondary">
-      <i class="fas fa-list"></i> View Questions
+    <a href="<?= ADMIN_URL ?>/questions/index.php?cat=<?= urlencode($set['category']) ?>&set_id=<?= $id ?>" class="btn btn-primary">
+      <i class="fas fa-list-ol"></i> Questions
     </a>
-    <a href="<?= ADMIN_URL ?>/sets/index.php" class="btn btn-secondary">
+    <a href="<?= ADMIN_URL ?>/sets/index.php?<?= ltrim($catQS, '&') ?>" class="btn btn-secondary">
       <i class="fas fa-arrow-left"></i> Back
     </a>
   </div>
@@ -75,10 +83,10 @@ $qCount = $qCount->fetchColumn();
     <div class="form-group">
       <label class="form-label">Category *</label>
       <select name="category" class="form-select" required>
-        <option value="mcq"            <?= $set['category']==='mcq'            ?'selected':'' ?>>5000 Speed Math MCQ</option>
+        <option value="mcq"            <?= $set['category']==='mcq'            ?'selected':'' ?>>5000 Speed Math MCQ (Practice Sets)</option>
         <option value="simplification" <?= $set['category']==='simplification' ?'selected':'' ?>>500 Simplification</option>
-        <option value="previous_year"  <?= $set['category']==='previous_year'  ?'selected':'' ?>>Previous Year</option>
         <option value="tunnlity"        <?= $set['category']==='tunnlity'        ?'selected':'' ?>>Test Your Tunnlity</option>
+        <option value="previous_year"  <?= $set['category']==='previous_year'  ?'selected':'' ?>>Previous Year</option>
       </select>
     </div>
     <div class="form-group">
@@ -95,7 +103,7 @@ $qCount = $qCount->fetchColumn();
         placeholder="e.g. Percentage Basics">
     </div>
     <div class="form-group">
-      <label class="form-label">Exam Name (PY only)</label>
+      <label class="form-label">Exam Name (PY / MCQ exam group)</label>
       <input type="text" name="exam_name" class="form-input"
         value="<?= htmlspecialchars($set['exam_name']) ?>"
         placeholder="e.g. SSC CGL 2023">
@@ -114,7 +122,8 @@ $qCount = $qCount->fetchColumn();
     <div class="form-group">
       <label class="form-label">Total Questions *</label>
       <input type="number" name="total_questions" class="form-input"
-        value="<?= $set['total_questions'] ?>" required min="1">
+        value="<?= min(10, (int)$set['total_questions']) ?>" required min="1" max="10">
+      <p style="font-size:11px;color:var(--muted);margin-top:4px">Every set is capped at 10 questions.</p>
     </div>
   </div>
   <div style="display:flex;gap:24px;margin-bottom:20px">
@@ -135,7 +144,7 @@ $qCount = $qCount->fetchColumn();
   </div>
   <div style="display:flex;gap:12px">
     <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Update Set</button>
-    <a href="<?= ADMIN_URL ?>/sets/index.php" class="btn btn-secondary"><i class="fas fa-times"></i> Cancel</a>
+    <a href="<?= ADMIN_URL ?>/sets/index.php?<?= ltrim($catQS, '&') ?>" class="btn btn-secondary"><i class="fas fa-times"></i> Cancel</a>
   </div>
 </div>
 </form>

@@ -1,6 +1,8 @@
 <?php
-$pageTitle = 'Edit Question';
-require_once dirname(__DIR__) . '/includes/header.php';
+// Config FIRST (no HTML output) so header('Location') redirects work.
+require_once dirname(__DIR__) . '/config/auth_check.php';
+require_once dirname(__DIR__) . '/config/db.php';
+require_once dirname(__DIR__) . '/config/constants.php';
 
 $id = intval($_GET['id'] ?? 0);
 if (!$id) { header('Location: ' . ADMIN_URL . '/questions/index.php'); exit; }
@@ -39,6 +41,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = $e->getMessage();
     }
 }
+
+// Preserve the section context for the Back/Cancel links.
+$cat   = $_GET['cat'] ?? ($_GET['category'] ?? $question['category']);
+$setId = intval($_GET['set_id'] ?? $question['set_id']);
+$scopeQS = '';
+if ($cat)   $scopeQS .= '&cat=' . urlencode($cat);
+if ($setId) $scopeQS .= '&set_id=' . $setId;
+
+$pageTitle = 'Edit Question';
+require_once dirname(__DIR__) . '/includes/header.php';
 ?>
 
 <?php if ($success): ?>
@@ -58,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <h2 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700">Edit Question #<?= $id ?></h2>
     <p class="text-muted">Update question details</p>
   </div>
-  <a href="<?= ADMIN_URL ?>/questions/index.php" class="btn btn-secondary">
+  <a href="<?= ADMIN_URL ?>/questions/index.php?<?= ltrim($scopeQS, '&') ?>" class="btn btn-secondary">
     <i class="fas fa-arrow-left"></i> Back
   </a>
 </div>
@@ -125,7 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <div style="display:flex;gap:12px">
     <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Update</button>
-    <a href="<?= ADMIN_URL ?>/questions/index.php" class="btn btn-secondary"><i class="fas fa-times"></i> Cancel</a>
+    <a href="<?= ADMIN_URL ?>/questions/index.php?<?= ltrim($scopeQS, '&') ?>" class="btn btn-secondary"><i class="fas fa-times"></i> Cancel</a>
   </div>
 </form>
 </div>
