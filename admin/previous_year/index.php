@@ -85,7 +85,7 @@ require_once dirname(__DIR__) . '/includes/header.php';
     <div style="display:flex;gap:6px">
       <a href="<?= ADMIN_URL ?>/previous_year/manage_sets.php?exam_id=<?= $e['id'] ?>"
          class="btn btn-primary btn-sm" style="flex:1;justify-content:center" title="Open exam — manage its sets & questions">
-        <i class="fas fa-layer-group"></i> Sets &amp; Questions
+        <i class="fas fa-layer-group"></i> Sets
       </a>
       <a href="<?= ADMIN_URL ?>/previous_year/edit_exam.php?id=<?= $e['id'] ?>" class="btn btn-secondary btn-sm" title="Edit exam">
         <i class="fas fa-edit"></i>
