@@ -69,13 +69,13 @@ require_once dirname(__DIR__) . '/includes/header.php';
       <i class="fas fa-question-circle"></i> <?= (int)$e['q_count'] ?> questions
     </div>
     <div style="display:flex;gap:6px">
-      <a href="<?= ADMIN_URL ?>/sets/add.php" class="btn btn-secondary btn-sm" style="flex:1;justify-content:center" title="Add a set with this exam name">
-        <i class="fas fa-plus"></i> Set
+      <a href="<?= ADMIN_URL ?>/mcq_exams/manage_sets.php?exam_id=<?= $e['id'] ?>" class="btn btn-primary btn-sm" style="flex:1;justify-content:center" title="Open exam — manage its sets & questions">
+        <i class="fas fa-layer-group"></i> Sets &amp; Questions
       </a>
-      <a href="<?= ADMIN_URL ?>/mcq_exams/edit.php?id=<?= $e['id'] ?>" class="btn btn-secondary btn-sm">
+      <a href="<?= ADMIN_URL ?>/mcq_exams/edit.php?id=<?= $e['id'] ?>" class="btn btn-secondary btn-sm" title="Edit exam">
         <i class="fas fa-edit"></i>
       </a>
-      <button onclick="deleteMcqExam(<?= $e['id'] ?>)" class="btn btn-danger btn-sm">
+      <button onclick="deleteMcqExam(<?= $e['id'] ?>)" class="btn btn-danger btn-sm" title="Delete exam">
         <i class="fas fa-trash"></i>
       </button>
     </div>

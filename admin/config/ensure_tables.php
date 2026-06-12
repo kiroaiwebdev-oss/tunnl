@@ -126,6 +126,19 @@ try {
             ");
         } catch (Throwable $e) { /* ignore */ }
     }
+    // ── tricks.category: widen enum → VARCHAR so admins can add custom
+    //    categories (PERCENTAGE, ALGEBRA, …) without "Data truncated" errors ──
+    try {
+        $tc = $pdo->prepare(
+            "SELECT DATA_TYPE FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'tricks' AND COLUMN_NAME = 'category'"
+        );
+        $tc->execute();
+        $type = strtolower((string)$tc->fetchColumn());
+        if ($type === 'enum') {
+            $pdo->exec("ALTER TABLE `tricks` MODIFY `category` VARCHAR(50) NOT NULL DEFAULT 'SHORTCUTS'");
+        }
+    } catch (Throwable $e) { /* ignore */ }
 } catch (Throwable $e) {
     // Never break the request. The calling page/API has its own fallback.
 }

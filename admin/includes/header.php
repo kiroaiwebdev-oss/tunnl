@@ -463,9 +463,9 @@ function navSectionActive($currentPage, $currentCat, $cat) {
     </a>
 
     <div class="nav-section">Content</div>
-    <a href="<?= ADMIN_URL ?>/sets/index.php?cat=mcq"
-       class="nav-item <?= navSectionActive($currentPage, $currentCat, 'mcq') ?>">
-      <i class="fas fa-layer-group"></i> Practice Sets
+    <a href="<?= ADMIN_URL ?>/mcq_exams/index.php"
+       class="nav-item <?= ($currentPage === 'mcq_exams' || navSectionActive($currentPage, $currentCat, 'mcq')) ? 'active' : '' ?>">
+      <i class="fas fa-bolt"></i> Practice Sets (5000 MCQ)
     </a>
     <a href="<?= ADMIN_URL ?>/sets/index.php?cat=simplification"
        class="nav-item <?= navSectionActive($currentPage, $currentCat, 'simplification') ?>">
@@ -474,10 +474,6 @@ function navSectionActive($currentPage, $currentCat, $cat) {
     <a href="<?= ADMIN_URL ?>/sets/index.php?cat=tunnlity"
        class="nav-item <?= navSectionActive($currentPage, $currentCat, 'tunnlity') ?>">
       <i class="fas fa-bolt"></i> Test Your Tunnlity
-    </a>
-    <a href="<?= ADMIN_URL ?>/mcq_exams/index.php"
-       class="nav-item <?= $currentPage === 'mcq_exams' ? 'active' : '' ?>">
-      <i class="fas fa-graduation-cap"></i> 5000 MCQ Exams
     </a>
     <a href="<?= ADMIN_URL ?>/tricks/index.php"
        class="nav-item <?= $currentPage === 'tricks' ? 'active' : '' ?>">
