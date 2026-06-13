@@ -6,6 +6,7 @@
 // Auth: Bearer JWT required.
 
 require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/_coupon_lib.php';
 checkApiKey();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') error('POST only', 405);
@@ -46,13 +47,30 @@ if (!$keyId || !$keySecret ||
 }
 
 // ── Resolve amount ──────────────────────────────────
+// The app displays `premium_price` and only sells a one-time unlock, so the
+// charged amount MUST match `premium_price` to avoid display/charge mismatch.
+$basePrice = intval($settings['premium_price'] ?? 50);
 $priceMap = [
-    'monthly'  => intval($settings['premium_price']          ?? 50),
-    'yearly'   => intval($settings['premium_yearly_price']   ?? 499),
-    'lifetime' => intval($settings['premium_lifetime_price'] ?? intval($settings['premium_price'] ?? 50)),
+    'monthly'  => $basePrice,
+    'yearly'   => intval($settings['premium_yearly_price'] ?? 499),
+    'lifetime' => $basePrice,
 ];
-$amountRupees = $priceMap[$plan];
+$amountRupees = $priceMap[$plan] ?? $basePrice;
 if ($amountRupees < 1) error('Invalid amount configuration', 500);
+
+// ── Apply coupon (optional) ─────────────────────────
+$couponCode    = strtoupper(trim((string)($input['coupon_code'] ?? '')));
+$couponDiscount = 0;
+$couponRow      = null;
+if ($couponCode !== '') {
+    $cRes = tunnl_validate_coupon($pdo, $couponCode, $amountRupees, (int)$user['id']);
+    if (!$cRes['valid']) {
+        error($cRes['message'] ?? 'Invalid coupon', 422);
+    }
+    $couponDiscount = (int)$cRes['discount'];
+    $amountRupees   = (int)$cRes['final'];
+    $couponRow      = $cRes['coupon'];
+}
 
 $amountPaise = $amountRupees * 100;
 
@@ -108,11 +126,32 @@ if ($httpCode >= 400 || empty($rzpData['id'])) {
 try {
     $pdo->prepare("
         INSERT INTO transactions
-          (user_id, razorpay_order_id, amount, type, plan, status, note, created_at)
-        VALUES (?, ?, ?, 'razorpay', ?, 'pending', 'Order created', NOW())
-    ")->execute([$user['id'], $rzpData['id'], $amountRupees, $plan]);
+          (user_id, razorpay_order_id, amount, type, plan, status, note, coupon_code, discount, created_at)
+        VALUES (?, ?, ?, 'razorpay', ?, 'pending', 'Order created', ?, ?, NOW())
+    ")->execute([$user['id'], $rzpData['id'], $amountRupees, $plan, $couponCode, $couponDiscount]);
 } catch (Exception $_) {
-    // Non-fatal — table may not have all columns. Continue.
+    // Fallback for older schema without coupon columns
+    try {
+        $pdo->prepare("
+            INSERT INTO transactions
+              (user_id, razorpay_order_id, amount, type, plan, status, note, created_at)
+            VALUES (?, ?, ?, 'razorpay', ?, 'pending', 'Order created', NOW())
+        ")->execute([$user['id'], $rzpData['id'], $amountRupees, $plan]);
+    } catch (Exception $_) {}
+}
+
+// ── Log a pending coupon redemption (finalised on payment verify) ──
+if ($couponRow) {
+    try {
+        $pdo->prepare("
+            INSERT INTO coupon_redemptions
+              (coupon_id, code, user_id, order_id, discount, final_amount, status, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())
+        ")->execute([
+            (int)$couponRow['id'], $couponRow['code'], (int)$user['id'],
+            $rzpData['id'], $couponDiscount, $amountRupees,
+        ]);
+    } catch (Exception $_) {}
 }
 
 // ── Respond ─────────────────────────────────────────
@@ -125,6 +164,8 @@ response([
     'currency'  => 'INR',
     'plan'      => $plan,
     'rupees'    => $amountRupees,
+    'coupon'    => $couponCode,
+    'discount'  => $couponDiscount,
     'name'      => $user['name'] ?? '',
     'phone'     => $user['phone'] ?? '',
 ]);

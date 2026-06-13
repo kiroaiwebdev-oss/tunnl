@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/app_settings_service.dart';
 import '../../core/services/content_service.dart';
 import '../premium/premium_screen.dart';
 import '../sets/sets_screen.dart';
@@ -31,7 +32,35 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
   late Animation<Offset> _slideAnim;
 
   String _selectedFilter = 'All';
-  final List<String> _filters = ['All', 'SSC', 'Railway', 'Bank'];
+
+  /// Filter chips are built dynamically from the exam categories that actually
+  /// exist (so every exam shown below is reachable from a top chip).
+  List<String> get _filters {
+    final cats = <String>{};
+    _exams.forEach((_, list) {
+      final c = list.isNotEmpty
+          ? (list.first['exam_category'] ?? '').toString().trim()
+          : '';
+      if (c.isNotEmpty) cats.add(_prettyCat(c));
+    });
+    final sorted = cats.toList()..sort();
+    return ['All', ...sorted];
+  }
+
+  String _prettyCat(String c) {
+    switch (c.toUpperCase()) {
+      case 'SSC':
+        return 'SSC';
+      case 'RAILWAY':
+        return 'Railway';
+      case 'BANK':
+        return 'Bank';
+      case 'DEFENCE':
+        return 'Defence';
+      default:
+        return 'Other';
+    }
+  }
 
   /// API: { ExamName: [ {id, exam_year, set_count, total_questions, is_premium, can_access, ...} ] }
   Map<String, List<Map<String, dynamic>>> _exams = {};
@@ -71,13 +100,30 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
 
   Map<String, List<Map<String, dynamic>>> get _filteredExams {
     if (_selectedFilter == 'All') return _exams;
-    final keyFilter = _selectedFilter.toLowerCase();
     final filtered = <String, List<Map<String, dynamic>>>{};
     _exams.forEach((examName, list) {
       final n = examName.toLowerCase();
-      final match = (keyFilter == 'ssc' && n.contains('ssc')) ||
-          (keyFilter == 'railway' && (n.contains('railway') || n.contains('rrb'))) ||
-          (keyFilter == 'bank' && (n.contains('bank') || n.contains('ibps') || n.contains('sbi')));
+      final cat = list.isNotEmpty
+          ? _prettyCat((list.first['exam_category'] ?? '').toString())
+          : '';
+      bool match = cat == _selectedFilter;
+      // Fall back to name heuristics when the admin left the category blank.
+      if (!match) {
+        switch (_selectedFilter) {
+          case 'SSC':
+            match = n.contains('ssc');
+            break;
+          case 'Railway':
+            match = n.contains('railway') || n.contains('rrb');
+            break;
+          case 'Bank':
+            match = n.contains('bank') || n.contains('ibps') || n.contains('sbi');
+            break;
+          case 'Defence':
+            match = n.contains('cds') || n.contains('nda') || n.contains('defence') || n.contains('airforce');
+            break;
+        }
+      }
       if (match) filtered[examName] = list;
     });
     return filtered;
@@ -146,7 +192,7 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
           title: name,
           category: 'previous_year',
           examId: examId,
-          questionsPerSet: 100,
+          questionsPerSet: 10,
           totalSets: (exam['set_count'] as num?)?.toInt() ?? 10,
           showLeaderboard: true,
         ),
@@ -232,7 +278,7 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
                 border: Border.all(
                     color: isActive
                         ? AppColors.yellow
-                        : AppColors.textMuted.withOpacity(0.2),
+                        : AppColors.textMuted.withValues(alpha: 0.2),
                     width: 1),
               ),
               child: Text(f.toUpperCase(),
@@ -261,10 +307,10 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
         margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-            color: AppColors.orange.withOpacity(0.08),
+            color: AppColors.orange.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-                color: AppColors.orange.withOpacity(0.3), width: 1)),
+                color: AppColors.orange.withValues(alpha: 0.3), width: 1)),
         child: Row(
           children: [
             const Icon(Icons.lock_open_rounded,
@@ -272,7 +318,7 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Free exams open. Premium ones need ₹50 upgrade.',
+                'Free exams open. Premium ones need ₹${AppSettingsService.instance.getInt('premium_price', 50)} upgrade.',
                 style: GoogleFonts.poppins(
                     fontSize: 12, color: AppColors.textSecondary),
               ),
@@ -282,7 +328,7 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
               decoration: BoxDecoration(
                   color: AppColors.orange,
                   borderRadius: BorderRadius.circular(16)),
-              child: Text('₹50',
+              child: Text('₹${AppSettingsService.instance.getInt('premium_price', 50)}',
                   style: GoogleFonts.poppins(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -341,134 +387,130 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
       );
     }
 
-    final entries = filtered.entries.toList();
+    // Flatten every exam paper into its own card → tapping opens its sets
+    // directly (no intermediate year picker / bottom sheet).
+    final flat = <Map<String, dynamic>>[];
+    for (final list in filtered.values) {
+      flat.addAll(list);
+    }
     return RefreshIndicator(
       color: AppColors.yellow,
       backgroundColor: AppColors.darkCard,
       onRefresh: _loadExams,
-      child: ListView.builder(
+      child: GridView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        itemCount: entries.length,
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 0.92,
+        ),
+        itemCount: flat.length,
         itemBuilder: (_, i) {
-          final examName = entries[i].key;
-          final years = entries[i].value;
-          final color = _examColor(examName);
-          // Prefer the admin-configured icon from the first year's entry,
-          // fall back to name-based heuristic if the admin hasn't set one.
-          final firstWithIcon = years.firstWhere(
-            (e) => (e['icon'] ?? '').toString().isNotEmpty,
-            orElse: () => years.isNotEmpty ? years.first : <String, dynamic>{},
-          );
-          final icon = _resolveIcon(
-            firstWithIcon['icon']?.toString(),
-            examName,
-          );
-
-          return Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.darkCard,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: color.withOpacity(0.18), width: 1),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 46,
-                      height: 46,
-                      decoration: BoxDecoration(
-                        color: color.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(icon, color: color, size: 22),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(examName,
-                              style: GoogleFonts.poppins(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white)),
-                          Text('${years.length} year${years.length == 1 ? '' : 's'} available',
-                              style: GoogleFonts.poppins(
-                                  fontSize: 11,
-                                  color: AppColors.textSecondary)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: years.map((y) {
-                    final yearLabel = '${y['exam_year'] ?? ''}';
-                    final canAccess = y['can_access'] == true;
-                    final difficulty = (y['difficulty'] ?? 'medium').toString();
-                    return GestureDetector(
-                      onTap: () => _openExam(y),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: canAccess
-                              ? color.withOpacity(0.08)
-                              : AppColors.orange.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: canAccess
-                                ? color.withOpacity(0.3)
-                                : AppColors.orange.withOpacity(0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(yearLabel,
-                                style: GoogleFonts.orbitron(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: canAccess
-                                        ? Colors.white
-                                        : AppColors.orange)),
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 5, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: _diffColor(difficulty).withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(difficulty.toUpperCase(),
-                                  style: GoogleFonts.poppins(
-                                      fontSize: 8,
-                                      fontWeight: FontWeight.w700,
-                                      color: _diffColor(difficulty))),
-                            ),
-                            const SizedBox(width: 4),
-                            if (!canAccess)
-                              const Icon(Icons.lock_rounded,
-                                  size: 11, color: AppColors.orange),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
-            ),
+          final exam = flat[i];
+          final name = (exam['exam_name'] ?? '').toString();
+          final year = (exam['exam_year'] as num?)?.toInt() ?? 0;
+          final color = _examColor(name);
+          final icon = _resolveIcon(exam['icon']?.toString(), name);
+          final locked = exam['can_access'] != true;
+          final setCount = (exam['set_count'] as num?)?.toInt() ?? 0;
+          return _ExamSquare(
+            name: year > 0 ? '$name $year' : name,
+            icon: icon,
+            color: color,
+            subtitle: '$setCount set${setCount == 1 ? '' : 's'}',
+            locked: locked,
+            onTap: () => _openExam(exam),
           );
         },
+      ),
+    );
+  }
+}
+
+// Square exam tile — 3 per line.
+class _ExamSquare extends StatelessWidget {
+  final String name;
+  final IconData icon;
+  final Color color;
+  final String subtitle;
+  final bool locked;
+  final VoidCallback onTap;
+
+  const _ExamSquare({
+    required this.name,
+    required this.icon,
+    required this.color,
+    required this.subtitle,
+    required this.locked,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.darkCard,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: 0.25), width: 1.2),
+        ),
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 24),
+                ),
+                if (locked)
+                  Positioned(
+                    right: -4,
+                    top: -4,
+                    child: Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(
+                        color: AppColors.orange,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.lock_rounded,
+                          size: 10, color: Colors.white),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: GoogleFonts.poppins(
+                fontSize: 10,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

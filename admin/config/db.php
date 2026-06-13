@@ -21,3 +21,7 @@ try {
 } catch (PDOException $e) {
     die(json_encode(['error' => 'Database connection failed: ' . $e->getMessage()]));
 }
+
+// Self-healing: make sure the coupon + MCQ-exam tables exist so new admin
+// pages and payment APIs never 500 on a fresh database. Fully guarded.
+require_once __DIR__ . '/ensure_tables.php';

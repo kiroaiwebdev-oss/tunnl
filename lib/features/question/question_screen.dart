@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/content_service.dart';
+import '../../core/services/user_service.dart';
 import '../../core/models/question_model.dart';
 import '../result/result_screen.dart';
 
@@ -14,6 +15,7 @@ class QuestionScreen extends StatefulWidget {
   final int setId;
   final int totalQuestions;
   final String category;
+  final int challengeId;
   final VoidCallback? onSetCompleted;
 
   const QuestionScreen({
@@ -23,6 +25,7 @@ class QuestionScreen extends StatefulWidget {
     this.setId = 0,
     this.setNumber = 1,
     this.totalQuestions = 10,
+    this.challengeId = 0,
     this.onSetCompleted,
   });
 
@@ -64,7 +67,6 @@ class _QuestionScreenState extends State<QuestionScreen>
   late AnimationController        _optionCtrl;
   late List<Animation<Offset>>    _optionAnims;
   late AnimationController        _answerCtrl;
-  late Animation<double>          _answerScaleAnim;
 
   @override
   void initState() {
@@ -80,14 +82,18 @@ class _QuestionScreenState extends State<QuestionScreen>
     setState(() { _isLoading = true; _hasError = false; });
 
     if (widget.setId == 0) {
-      // No set_id provided (e.g. "tunnelity" speed test from hub) →
-      // fall back to first available MCQ set.
+      // No set_id provided (e.g. the "Tunnelity" speed test from hub) →
+      // load the first available set of THIS screen's category. Falls back to
+      // mcq only if the requested category has no sets yet.
       try {
-        final sets = await ContentService.getSets(
-          'mcq',
+        var sets = await ContentService.getSets(
+          widget.category.isEmpty ? 'mcq' : widget.category,
           page: 1,
           perPage: 1,
         );
+        if (sets.isEmpty && widget.category != 'mcq') {
+          sets = await ContentService.getSets('mcq', page: 1, perPage: 1);
+        }
         if (sets.isEmpty) {
           _showApiError(
               'No questions available yet. Admin will publish soon.');
@@ -169,8 +175,6 @@ class _QuestionScreenState extends State<QuestionScreen>
 
     _answerCtrl = AnimationController(
       vsync: this, duration: const Duration(milliseconds: 300));
-    _answerScaleAnim = Tween<double>(begin: 1.0, end: 1.03).animate(
-      CurvedAnimation(parent: _answerCtrl, curve: Curves.easeOut));
 
     _questionSlideCtrl.forward();
     _optionCtrl.forward();
@@ -300,6 +304,17 @@ class _QuestionScreenState extends State<QuestionScreen>
         : (_correctCount / _questions.length) * 100;
     final totalTime = _timeTaken.fold<int>(0, (s, e) => s + e);
 
+    // Solve & Earn: record the attempt so it shows on the leaderboard.
+    // (Fire-and-forget — the server creates a challenge_entries row.)
+    if (widget.mode == 'solve_earn' && widget.challengeId > 0) {
+      UserService.submitWeeklyChallenge(
+        challengeId: widget.challengeId,
+        correct: _correctCount,
+        wrong: _wrongCount,
+        timeTaken: totalTime,
+      );
+    }
+
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (_, __, ___) => ResultScreen(
@@ -332,7 +347,7 @@ class _QuestionScreenState extends State<QuestionScreen>
         backgroundColor: AppColors.darkCard,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: AppColors.error.withOpacity(0.4))),
+          side: BorderSide(color: AppColors.error.withValues(alpha: 0.4))),
         title: Text('Exit Test?',
           style: GoogleFonts.poppins(
             color: Colors.white, fontWeight: FontWeight.w700)),
@@ -445,8 +460,14 @@ class _QuestionScreenState extends State<QuestionScreen>
     final q = _questions[_currentIndex];
     final stage = 'STAGE ${(_currentIndex + 1).toString().padLeft(2, '0')}';
 
-    return WillPopScope(
-      onWillPop: _onWillPop,
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        if (didPop) return;
+        final navigator = Navigator.of(context);
+        final exit = await _onWillPop();
+        if (exit && mounted) navigator.pop();
+      },
       child: Scaffold(
         backgroundColor: AppColors.darkBg,
         body: Container(
@@ -489,7 +510,7 @@ class _QuestionScreenState extends State<QuestionScreen>
               color: AppColors.darkCard,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: AppColors.neonCyan.withOpacity(0.2)),
+                color: AppColors.neonCyan.withValues(alpha: 0.2)),
             ),
             padding: const EdgeInsets.all(8),
             child: Image.asset(
@@ -562,7 +583,7 @@ class _QuestionScreenState extends State<QuestionScreen>
                 width: 56, height: 56,
                 child: CircularProgressIndicator(
                   value: 1.0, strokeWidth: 3,
-                  backgroundColor: AppColors.textMuted.withOpacity(0.2),
+                  backgroundColor: AppColors.textMuted.withValues(alpha: 0.2),
                   valueColor:
                       const AlwaysStoppedAnimation(Colors.transparent),
                 ),
@@ -572,7 +593,7 @@ class _QuestionScreenState extends State<QuestionScreen>
                 child: CircularProgressIndicator(
                   value: _timerRingAnim.value,
                   strokeWidth: 3,
-                  backgroundColor: AppColors.textMuted.withOpacity(0.2),
+                  backgroundColor: AppColors.textMuted.withValues(alpha: 0.2),
                   valueColor: AlwaysStoppedAnimation(ringColor),
                   strokeCap: StrokeCap.round,
                 ),
@@ -601,7 +622,7 @@ class _QuestionScreenState extends State<QuestionScreen>
             color: AppColors.darkCard,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: AppColors.neonCyan.withOpacity(0.1)),
+              color: AppColors.neonCyan.withValues(alpha: 0.1)),
           ),
           child: Column(
             children: [
@@ -609,7 +630,7 @@ class _QuestionScreenState extends State<QuestionScreen>
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(width: 40, height: 1,
-                    color: AppColors.textMuted.withOpacity(0.4)),
+                    color: AppColors.textMuted.withValues(alpha: 0.4)),
                   const SizedBox(width: 10),
                   Text(stage,
                     style: GoogleFonts.poppins(
@@ -617,7 +638,7 @@ class _QuestionScreenState extends State<QuestionScreen>
                       letterSpacing: 2, fontWeight: FontWeight.w500)),
                   const SizedBox(width: 10),
                   Container(width: 40, height: 1,
-                    color: AppColors.textMuted.withOpacity(0.4)),
+                    color: AppColors.textMuted.withValues(alpha: 0.4)),
                 ],
               ),
               const SizedBox(height: 20),
@@ -670,14 +691,14 @@ class _QuestionScreenState extends State<QuestionScreen>
     if (_isAnswered) {
       if (index == correctIndex) {
         borderColor  = AppColors.success;
-        bgColor      = AppColors.success.withOpacity(0.08);
+        bgColor      = AppColors.success.withValues(alpha: 0.08);
         labelBg      = AppColors.success;
         labelColor   = Colors.white;
         trailingIcon = const Icon(Icons.check_circle_rounded,
           color: AppColors.success, size: 22);
       } else if (index == _confirmedOption && index != correctIndex) {
         borderColor  = AppColors.error;
-        bgColor      = AppColors.error.withOpacity(0.08);
+        bgColor      = AppColors.error.withValues(alpha: 0.08);
         labelBg      = AppColors.error;
         labelColor   = Colors.white;
         trailingIcon = const Icon(Icons.cancel_rounded,
@@ -685,7 +706,7 @@ class _QuestionScreenState extends State<QuestionScreen>
       }
     } else if (index == _selectedOption) {
       borderColor  = AppColors.neonCyan;
-      bgColor      = AppColors.neonCyan.withOpacity(0.08);
+      bgColor      = AppColors.neonCyan.withValues(alpha: 0.08);
       labelBg      = AppColors.neonCyan;
       labelColor   = AppColors.darkBg;
       trailingIcon = const Icon(Icons.check_circle_outline_rounded,
@@ -701,13 +722,13 @@ class _QuestionScreenState extends State<QuestionScreen>
           color: bgColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: borderColor.withOpacity(
+            color: borderColor.withValues(alpha: 
               _isAnswered || index == _selectedOption ? 0.8 : 0.15),
             width: 1.5,
           ),
           boxShadow: (index == _selectedOption && !_isAnswered)
               ? [BoxShadow(
-                  color: AppColors.neonCyan.withOpacity(0.15),
+                  color: AppColors.neonCyan.withValues(alpha: 0.15),
                   blurRadius: 12, spreadRadius: 1)]
               : null,
         ),
@@ -763,7 +784,7 @@ class _QuestionScreenState extends State<QuestionScreen>
             borderRadius: BorderRadius.circular(30),
             boxShadow: canContinue
                 ? [BoxShadow(
-                    color: AppColors.neonCyan.withOpacity(0.35),
+                    color: AppColors.neonCyan.withValues(alpha: 0.35),
                     blurRadius: 20, spreadRadius: 2,
                     offset: const Offset(0, 4))]
                 : null,

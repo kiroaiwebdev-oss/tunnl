@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/content_service.dart';
 import '../../core/models/short_model.dart';
+import '../../core/widgets/in_app_video_player.dart';
 
 class ShortsScreen extends StatefulWidget {
   const ShortsScreen({super.key});
@@ -23,7 +24,7 @@ class _ShortsScreenState extends State<ShortsScreen>
   late AnimationController _entryCtrl;
   late Animation<double> _fadeAnim;
 
-  final List<String> _filters = ['ALL', 'YOUTUBE', 'INSTAGRAM', 'TELEGRAM'];
+  final List<String> _filters = ['ALL', 'YOUTUBE', 'INSTAGRAM', 'FACEBOOK'];
 
   List<ShortModel> _allShorts = [];
   bool _isLoading = true;
@@ -38,6 +39,8 @@ class _ShortsScreenState extends State<ShortsScreen>
     switch (platform) {
       case 'INSTAGRAM':
         return Icons.camera_alt_rounded;
+      case 'FACEBOOK':
+        return Icons.facebook;
       case 'TELEGRAM':
         return Icons.send_rounded;
       case 'YOUTUBE':
@@ -50,6 +53,8 @@ class _ShortsScreenState extends State<ShortsScreen>
     switch (platform) {
       case 'INSTAGRAM':
         return const Color(0xFFE1306C);
+      case 'FACEBOOK':
+        return const Color(0xFF1877F2);
       case 'TELEGRAM':
         return const Color(0xFF0088CC);
       case 'YOUTUBE':
@@ -87,11 +92,30 @@ class _ShortsScreenState extends State<ShortsScreen>
     });
   }
 
+  // Play the short. YouTube + uploaded videos play INSIDE the app on a
+  // dedicated player screen. Instagram/Facebook pages (which can't be
+  // embedded) open in the in-app browser so the user still stays in the app.
+  void _openShort(ShortModel s) {
+    if (InAppVideoPlayer.canPlayInline(s.url)) {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => _ShortPlayerScreen(short: s),
+      ));
+    } else {
+      _openLink(s.url);
+    }
+  }
+
   Future<void> _openLink(String url) async {
     if (url.isEmpty) return;
     final uri = Uri.parse(url);
+    // Open INSIDE the app (in-app browser / custom tab) instead of jumping to
+    // the external YouTube / Instagram app.
     if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      try {
+        await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+      } catch (_) {
+        await launchUrl(uri, mode: LaunchMode.inAppWebView);
+      }
     } else {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -172,7 +196,7 @@ class _ShortsScreenState extends State<ShortsScreen>
             short: s,
             platformIcon: _platformIcon(s.platform),
             platformColor: _platformColor(s.platform),
-            onTap: () => _openLink(s.url),
+            onTap: () => _openShort(s),
           );
         },
       ),
@@ -211,7 +235,7 @@ class _ShortsScreenState extends State<ShortsScreen>
               color: AppColors.darkCard,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                  color: AppColors.neonCyan.withOpacity(0.2), width: 1),
+                  color: AppColors.neonCyan.withValues(alpha: 0.2), width: 1),
             ),
             child: Row(
               children: [
@@ -236,7 +260,7 @@ class _ShortsScreenState extends State<ShortsScreen>
       AppColors.neonCyan,
       const Color(0xFFFF0000),
       const Color(0xFFE1306C),
-      const Color(0xFF0088CC),
+      const Color(0xFF1877F2),
     ];
     return SizedBox(
       height: 40,
@@ -254,12 +278,12 @@ class _ShortsScreenState extends State<ShortsScreen>
               margin: const EdgeInsets.only(right: 8),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: isActive ? color.withOpacity(0.15) : AppColors.darkCard,
+                color: isActive ? color.withValues(alpha: 0.15) : AppColors.darkCard,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                     color: isActive
                         ? color
-                        : AppColors.textMuted.withOpacity(0.2),
+                        : AppColors.textMuted.withValues(alpha: 0.2),
                     width: 1.2),
               ),
               child: Text(
@@ -280,7 +304,7 @@ class _ShortsScreenState extends State<ShortsScreen>
   Widget _buildStatsRow() {
     final ytCount = _allShorts.where((s) => s.platform == 'YOUTUBE').length;
     final igCount = _allShorts.where((s) => s.platform == 'INSTAGRAM').length;
-    final tgCount = _allShorts.where((s) => s.platform == 'TELEGRAM').length;
+    final fbCount = _allShorts.where((s) => s.platform == 'FACEBOOK').length;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
@@ -298,10 +322,10 @@ class _ShortsScreenState extends State<ShortsScreen>
               icon: Icons.camera_alt_rounded),
           const SizedBox(width: 8),
           _StatChip(
-              label: 'Telegram',
-              count: tgCount,
-              color: const Color(0xFF0088CC),
-              icon: Icons.send_rounded),
+              label: 'Facebook',
+              count: fbCount,
+              color: const Color(0xFF1877F2),
+              icon: Icons.facebook),
         ],
       ),
     );
@@ -365,7 +389,7 @@ class _ShortCardState extends State<_ShortCard>
             color: AppColors.darkCard,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-                color: widget.platformColor.withOpacity(0.15), width: 1),
+                color: widget.platformColor.withValues(alpha: 0.15), width: 1),
           ),
           child: Row(
             children: [
@@ -374,7 +398,7 @@ class _ShortCardState extends State<_ShortCard>
                 width: 90,
                 height: 100,
                 decoration: BoxDecoration(
-                  color: widget.platformColor.withOpacity(0.08),
+                  color: widget.platformColor.withValues(alpha: 0.08),
                   borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(17),
                       bottomLeft: Radius.circular(17)),
@@ -383,7 +407,7 @@ class _ShortCardState extends State<_ShortCard>
                           image: NetworkImage(s.thumbnailUrl),
                           fit: BoxFit.cover,
                           colorFilter: ColorFilter.mode(
-                              Colors.black.withOpacity(0.3),
+                              Colors.black.withValues(alpha: 0.3),
                               BlendMode.darken))
                       : null,
                 ),
@@ -399,7 +423,7 @@ class _ShortCardState extends State<_ShortCard>
                           boxShadow: [
                             BoxShadow(
                                 color:
-                                    widget.platformColor.withOpacity(0.35),
+                                    widget.platformColor.withValues(alpha: 0.35),
                                 blurRadius: 12,
                                 spreadRadius: 2),
                           ],
@@ -416,7 +440,7 @@ class _ShortCardState extends State<_ShortCard>
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.6),
+                              color: Colors.black.withValues(alpha: 0.6),
                               borderRadius: BorderRadius.circular(4)),
                           child: Text(s.durationLabel,
                               style: GoogleFonts.poppins(
@@ -456,11 +480,11 @@ class _ShortCardState extends State<_ShortCard>
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: widget.platformColor.withOpacity(0.1),
+                              color: widget.platformColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
                                   color:
-                                      widget.platformColor.withOpacity(0.3),
+                                      widget.platformColor.withValues(alpha: 0.3),
                                   width: 1),
                             ),
                             child: Row(
@@ -478,7 +502,7 @@ class _ShortCardState extends State<_ShortCard>
                           ),
                           const Spacer(),
                           Icon(Icons.open_in_new_rounded,
-                              color: widget.platformColor.withOpacity(0.6),
+                              color: widget.platformColor.withValues(alpha: 0.6),
                               size: 16),
                         ],
                       ),
@@ -511,9 +535,9 @@ class _StatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.07),
+        color: color.withValues(alpha: 0.07),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.2), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
       ),
       child: Row(
         children: [
@@ -523,6 +547,70 @@ class _StatChip extends StatelessWidget {
               style: GoogleFonts.poppins(
                   fontSize: 11, fontWeight: FontWeight.w600, color: color)),
         ],
+      ),
+    );
+  }
+}
+
+
+// Full-screen in-app player for a single short (YouTube embed or uploaded MP4).
+class _ShortPlayerScreen extends StatelessWidget {
+  final ShortModel short;
+  const _ShortPlayerScreen({required this.short});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // top bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                        color: AppColors.neonCyan, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      short.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Center(
+                child: InAppVideoPlayer(
+                  url: short.url,
+                  autoPlay: true,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            if (short.category.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  short.category,
+                  style: GoogleFonts.poppins(
+                      fontSize: 12, color: AppColors.textSecondary),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

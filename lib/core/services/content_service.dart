@@ -75,6 +75,8 @@ class ContentService {
   static Future<List<SetModel>> getSets(
     String category, {
     int? examId,
+    String? examName,
+    bool ungrouped = false,
     int page = 1,
     int perPage = 50,
   }) async {
@@ -85,6 +87,8 @@ class ContentService {
         'per_page': '$perPage',
       };
       if (examId != null) params['exam_id'] = '$examId';
+      if (examName != null && examName.isNotEmpty) params['exam_name'] = examName;
+      if (ungrouped) params['ungrouped'] = '1';
 
       final res = await ApiClient.get(
         ApiEndpoints.sets,
@@ -319,6 +323,54 @@ class ContentService {
       );
     } catch (e) {
       return {'success': false, 'message': '$e'};
+    }
+  }
+
+  // ── Coupon validation ─────────────────────────────
+  /// Returns { valid, code, discount, final_price, base_price, message }.
+  static Future<Map<String, dynamic>> validateCoupon(
+    String code, {
+    String plan = 'lifetime',
+  }) async {
+    try {
+      final res = await ApiClient.post(
+        ApiEndpoints.coupons,
+        {'code': code, 'plan': plan},
+        auth: true,
+      );
+      if (!_ok(res)) {
+        return {'valid': false, 'message': res['message'] ?? 'Could not validate coupon.'};
+      }
+      return {
+        'valid': res['valid'] == true,
+        'code': res['code'] ?? code.toUpperCase(),
+        'discount': (res['discount'] as num?)?.toInt() ?? 0,
+        'final_price': (res['final_price'] as num?)?.toInt() ??
+            (res['base_price'] as num?)?.toInt() ?? 0,
+        'base_price': (res['base_price'] as num?)?.toInt() ?? 0,
+        'message': res['message'] ?? '',
+      };
+    } catch (e) {
+      debugPrint('[validateCoupon] $e');
+      return {'valid': false, 'message': 'Network error. Try again.'};
+    }
+  }
+
+  // ── 5000 MCQ exams (grouped by category, exam-wise) ──
+  /// Returns a flat list of exam maps: { exam_name, exam_category, icon,
+  /// difficulty, is_premium, can_access, set_count, total_questions }.
+  static Future<List<Map<String, dynamic>>> getMcqExams() async {
+    try {
+      final res = await ApiClient.get(ApiEndpoints.mcqExams, auth: true);
+      if (!_ok(res)) return [];
+      final raw = _list(res, const ['exams']);
+      return raw
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+    } catch (e) {
+      debugPrint('[McqExams] ERROR: $e');
+      return [];
     }
   }
 }

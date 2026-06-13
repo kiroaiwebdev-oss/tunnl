@@ -15,7 +15,12 @@ define('ADMIN_URL', rtrim($scheme . '://' . $_SERVER['HTTP_HOST'] . $adminDir, '
 
 // App constants
 define('APP_ENV',             'production');
-define('API_KEY',             'your_api_key_here');
+// ⚠️ API_KEY MUST stay empty unless the Flutter app is also updated to send the
+// matching `X-API-Key` header on every request. A non-empty value here makes
+// checkApiKey() reject EVERY app call with 401 Unauthorized — which silently
+// breaks all content (sets/questions/shorts/PYQ/daily) AND logs the user out on
+// every launch (the 401 message contains "login", so the splash wipes session).
+define('API_KEY',             '');
 define('FCM_SERVER_KEY',      'your_fcm_key_here');
 define('RAZORPAY_KEY_ID',     'your_rzp_key_id');
 define('RAZORPAY_KEY_SECRET', 'your_rzp_secret');

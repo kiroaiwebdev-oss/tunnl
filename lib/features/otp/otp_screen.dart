@@ -188,7 +188,7 @@ Future<void> _verifyOtp() async {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
               side: BorderSide(
-                color: AppColors.neonCyan.withOpacity(0.3),
+                color: AppColors.neonCyan.withValues(alpha: 0.3),
               ),
             ),
             duration: const Duration(seconds: 2),
@@ -342,13 +342,13 @@ Future<void> _verifyOtp() async {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: _isVerified
-              ? AppColors.neonCyan.withOpacity(0.6)
-              : AppColors.neonCyan.withOpacity(0.15),
+              ? AppColors.neonCyan.withValues(alpha: 0.6)
+              : AppColors.neonCyan.withValues(alpha: 0.15),
           width: _isVerified ? 1.5 : 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.neonCyan.withOpacity(_isVerified ? 0.2 : 0.08),
+            color: AppColors.neonCyan.withValues(alpha: _isVerified ? 0.2 : 0.08),
             blurRadius: 20, spreadRadius: 4,
           ),
         ],
@@ -409,7 +409,7 @@ Future<void> _verifyOtp() async {
         color: const Color(0xFF111827),
         borderRadius: BorderRadius.circular(30),
         border: Border.all(
-          color: AppColors.neonCyan.withOpacity(0.2), width: 1,
+          color: AppColors.neonCyan.withValues(alpha: 0.2), width: 1,
         ),
       ),
       child: Text(
@@ -450,17 +450,17 @@ Future<void> _verifyOtp() async {
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(
-                  color: AppColors.neonCyan.withOpacity(0.15), width: 1,
+                  color: AppColors.neonCyan.withValues(alpha: 0.15), width: 1,
                 ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(
                   color: _isVerified
-                      ? AppColors.neonCyan.withOpacity(0.5)
+                      ? AppColors.neonCyan.withValues(alpha: 0.5)
                       : _hasError
-                          ? AppColors.error.withOpacity(0.5)
-                          : AppColors.neonCyan.withOpacity(0.15),
+                          ? AppColors.error.withValues(alpha: 0.5)
+                          : AppColors.neonCyan.withValues(alpha: 0.15),
                   width: 1,
                 ),
               ),
@@ -529,8 +529,8 @@ Future<void> _verifyOtp() async {
                 ? [AppColors.neonCyan, AppColors.neonCyan]
                 : (_isLoading
                     ? [
-                        AppColors.neonCyan.withOpacity(0.5),
-                        const Color(0xFF00ACC1).withOpacity(0.5),
+                        AppColors.neonCyan.withValues(alpha: 0.5),
+                        const Color(0xFF00ACC1).withValues(alpha: 0.5),
                       ]
                     : const [Color(0xFF00E5FF), Color(0xFF00ACC1)]),
             begin: Alignment.centerLeft,
@@ -540,7 +540,7 @@ Future<void> _verifyOtp() async {
           boxShadow: [
             BoxShadow(
               color: AppColors.neonCyan
-                  .withOpacity(_isLoading ? 0.15 : 0.35),
+                  .withValues(alpha: _isLoading ? 0.15 : 0.35),
               blurRadius: 20, spreadRadius: 2,
               offset: const Offset(0, 4),
             ),
@@ -626,7 +626,7 @@ Future<void> _verifyOtp() async {
                 height: 3,
                 width: 60 * _indicatorAnim.value,
                 decoration: BoxDecoration(
-                  color: AppColors.neonCyan.withOpacity(0.4),
+                  color: AppColors.neonCyan.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),

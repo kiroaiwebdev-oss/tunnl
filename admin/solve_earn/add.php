@@ -14,11 +14,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $pdo->beginTransaction();
 
+        $statusNew = in_array(($_POST['status'] ?? 'upcoming'), ['upcoming','active','ended','completed'], true)
+            ? $_POST['status'] : 'upcoming';
+
         $stmt = $pdo->prepare("
             INSERT INTO weekly_challenges
               (title, description, start_date, end_date, prize_amount,
                total_questions, time_limit, status)
-            VALUES (?,?,?,?,?,?,?,'upcoming')
+            VALUES (?,?,?,?,?,?,?,?)
         ");
         $stmt->execute([
             trim($_POST['title']),
@@ -28,8 +31,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             floatval($_POST['prize_amount']),
             intval($_POST['total_questions']),
             intval($_POST['time_limit']),
+            $statusNew,
         ]);
         $cId = $pdo->lastInsertId();
+
+        // Only ONE challenge can be active at a time.
+        if ($statusNew === 'active') {
+            $pdo->prepare("UPDATE weekly_challenges SET status='ended' WHERE status='active' AND id != ?")
+                ->execute([$cId]);
+        }
 
         if (!empty($_POST['question_ids'])) {
             $qStmt = $pdo->prepare("
@@ -123,6 +133,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <label class="form-label">Time Limit (minutes) *</label>
       <input type="number" name="time_limit" class="form-input" required
         value="<?= $_POST['time_limit'] ?? 10 ?>" min="1">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Status *</label>
+    <select name="status" class="form-select" required>
+      <option value="upcoming">Upcoming (not visible yet)</option>
+      <option value="active">Active (Live now in app)</option>
+    </select>
+    <div style="font-size:11px;color:var(--muted);margin-top:4px">
+      Choose <strong>Active</strong> to make this the live challenge immediately.
+      Any previously active challenge is automatically ended.
     </div>
   </div>
 </div>

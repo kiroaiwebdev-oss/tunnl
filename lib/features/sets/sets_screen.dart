@@ -22,6 +22,7 @@ class SetsScreen extends StatefulWidget {
   final int totalSets;
   final bool showLeaderboard;
   final int? examId;
+  final String? examName;
 
   const SetsScreen({
     super.key,
@@ -33,6 +34,7 @@ class SetsScreen extends StatefulWidget {
     this.totalSets = 100,
     this.showLeaderboard = true,
     this.examId,
+    this.examName,
   });
 
   @override
@@ -86,6 +88,7 @@ class _SetsScreenState extends State<SetsScreen>
       final sets = await ContentService.getSets(
         mappedCategory,
         examId: widget.examId,
+        examName: widget.examName,
         page: 1,
         perPage: 100,
       );
@@ -219,7 +222,7 @@ class _SetsScreenState extends State<SetsScreen>
             decoration: BoxDecoration(
               color: AppColors.darkCard,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.neonCyan.withOpacity(0.2)),
+              border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.2)),
             ),
             child: Text(
               _isLoading
@@ -244,7 +247,7 @@ class _SetsScreenState extends State<SetsScreen>
       decoration: BoxDecoration(
         color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.neonCyan.withOpacity(0.15)),
+        border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.15)),
       ),
       child: Row(
         children: [
@@ -252,7 +255,7 @@ class _SetsScreenState extends State<SetsScreen>
             width: 52,
             height: 52,
             decoration: BoxDecoration(
-              color: AppColors.neonCyan.withOpacity(0.1),
+              color: AppColors.neonCyan.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(14),
             ),
             child: const Icon(Icons.quiz_rounded,
@@ -282,7 +285,7 @@ class _SetsScreenState extends State<SetsScreen>
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: total > 0 ? _completedCount / total : 0.0,
-                    backgroundColor: AppColors.neonCyan.withOpacity(0.1),
+                    backgroundColor: AppColors.neonCyan.withValues(alpha: 0.1),
                     valueColor:
                         const AlwaysStoppedAnimation<Color>(AppColors.neonCyan),
                     minHeight: 6,
@@ -553,13 +556,13 @@ class _SetCardState extends State<_SetCard>
 
     if (widget.isCompleted) {
       borderColor = AppColors.success;
-      bgColor = AppColors.success.withOpacity(0.08);
+      bgColor = AppColors.success.withValues(alpha: 0.08);
       labelColor = AppColors.success;
       stateIcon = Icons.check_circle_rounded;
       iconColor = AppColors.success;
     } else if (widget.isPremiumLocked) {
       borderColor = AppColors.orange;
-      bgColor = AppColors.orange.withOpacity(0.06);
+      bgColor = AppColors.orange.withValues(alpha: 0.06);
       labelColor = AppColors.orange;
       stateIcon = Icons.workspace_premium_rounded;
       iconColor = AppColors.orange;
@@ -592,7 +595,7 @@ class _SetCardState extends State<_SetCard>
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color:
-                  borderColor.withOpacity(widget.isLocked ? 0.15 : 0.4),
+                  borderColor.withValues(alpha: widget.isLocked ? 0.15 : 0.4),
               width: 1.2,
             ),
           ),

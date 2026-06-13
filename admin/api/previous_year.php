@@ -89,8 +89,8 @@ response([
             'set_number'      => intval($s['set_number']),
             'title'           => $s['title']     ?? '',
             'level'           => $s['level']     ?? 'beginner',
-            'total_questions' => intval($s['total_questions'] ?? 0),
-            'question_count'  => intval($s['q_count']),
+            'total_questions' => 10,
+            'question_count'  => min(10, intval($s['q_count'])),
             'is_premium'      => $isPremium,
             'can_access'      => !$isPremium || ($user && !empty($user['is_premium'])),
         ];

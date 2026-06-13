@@ -1,8 +1,11 @@
 <?php
-$pageTitle = 'Carousel Banners';
-require_once '../includes/header.php';
+// ── Actions MUST run before header.php (which prints HTML). Otherwise
+//    header('Location:') fails with "headers already sent" and the reorder
+//    AJAX response gets polluted with HTML. So we include only the config
+//    here, process the action, redirect/echo, then load the HTML chrome. ──
+require_once dirname(__DIR__) . '/config/auth_check.php';
+require_once dirname(__DIR__) . '/config/db.php';
 
-// ── Actions ──────────────────────────────────────────
 // Delete
 if (isset($_GET['delete'])) {
     $id = (int)$_GET['delete'];
@@ -27,6 +30,7 @@ if (isset($_GET['toggle'])) {
 
 // Drag reorder (AJAX)
 if (isset($_POST['reorder'])) {
+    header('Content-Type: application/json');
     $ids = explode(',', $_POST['order']);
     foreach ($ids as $i => $rid) {
         $pdo->prepare("UPDATE carousel_banners SET sort_order=? WHERE id=?")
@@ -37,6 +41,9 @@ if (isset($_POST['reorder'])) {
 
 $banners = $pdo->query("SELECT * FROM carousel_banners ORDER BY sort_order ASC")
                ->fetchAll(PDO::FETCH_ASSOC);
+
+$pageTitle = 'Carousel Banners';
+require_once '../includes/header.php';
 ?>
 
 <!-- PAGE HEADER -->

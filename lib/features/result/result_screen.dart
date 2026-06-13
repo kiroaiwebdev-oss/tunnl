@@ -353,7 +353,7 @@ class _ResultScreenState extends State<ResultScreen>
       decoration: BoxDecoration(
         color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.neonCyan.withOpacity(0.1)),
+        border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.1)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -374,7 +374,7 @@ class _ResultScreenState extends State<ResultScreen>
             ),
           ),
           Container(width: 1, height: 60,
-            color: AppColors.textMuted.withOpacity(0.3)),
+            color: AppColors.textMuted.withValues(alpha: 0.3)),
           FadeTransition(
             opacity: _statsFadeAnims[1],
             child: _StatItem(
@@ -388,7 +388,7 @@ class _ResultScreenState extends State<ResultScreen>
             ),
           ),
           Container(width: 1, height: 60,
-            color: AppColors.textMuted.withOpacity(0.3)),
+            color: AppColors.textMuted.withValues(alpha: 0.3)),
           FadeTransition(
             opacity: _statsFadeAnims[2],
             child: _StatItem(
@@ -441,9 +441,9 @@ class _ResultScreenState extends State<ResultScreen>
         color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: AppColors.neonCyan.withOpacity(0.25), width: 1.2),
+          color: AppColors.neonCyan.withValues(alpha: 0.25), width: 1.2),
         boxShadow: [BoxShadow(
-          color: AppColors.neonCyan.withOpacity(0.05),
+          color: AppColors.neonCyan.withValues(alpha: 0.05),
           blurRadius: 16, spreadRadius: 2)],
       ),
       child: Row(
@@ -459,7 +459,7 @@ class _ResultScreenState extends State<ResultScreen>
             width: 44, height: 44,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.neonCyan.withOpacity(0.1)),
+              color: AppColors.neonCyan.withValues(alpha: 0.1)),
             child: const Icon(Icons.emoji_events_rounded,
               color: AppColors.neonCyan, size: 22),
           ),
@@ -485,10 +485,10 @@ class _ResultScreenState extends State<ResultScreen>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: AppColors.neonCyan.withOpacity(0.1),
+                color: AppColors.neonCyan.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: AppColors.neonCyan.withOpacity(0.3))),
+                  color: AppColors.neonCyan.withValues(alpha: 0.3))),
               child: Column(
                 children: [
                   Text('+$_xpEarned',
@@ -528,7 +528,7 @@ class _ResultScreenState extends State<ResultScreen>
             begin: Alignment.centerLeft, end: Alignment.centerRight),
           borderRadius: BorderRadius.circular(30),
           boxShadow: [BoxShadow(
-            color: AppColors.neonCyan.withOpacity(0.35),
+            color: AppColors.neonCyan.withValues(alpha: 0.35),
             blurRadius: 20, spreadRadius: 2, offset: const Offset(0, 4))],
         ),
         child: Center(child: Text('RETRY TEST',
@@ -549,7 +549,7 @@ class _ResultScreenState extends State<ResultScreen>
         decoration: BoxDecoration(
           color: AppColors.darkCard,
           borderRadius: BorderRadius.circular(30),
-          border: Border.all(color: AppColors.textMuted.withOpacity(0.3)),
+          border: Border.all(color: AppColors.textMuted.withValues(alpha: 0.3)),
         ),
         child: Center(child: Text('DASHBOARD',
           style: GoogleFonts.poppins(
@@ -569,7 +569,7 @@ class _ResultScreenState extends State<ResultScreen>
           color: AppColors.orange,
           borderRadius: BorderRadius.circular(30),
           boxShadow: [BoxShadow(
-            color: AppColors.orange.withOpacity(0.35),
+            color: AppColors.orange.withValues(alpha: 0.35),
             blurRadius: 20, spreadRadius: 2, offset: const Offset(0, 4))],
         ),
         child: Row(
@@ -594,7 +594,7 @@ class _ResultScreenState extends State<ResultScreen>
       decoration: BoxDecoration(
         color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.neonCyan.withOpacity(0.2)),
+        border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -613,7 +613,7 @@ class _ResultScreenState extends State<ResultScreen>
                   color: AppColors.darkSurface,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: AppColors.neonCyan.withOpacity(0.3))),
+                    color: AppColors.neonCyan.withValues(alpha: 0.3))),
                 child: Text('ELITE\nACCESS',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
@@ -638,7 +638,7 @@ class _ResultScreenState extends State<ResultScreen>
                 gradient: AppColors.premiumGradient,
                 borderRadius: BorderRadius.circular(30),
                 boxShadow: [BoxShadow(
-                  color: AppColors.purple.withOpacity(0.4),
+                  color: AppColors.purple.withValues(alpha: 0.4),
                   blurRadius: 20, spreadRadius: 2,
                   offset: const Offset(0, 4))],
               ),
@@ -686,7 +686,7 @@ class _ResultScreenState extends State<ResultScreen>
             color: AppColors.darkCard,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: headerColor.withOpacity(0.3), width: 1),
+              color: headerColor.withValues(alpha: 0.3), width: 1),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -696,7 +696,7 @@ class _ResultScreenState extends State<ResultScreen>
                 padding: const EdgeInsets.symmetric(
                   horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
-                  color: headerColor.withOpacity(0.08),
+                  color: headerColor.withValues(alpha: 0.08),
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(15)),
                 ),
@@ -706,7 +706,7 @@ class _ResultScreenState extends State<ResultScreen>
                       padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: headerColor.withOpacity(0.15),
+                        color: headerColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(6)),
                       child: Text(
                         'Q${i + 1}',
@@ -741,16 +741,16 @@ class _ResultScreenState extends State<ResultScreen>
                       final isC = oi == correct;
                       final isS = oi == selected;
                       Color bg        = Colors.transparent;
-                      Color border    = AppColors.textMuted.withOpacity(0.15);
+                      Color border    = AppColors.textMuted.withValues(alpha: 0.15);
                       Color textColor = AppColors.textSecondary;
 
                       if (isC) {
-                        bg        = AppColors.success.withOpacity(0.1);
-                        border    = AppColors.success.withOpacity(0.4);
+                        bg        = AppColors.success.withValues(alpha: 0.1);
+                        border    = AppColors.success.withValues(alpha: 0.4);
                         textColor = AppColors.success;
                       } else if (isS && !isC) {
-                        bg        = AppColors.error.withOpacity(0.1);
-                        border    = AppColors.error.withOpacity(0.4);
+                        bg        = AppColors.error.withValues(alpha: 0.1);
+                        border    = AppColors.error.withValues(alpha: 0.4);
                         textColor = AppColors.error;
                       }
 
@@ -851,13 +851,13 @@ class _TabChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: active
-              ? AppColors.neonCyan.withOpacity(0.15)
+              ? AppColors.neonCyan.withValues(alpha: 0.15)
               : AppColors.darkCard,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: active
-                ? AppColors.neonCyan.withOpacity(0.5)
-                : AppColors.textMuted.withOpacity(0.2)),
+                ? AppColors.neonCyan.withValues(alpha: 0.5)
+                : AppColors.textMuted.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
@@ -893,9 +893,9 @@ class _BreakdownChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.06),
+          color: color.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.25)),
+          border: Border.all(color: color.withValues(alpha: 0.25)),
         ),
         child: Column(
           children: [
@@ -930,7 +930,7 @@ class _StatItem extends StatelessWidget {
           width: 40, height: 40,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.neonCyan.withOpacity(0.1)),
+            color: AppColors.neonCyan.withValues(alpha: 0.1)),
           child: Icon(icon, color: AppColors.neonCyan, size: 20),
         ),
         const SizedBox(height: 8),

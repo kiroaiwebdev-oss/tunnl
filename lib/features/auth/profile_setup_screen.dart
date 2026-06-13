@@ -152,11 +152,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
                             color: const Color(0xFF0D1A26),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: AppColors.neonCyan.withOpacity(0.3),
+                              color: AppColors.neonCyan.withValues(alpha: 0.3),
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.neonCyan.withOpacity(0.15),
+                                color: AppColors.neonCyan.withValues(alpha: 0.15),
                                 blurRadius: 20, spreadRadius: 4,
                               ),
                             ],
@@ -207,10 +207,10 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: _hasNameError
-                                ? AppColors.error.withOpacity(0.6)
+                                ? AppColors.error.withValues(alpha: 0.6)
                                 : _nameFocus.hasFocus
-                                    ? AppColors.neonCyan.withOpacity(0.5)
-                                    : AppColors.neonCyan.withOpacity(0.1),
+                                    ? AppColors.neonCyan.withValues(alpha: 0.5)
+                                    : AppColors.neonCyan.withValues(alpha: 0.1),
                             width: 1.2,
                           ),
                         ),
@@ -288,15 +288,15 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
                               ),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? AppColors.neonCyan.withOpacity(0.15)
+                                    ? AppColors.neonCyan.withValues(alpha: 0.15)
                                     : const Color(0xFF1A2235),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: isSelected
                                       ? AppColors.neonCyan
                                       : _hasStandardError
-                                          ? AppColors.error.withOpacity(0.4)
-                                          : AppColors.neonCyan.withOpacity(0.1),
+                                          ? AppColors.error.withValues(alpha: 0.4)
+                                          : AppColors.neonCyan.withValues(alpha: 0.1),
                                   width: isSelected ? 1.5 : 1,
                                 ),
                               ),
@@ -347,8 +347,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
                             gradient: LinearGradient(
                               colors: _isLoading
                                   ? [
-                                      AppColors.neonCyan.withOpacity(0.5),
-                                      const Color(0xFF00ACC1).withOpacity(0.5),
+                                      AppColors.neonCyan.withValues(alpha: 0.5),
+                                      const Color(0xFF00ACC1).withValues(alpha: 0.5),
                                     ]
                                   : const [
                                       Color(0xFF00E5FF),
@@ -361,7 +361,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
                             boxShadow: [
                               BoxShadow(
                                 color: AppColors.neonCyan
-                                    .withOpacity(_isLoading ? 0.1 : 0.35),
+                                    .withValues(alpha: _isLoading ? 0.1 : 0.35),
                                 blurRadius: 20, spreadRadius: 2,
                                 offset: const Offset(0, 4),
                               ),
@@ -399,25 +399,13 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
 
                       const SizedBox(height: 16),
 
-                      // ── Skip button ─────────────────────────
+                      // Profile completion is mandatory for new users — no skip.
                       Center(
-                        child: GestureDetector(
-                          onTap: () {
-                            Navigator.of(context).pushAndRemoveUntil(
-                              MaterialPageRoute(
-                                builder: (_) => const HubScreen(),
-                              ),
-                              (route) => false,
-                            );
-                          },
-                          child: Text(
-                            'Skip for now',
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              color: AppColors.textMuted,
-                              decoration: TextDecoration.underline,
-                              decorationColor: AppColors.textMuted,
-                            ),
+                        child: Text(
+                          'Complete your profile to continue',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: AppColors.textMuted,
                           ),
                         ),
                       ),

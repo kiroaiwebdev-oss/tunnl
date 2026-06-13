@@ -145,7 +145,7 @@ $cats = ['MULTIPLICATION','DIVISION','SQUARES','FRACTIONS','SHORTCUTS'];
 <script>
 function deleteTrick(id) {
   if (!confirm('Delete this trick permanently?')) return;
-  fetch('/admin/tricks/delete.php', {
+  fetch('delete.php', {
     method:'POST',
     headers:{'Content-Type':'application/x-www-form-urlencoded'},
     body:'id='+id

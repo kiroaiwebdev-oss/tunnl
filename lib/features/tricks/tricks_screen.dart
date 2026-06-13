@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/app_settings_service.dart';
 import '../../core/services/content_service.dart';
 import '../../core/models/trick_model.dart';
 import '../premium/premium_screen.dart';
@@ -44,15 +45,13 @@ class _TricksScreenState extends State<TricksScreen>
     return _allTricks.where((t) => t.category == cat).toList();
   }
 
-  // Free user = first 10% of tricks unlocked, premium = all
-  int get _freeLimit {
-    final total = _allTricks.length;
-    return (total * 0.1).ceil().clamp(1, total);
-  }
+  // Premium gating is now per-trick: admin marks a trick "Premium Only".
+  int get _freeCount => _allTricks.where((t) => !t.isPremium).length;
+  int get _premiumCount => _allTricks.where((t) => t.isPremium).length;
 
-  bool _isLocked(int originalIndex) {
+  bool _isLockedTrick(TrickModel t) {
     if (widget.isPremium) return false;
-    return originalIndex >= _freeLimit;
+    return t.isPremium;
   }
 
   Color _difficultyColor(String d) {
@@ -131,7 +130,7 @@ class _TricksScreenState extends State<TricksScreen>
               children: [
                 _buildAppBar(),
                 _buildCategoryFilter(),
-                if (!widget.isPremium && _allTricks.isNotEmpty)
+                if (!widget.isPremium && _premiumCount > 0)
                   _buildFreeBanner(),
                 Expanded(
                   child: _isLoading
@@ -152,8 +151,7 @@ class _TricksScreenState extends State<TricksScreen>
                                 itemCount: filtered.length,
                                 itemBuilder: (_, i) {
                                   final t = filtered[i];
-                                  final originalIndex = _allTricks.indexOf(t);
-                                  final locked = _isLocked(originalIndex);
+                                  final locked = _isLockedTrick(t);
 
                                   return _TrickCard(
                                     trick: t,
@@ -203,10 +201,10 @@ class _TricksScreenState extends State<TricksScreen>
         margin: const EdgeInsets.fromLTRB(20, 8, 20, 4),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: AppColors.orange.withOpacity(0.08),
+          color: AppColors.orange.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12),
           border:
-              Border.all(color: AppColors.orange.withOpacity(0.3), width: 1),
+              Border.all(color: AppColors.orange.withValues(alpha: 0.3), width: 1),
         ),
         child: Row(
           children: [
@@ -220,15 +218,15 @@ class _TricksScreenState extends State<TricksScreen>
                       fontSize: 12, color: AppColors.textSecondary),
                   children: [
                     TextSpan(
-                      text: '$_freeLimit tricks free ',
+                      text: '$_freeCount tricks free ',
                       style: GoogleFonts.poppins(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: Colors.white),
                     ),
-                    const TextSpan(text: '— Upgrade for all '),
+                    const TextSpan(text: '— Upgrade for '),
                     TextSpan(
-                      text: '${_allTricks.length} tricks',
+                      text: '$_premiumCount premium tricks',
                       style: GoogleFonts.poppins(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -244,7 +242,7 @@ class _TricksScreenState extends State<TricksScreen>
               decoration: BoxDecoration(
                   color: AppColors.orange,
                   borderRadius: BorderRadius.circular(16)),
-              child: Text('₹50',
+              child: Text('₹${AppSettingsService.instance.getInt('premium_price', 50)}',
                   style: GoogleFonts.poppins(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -288,11 +286,11 @@ class _TricksScreenState extends State<TricksScreen>
                 color: AppColors.darkCard,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                    color: AppColors.neonCyan.withOpacity(0.2), width: 1)),
+                    color: AppColors.neonCyan.withValues(alpha: 0.2), width: 1)),
             child: Text(
               widget.isPremium
                   ? '${_allTricks.length} Tricks'
-                  : '$_freeLimit/${_allTricks.length} Free',
+                  : '$_freeCount Free',
               style: GoogleFonts.poppins(
                   fontSize: 11,
                   color: widget.isPremium
@@ -329,7 +327,7 @@ class _TricksScreenState extends State<TricksScreen>
                 border: Border.all(
                     color: isActive
                         ? AppColors.neonCyan
-                        : AppColors.textMuted.withOpacity(0.2),
+                        : AppColors.textMuted.withValues(alpha: 0.2),
                     width: 1),
               ),
               child: Text(cats[i],
@@ -411,8 +409,8 @@ class _TrickCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: isLocked
-                ? AppColors.textMuted.withOpacity(0.08)
-                : AppColors.neonCyan.withOpacity(0.1),
+                ? AppColors.textMuted.withValues(alpha: 0.08)
+                : AppColors.neonCyan.withValues(alpha: 0.1),
             width: 1,
           ),
         ),
@@ -424,13 +422,13 @@ class _TrickCard extends StatelessWidget {
               height: 48,
               decoration: BoxDecoration(
                 color: isLocked
-                    ? AppColors.textMuted.withOpacity(0.06)
-                    : AppColors.neonCyan.withOpacity(0.1),
+                    ? AppColors.textMuted.withValues(alpha: 0.06)
+                    : AppColors.neonCyan.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isLocked
-                      ? AppColors.textMuted.withOpacity(0.1)
-                      : AppColors.neonCyan.withOpacity(0.2),
+                      ? AppColors.textMuted.withValues(alpha: 0.1)
+                      : AppColors.neonCyan.withValues(alpha: 0.2),
                   width: 1,
                 ),
               ),
@@ -468,10 +466,10 @@ class _TrickCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 7, vertical: 3),
                           decoration: BoxDecoration(
-                              color: AppColors.success.withOpacity(0.15),
+                              color: AppColors.success.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
-                                  color: AppColors.success.withOpacity(0.4),
+                                  color: AppColors.success.withValues(alpha: 0.4),
                                   width: 1)),
                           child: Text('NEW',
                               style: GoogleFonts.poppins(
@@ -485,12 +483,12 @@ class _TrickCard extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     isLocked
-                        ? 'Upgrade to Premium — ₹50 only'
+                        ? 'Upgrade to Premium — ₹${AppSettingsService.instance.getInt('premium_price', 50)} only'
                         : trick.subtitle,
                     style: GoogleFonts.poppins(
                       fontSize: 11,
                       color: isLocked
-                          ? AppColors.orange.withOpacity(0.8)
+                          ? AppColors.orange.withValues(alpha: 0.8)
                           : AppColors.textSecondary,
                     ),
                   ),
@@ -504,7 +502,7 @@ class _TrickCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 7, vertical: 3),
                           decoration: BoxDecoration(
-                              color: diffColor.withOpacity(0.1),
+                              color: diffColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(6)),
                           child: Text(trick.difficulty,
                               style: GoogleFonts.poppins(
@@ -565,7 +563,7 @@ class _FormatBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(6)),
       child: Row(
         mainAxisSize: MainAxisSize.min,

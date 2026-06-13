@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/app_settings_service.dart';
+import '../../core/services/content_service.dart';
 import '../../core/services/payment_service.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/user_service.dart';
@@ -106,6 +107,19 @@ class _PremiumScreenState extends State<PremiumScreen>
   // Live price (defaults to 50 then refreshes from app_settings)
   int _priceRupees = 50;
 
+  // ── Coupon state ──────────────────────────────────
+  final TextEditingController _couponCtrl = TextEditingController();
+  bool   _couponLoading = false;
+  bool   _couponApplied = false;
+  String _appliedCode   = '';
+  int    _discount      = 0;
+  int    _finalPrice    = 0;
+  String _couponMsg     = '';
+  bool   _couponError   = false;
+
+  /// Price the user will actually pay (after any coupon).
+  int get _payablePrice => _couponApplied ? _finalPrice : _priceRupees;
+
   @override
   void initState() {
     super.initState();
@@ -168,6 +182,7 @@ class _PremiumScreenState extends State<PremiumScreen>
   @override
   void dispose() {
     AppSettingsService.instance.removeListener(_loadPrice);
+    _couponCtrl.dispose();
     _payment.dispose();
     _entryCtrl.dispose();
     _glowCtrl.dispose();
@@ -175,10 +190,64 @@ class _PremiumScreenState extends State<PremiumScreen>
     super.dispose();
   }
 
+  // ── Coupon: validate + apply ──────────────────────
+  Future<void> _applyCoupon() async {
+    final code = _couponCtrl.text.trim();
+    if (code.isEmpty) {
+      setState(() {
+        _couponError = true;
+        _couponMsg = 'Enter a coupon code first.';
+      });
+      return;
+    }
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _couponLoading = true;
+      _couponMsg = '';
+      _couponError = false;
+    });
+
+    final res = await ContentService.validateCoupon(code, plan: 'lifetime');
+    if (!mounted) return;
+
+    final valid = res['valid'] == true;
+    setState(() {
+      _couponLoading = false;
+      if (valid) {
+        _couponApplied = true;
+        _appliedCode   = (res['code'] ?? code).toString().toUpperCase();
+        _discount      = (res['discount'] as int?) ?? 0;
+        _finalPrice    = (res['final_price'] as int?) ?? _priceRupees;
+        _couponError   = false;
+        _couponMsg     = res['message']?.toString() ?? 'Coupon applied!';
+      } else {
+        _couponApplied = false;
+        _appliedCode   = '';
+        _discount      = 0;
+        _couponError   = true;
+        _couponMsg     = res['message']?.toString() ?? 'Invalid coupon.';
+      }
+    });
+  }
+
+  void _removeCoupon() {
+    setState(() {
+      _couponApplied = false;
+      _appliedCode   = '';
+      _discount      = 0;
+      _couponMsg     = '';
+      _couponError   = false;
+      _couponCtrl.clear();
+    });
+  }
+
   // ── Payment Handler ───────────────────────────────
   Future<void> _handlePayment() async {
     setState(() => _isLoading = true);
-    await _payment.startUpgrade(plan: 'lifetime');
+    await _payment.startUpgrade(
+      plan: 'lifetime',
+      couponCode: _couponApplied ? _appliedCode : '',
+    );
     // success/error callbacks toggle _isLoading off
   }
 
@@ -206,7 +275,7 @@ class _PremiumScreenState extends State<PremiumScreen>
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side:
-                BorderSide(color: AppColors.error.withOpacity(0.4), width: 1)),
+                BorderSide(color: AppColors.error.withValues(alpha: 0.4), width: 1)),
         content: Row(
           children: [
             const Icon(Icons.error_outline_rounded,
@@ -234,7 +303,7 @@ class _PremiumScreenState extends State<PremiumScreen>
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
           side: BorderSide(
-            color: AppColors.success.withOpacity(0.5),
+            color: AppColors.success.withValues(alpha: 0.5),
             width: 1.5,
           ),
         ),
@@ -247,9 +316,9 @@ class _PremiumScreenState extends State<PremiumScreen>
               height: 72,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.success.withOpacity(0.1),
+                color: AppColors.success.withValues(alpha: 0.1),
                 border: Border.all(
-                  color: AppColors.success.withOpacity(0.5),
+                  color: AppColors.success.withValues(alpha: 0.5),
                   width: 2,
                 ),
               ),
@@ -282,10 +351,10 @@ class _PremiumScreenState extends State<PremiumScreen>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.08),
+                color: AppColors.success.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                    color: AppColors.success.withOpacity(0.2), width: 1),
+                    color: AppColors.success.withValues(alpha: 0.2), width: 1),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -410,6 +479,8 @@ class _PremiumScreenState extends State<PremiumScreen>
 
                           const SizedBox(height: 28),
                           _buildPriceCard(),
+                          const SizedBox(height: 14),
+                          _buildCouponCard(),
                           const SizedBox(height: 16),
                           _buildPayButton(),
                           const SizedBox(height: 10),
@@ -477,13 +548,13 @@ class _PremiumScreenState extends State<PremiumScreen>
               ),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: AppColors.yellow.withOpacity(0.4),
+                color: AppColors.yellow.withValues(alpha: 0.4),
                 width: 1.5,
               ),
               boxShadow: [
                 BoxShadow(
                   color:
-                      AppColors.yellow.withOpacity(0.1 * _glowAnim.value),
+                      AppColors.yellow.withValues(alpha: 0.1 * _glowAnim.value),
                   blurRadius: 30,
                   spreadRadius: 4,
                 ),
@@ -496,9 +567,9 @@ class _PremiumScreenState extends State<PremiumScreen>
                   height: 60,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.yellow.withOpacity(0.15),
+                    color: AppColors.yellow.withValues(alpha: 0.15),
                     border: Border.all(
-                      color: AppColors.yellow.withOpacity(0.4),
+                      color: AppColors.yellow.withValues(alpha: 0.4),
                       width: 1.5,
                     ),
                   ),
@@ -571,9 +642,9 @@ class _PremiumScreenState extends State<PremiumScreen>
           height: 34,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             border: Border.all(
-              color: color.withOpacity(0.3),
+              color: color.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -611,7 +682,7 @@ class _PremiumScreenState extends State<PremiumScreen>
         Expanded(
           child: Container(
             height: 1,
-            color: AppColors.textMuted.withOpacity(0.2),
+            color: AppColors.textMuted.withValues(alpha: 0.2),
           ),
         ),
         const SizedBox(width: 12),
@@ -622,7 +693,7 @@ class _PremiumScreenState extends State<PremiumScreen>
             color: AppColors.darkCard,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: AppColors.orange.withOpacity(0.4),
+              color: AppColors.orange.withValues(alpha: 0.4),
               width: 1,
             ),
           ),
@@ -640,7 +711,7 @@ class _PremiumScreenState extends State<PremiumScreen>
         Expanded(
           child: Container(
             height: 1,
-            color: AppColors.textMuted.withOpacity(0.2),
+            color: AppColors.textMuted.withValues(alpha: 0.2),
           ),
         ),
       ],
@@ -655,7 +726,7 @@ class _PremiumScreenState extends State<PremiumScreen>
         color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: AppColors.yellow.withOpacity(0.3),
+          color: AppColors.yellow.withValues(alpha: 0.3),
           width: 1.2,
         ),
       ),
@@ -686,8 +757,17 @@ class _PremiumScreenState extends State<PremiumScreen>
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
+              if (_couponApplied && _discount > 0)
+                Text(
+                  '₹$_priceRupees',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: AppColors.textMuted,
+                    decoration: TextDecoration.lineThrough,
+                  ),
+                ),
               Text(
-                '₹$_priceRupees',
+                '₹$_payablePrice',
                 style: GoogleFonts.orbitron(
                   fontSize: 28,
                   fontWeight: FontWeight.w700,
@@ -695,7 +775,7 @@ class _PremiumScreenState extends State<PremiumScreen>
                 ),
               ),
               Text(
-                'only',
+                _couponApplied && _discount > 0 ? 'after discount' : 'only',
                 style: GoogleFonts.poppins(
                   fontSize: 11,
                   color: AppColors.textSecondary,
@@ -703,6 +783,151 @@ class _PremiumScreenState extends State<PremiumScreen>
               ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCouponCard() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.darkCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: _couponApplied
+              ? AppColors.success.withValues(alpha: 0.4)
+              : AppColors.neonCyan.withValues(alpha: 0.2),
+          width: 1.2,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.local_offer_rounded,
+                  color: AppColors.neonCyan, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                'Have a coupon?',
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _couponCtrl,
+                  enabled: !_couponApplied,
+                  textCapitalization: TextCapitalization.characters,
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1,
+                  ),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    hintText: 'ENTER CODE',
+                    hintStyle: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: AppColors.textMuted,
+                      letterSpacing: 1,
+                    ),
+                    filled: true,
+                    fillColor: AppColors.darkBg.withValues(alpha: 0.4),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: AppColors.neonCyan.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: AppColors.neonCyan.withValues(alpha: 0.2),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: _couponLoading
+                    ? null
+                    : (_couponApplied ? _removeCoupon : _applyCoupon),
+                child: Container(
+                  height: 44,
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  decoration: BoxDecoration(
+                    color: _couponApplied
+                        ? AppColors.error.withValues(alpha: 0.15)
+                        : AppColors.neonCyan.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _couponApplied
+                          ? AppColors.error.withValues(alpha: 0.4)
+                          : AppColors.neonCyan.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: _couponLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.neonCyan,
+                          ),
+                        )
+                      : Text(
+                          _couponApplied ? 'REMOVE' : 'APPLY',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: _couponApplied
+                                ? AppColors.error
+                                : AppColors.neonCyan,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                ),
+              ),
+            ],
+          ),
+          if (_couponMsg.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(
+                  _couponError
+                      ? Icons.error_outline_rounded
+                      : Icons.check_circle_rounded,
+                  size: 14,
+                  color: _couponError ? AppColors.error : AppColors.success,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    _couponMsg,
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      color: _couponError ? AppColors.error : AppColors.success,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -724,7 +949,7 @@ class _PremiumScreenState extends State<PremiumScreen>
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
             BoxShadow(
-              color: AppColors.yellow.withOpacity(0.4),
+              color: AppColors.yellow.withValues(alpha: 0.4),
               blurRadius: 20,
               spreadRadius: 2,
               offset: const Offset(0, 4),
@@ -752,7 +977,7 @@ class _PremiumScreenState extends State<PremiumScreen>
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    'PAY ₹$_priceRupees & UNLOCK NOW',
+                    'PAY ₹$_payablePrice & UNLOCK NOW',
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -809,7 +1034,7 @@ class _BenefitRow extends StatelessWidget {
         color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: color.withOpacity(0.12),
+          color: color.withValues(alpha: 0.12),
           width: 1,
         ),
       ),
@@ -820,7 +1045,7 @@ class _BenefitRow extends StatelessWidget {
             height: 38,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
             ),
             child: Icon(
               data['icon'] as IconData,
@@ -884,10 +1109,10 @@ class _PriceChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(
           horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: color.withOpacity(0.3),
+          color: color.withValues(alpha: 0.3),
           width: 1,
         ),
       ),

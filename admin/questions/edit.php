@@ -1,6 +1,8 @@
 <?php
-$pageTitle = 'Edit Question';
-require_once dirname(__DIR__) . '/includes/header.php';
+// Config FIRST (no HTML output) so header('Location') redirects work.
+require_once dirname(__DIR__) . '/config/auth_check.php';
+require_once dirname(__DIR__) . '/config/db.php';
+require_once dirname(__DIR__) . '/config/constants.php';
 
 $id = intval($_GET['id'] ?? 0);
 if (!$id) { header('Location: ' . ADMIN_URL . '/questions/index.php'); exit; }
@@ -39,6 +41,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = $e->getMessage();
     }
 }
+
+// Preserve the section context for the Back/Cancel links.
+$cat   = $_GET['cat'] ?? ($_GET['category'] ?? $question['category']);
+$setId = intval($_GET['set_id'] ?? $question['set_id']);
+$ret   = $_GET['ret'] ?? '';
+if ($ret !== '' && strpos($ret, 'manage_sets.php') === false) $ret = '';
+$scopeQS = '';
+if ($cat)   $scopeQS .= '&cat=' . urlencode($cat);
+if ($setId) $scopeQS .= '&set_id=' . $setId;
+if ($ret)   $scopeQS .= '&ret=' . urlencode($ret);
+
+$pageTitle = 'Edit Question';
+require_once dirname(__DIR__) . '/includes/header.php';
 ?>
 
 <?php if ($success): ?>
@@ -58,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <h2 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700">Edit Question #<?= $id ?></h2>
     <p class="text-muted">Update question details</p>
   </div>
-  <a href="<?= ADMIN_URL ?>/questions/index.php" class="btn btn-secondary">
+  <a href="<?= ADMIN_URL ?>/questions/index.php?<?= ltrim($scopeQS, '&') ?>" class="btn btn-secondary">
     <i class="fas fa-arrow-left"></i> Back
   </a>
 </div>
@@ -72,6 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <option value="mcq"            <?= $question['category']==='mcq'            ?'selected':'' ?>>5000 MCQ</option>
           <option value="simplification" <?= $question['category']==='simplification' ?'selected':'' ?>>500 Simplification</option>
           <option value="previous_year"  <?= $question['category']==='previous_year'  ?'selected':'' ?>>Previous Year</option>
+          <option value="tunnlity"        <?= $question['category']==='tunnlity'        ?'selected':'' ?>>Test Your Tunnlity</option>
           <option value="daily_practice" <?= $question['category']==='daily_practice' ?'selected':'' ?>>Daily Practice</option>
         </select>
       </div>
@@ -124,7 +140,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <div style="display:flex;gap:12px">
     <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Update</button>
-    <a href="<?= ADMIN_URL ?>/questions/index.php" class="btn btn-secondary"><i class="fas fa-times"></i> Cancel</a>
+    <a href="<?= ADMIN_URL ?>/questions/index.php?<?= ltrim($scopeQS, '&') ?>" class="btn btn-secondary"><i class="fas fa-times"></i> Cancel</a>
   </div>
 </form>
 </div>

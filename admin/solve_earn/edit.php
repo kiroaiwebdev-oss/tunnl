@@ -1,0 +1,281 @@
+<?php
+$pageTitle = 'Edit Challenge';
+require_once dirname(__DIR__) . '/includes/header.php';
+
+$id = intval($_GET['id'] ?? 0);
+if (!$id) { header('Location: ' . ADMIN_URL . '/solve_earn/index.php'); exit; }
+
+// Load the challenge
+$challenge = $pdo->prepare("SELECT * FROM weekly_challenges WHERE id = ?");
+$challenge->execute([$id]);
+$challenge = $challenge->fetch();
+if (!$challenge) { header('Location: ' . ADMIN_URL . '/solve_earn/index.php'); exit; }
+
+$success = $error = '';
+
+// Which columns exist (so we never crash on a DB that hasn't run v5 migration)
+$existingCols = array_column($pdo->query("
+    SELECT COLUMN_NAME FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'weekly_challenges'
+")->fetchAll(), 'COLUMN_NAME');
+$hasDescription = in_array('description', $existingCols, true);
+$hasTimeLimit   = in_array('time_limit', $existingCols, true);
+
+// Currently assigned question IDs (in order)
+$assignedStmt = $pdo->prepare("
+    SELECT question_id FROM challenge_questions
+    WHERE challenge_id = ? ORDER BY order_num ASC
+");
+$assignedStmt->execute([$id]);
+$assignedIds = array_map('intval', array_column($assignedStmt->fetchAll(), 'question_id'));
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    try {
+        $pdo->beginTransaction();
+
+        // Build the UPDATE dynamically so missing columns don't crash.
+        $sets    = ['title = ?', 'start_date = ?', 'end_date = ?',
+                    'prize_amount = ?', 'total_questions = ?', 'status = ?'];
+        $params  = [
+            trim($_POST['title']),
+            $_POST['start_date'],
+            $_POST['end_date'],
+            floatval($_POST['prize_amount']),
+            intval($_POST['total_questions']),
+            $_POST['status'] ?? 'upcoming',
+        ];
+        if ($hasDescription) { $sets[] = 'description = ?'; $params[] = trim($_POST['description'] ?? ''); }
+        if ($hasTimeLimit)   { $sets[] = 'time_limit = ?';  $params[] = intval($_POST['time_limit'] ?? 10); }
+        $params[] = $id;
+
+        $pdo->prepare("UPDATE weekly_challenges SET " . implode(', ', $sets) . " WHERE id = ?")
+            ->execute($params);
+
+        // Only ONE challenge can be active at a time — demote any other actives.
+        if (($_POST['status'] ?? '') === 'active') {
+            $pdo->prepare("UPDATE weekly_challenges SET status='ended' WHERE status='active' AND id != ?")
+                ->execute([$id]);
+        }
+
+        // Re-assign questions: clear then re-insert the selected ones.
+        $pdo->prepare("DELETE FROM challenge_questions WHERE challenge_id = ?")->execute([$id]);
+        if (!empty($_POST['question_ids'])) {
+            $qStmt = $pdo->prepare("
+                INSERT INTO challenge_questions (challenge_id, question_id, order_num)
+                VALUES (?,?,?)
+            ");
+            foreach ($_POST['question_ids'] as $order => $qid) {
+                $qStmt->execute([$id, intval($qid), $order + 1]);
+            }
+        }
+
+        $pdo->commit();
+        header('Location: ' . ADMIN_URL . '/solve_earn/index.php?updated=1');
+        exit;
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        $error = $e->getMessage();
+    }
+}
+
+// Build the question list: assigned ones first (checked), then a random sample.
+$assignedRows = [];
+if (!empty($assignedIds)) {
+    $in = implode(',', array_fill(0, count($assignedIds), '?'));
+    $st = $pdo->prepare("SELECT id, question_text, category, difficulty FROM questions WHERE id IN ($in)");
+    $st->execute($assignedIds);
+    $byId = [];
+    foreach ($st->fetchAll() as $r) { $byId[(int)$r['id']] = $r; }
+    foreach ($assignedIds as $aid) { if (isset($byId[$aid])) $assignedRows[] = $byId[$aid]; }
+}
+
+$sampleSql = "SELECT id, question_text, category, difficulty FROM questions";
+if (!empty($assignedIds)) {
+    $sampleSql .= " WHERE id NOT IN (" . implode(',', $assignedIds) . ")";
+}
+$sampleSql .= " ORDER BY RAND() LIMIT 100";
+$sampleRows = $pdo->query($sampleSql)->fetchAll();
+
+$questions = array_merge($assignedRows, $sampleRows);
+
+// Helper for current value (POST overrides DB on validation re-render)
+function cv($post, $challenge, $key, $default = '') {
+    if (isset($post[$key])) return $post[$key];
+    return $challenge[$key] ?? $default;
+}
+?>
+
+<?php if ($error): ?>
+<div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#FCA5A5;
+  padding:12px 16px;border-radius:12px;margin-bottom:20px">
+  <i class="fas fa-exclamation-circle"></i> <?= htmlspecialchars($error) ?>
+</div>
+<?php endif; ?>
+
+<div class="flex-between mb-24">
+  <div>
+    <h2 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700">
+      Edit Weekly Challenge
+    </h2>
+    <p class="text-muted">Update details, status &amp; assigned questions</p>
+  </div>
+  <a href="<?= ADMIN_URL ?>/solve_earn/index.php" class="btn btn-secondary">
+    <i class="fas fa-arrow-left"></i> Back
+  </a>
+</div>
+
+<form method="POST">
+
+<div class="card mb-16">
+  <div class="card-header">
+    <div class="card-title-text">
+      <i class="fas fa-trophy" style="color:var(--warning)"></i> Challenge Details
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Challenge Title *</label>
+    <input type="text" name="title" class="form-input" required
+      value="<?= htmlspecialchars(cv($_POST, $challenge, 'title')) ?>"
+      placeholder="e.g. Speed Math Challenge — Week 12">
+  </div>
+
+  <?php if ($hasDescription): ?>
+  <div class="form-group">
+    <label class="form-label">Description</label>
+    <textarea name="description" class="form-textarea" rows="2"
+      placeholder="Solve all questions as fast and accurately as possible to win!"><?= htmlspecialchars(cv($_POST, $challenge, 'description')) ?></textarea>
+  </div>
+  <?php endif; ?>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">Start Date *</label>
+      <input type="date" name="start_date" class="form-input" required
+        value="<?= htmlspecialchars(substr(cv($_POST, $challenge, 'start_date', date('Y-m-d')), 0, 10)) ?>">
+    </div>
+    <div class="form-group">
+      <label class="form-label">End Date *</label>
+      <input type="date" name="end_date" class="form-input" required
+        value="<?= htmlspecialchars(substr(cv($_POST, $challenge, 'end_date', date('Y-m-d', strtotime('+7 days'))), 0, 10)) ?>">
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">💰 Prize Amount (₹) *</label>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:20px;color:var(--warning);font-weight:700">₹</span>
+        <input type="number" name="prize_amount" class="form-input" required
+          value="<?= htmlspecialchars(cv($_POST, $challenge, 'prize_amount', 500)) ?>" min="1" step="1">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Total Questions *</label>
+      <input type="number" name="total_questions" class="form-input" required
+        value="<?= htmlspecialchars(cv($_POST, $challenge, 'total_questions', 20)) ?>" min="5">
+    </div>
+    <?php if ($hasTimeLimit): ?>
+    <div class="form-group">
+      <label class="form-label">Time Limit (minutes) *</label>
+      <input type="number" name="time_limit" class="form-input" required
+        value="<?= htmlspecialchars(cv($_POST, $challenge, 'time_limit', 10)) ?>" min="1">
+    </div>
+    <?php endif; ?>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Status *</label>
+    <?php $curStatus = cv($_POST, $challenge, 'status', 'upcoming'); ?>
+    <select name="status" class="form-select" required>
+      <?php foreach (['upcoming'=>'Upcoming','active'=>'Active (Live)','ended'=>'Ended','completed'=>'Completed'] as $v=>$l): ?>
+      <option value="<?= $v ?>" <?= $curStatus === $v ? 'selected' : '' ?>><?= $l ?></option>
+      <?php endforeach; ?>
+    </select>
+    <div style="font-size:11px;color:var(--muted);margin-top:4px">
+      Set to <strong>Active</strong> to make this the live challenge in the app.
+    </div>
+  </div>
+</div>
+
+<!-- Assign Questions -->
+<div class="card mb-16">
+  <div class="card-header">
+    <div class="card-title-text">
+      <i class="fas fa-list-ol" style="color:var(--success)"></i> Assign Questions
+    </div>
+    <span id="selectedCount" style="font-size:12px;color:var(--cyan);font-weight:700">0 selected</span>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <input type="text" class="form-input" placeholder="Search questions..."
+      oninput="filterQ(this.value)" style="flex:1">
+    <button type="button" onclick="selectAll()" class="btn btn-secondary btn-sm">Select All</button>
+    <button type="button" onclick="clearAll()" class="btn btn-secondary btn-sm">Clear</button>
+  </div>
+
+  <div id="qList" style="max-height:350px;overflow-y:auto">
+    <?php foreach ($questions as $q):
+      $checked = in_array((int)$q['id'], $assignedIds, true);
+      // On re-render after a failed POST, respect the posted selection.
+      if (isset($_POST['question_ids'])) {
+          $checked = in_array((string)$q['id'], (array)$_POST['question_ids'], true);
+      }
+    ?>
+    <label style="display:flex;align-items:flex-start;gap:10px;padding:8px;
+      border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;border-radius:8px"
+      class="q-row" data-text="<?= htmlspecialchars(strtolower($q['question_text'])) ?>">
+      <input type="checkbox" name="question_ids[]" value="<?= $q['id'] ?>"
+        style="accent-color:var(--cyan);width:16px;height:16px;flex-shrink:0;margin-top:3px"
+        onchange="updateCount()" <?= $checked ? 'checked' : '' ?>>
+      <div>
+        <div style="font-size:13px;color:var(--text2)">
+          <?= htmlspecialchars(mb_substr($q['question_text'],0,90)) ?>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:4px">
+          <?php $dc=['easy'=>'badge-success','medium'=>'badge-warning','hard'=>'badge-error']; ?>
+          <span class="badge <?= $dc[$q['difficulty']]??'badge-cyan' ?>" style="font-size:9px">
+            <?= ucfirst($q['difficulty']) ?>
+          </span>
+        </div>
+      </div>
+    </label>
+    <?php endforeach; ?>
+  </div>
+</div>
+
+<div style="display:flex;gap:12px">
+  <button type="submit" class="btn btn-primary">
+    <i class="fas fa-save"></i> Update Challenge
+  </button>
+  <a href="<?= ADMIN_URL ?>/solve_earn/index.php" class="btn btn-secondary">
+    <i class="fas fa-times"></i> Cancel
+  </a>
+</div>
+
+</form>
+
+<script>
+function updateCount() {
+  document.getElementById('selectedCount').textContent =
+    document.querySelectorAll('[name="question_ids[]"]:checked').length + ' selected';
+}
+function filterQ(q) {
+  document.querySelectorAll('.q-row').forEach(r => {
+    r.style.display = (!q || r.dataset.text.includes(q.toLowerCase())) ? '' : 'none';
+  });
+}
+function selectAll() {
+  document.querySelectorAll('.q-row').forEach(r => {
+    if (r.style.display !== 'none') r.querySelector('input').checked = true;
+  });
+  updateCount();
+}
+function clearAll() {
+  document.querySelectorAll('[name="question_ids[]"]').forEach(c => c.checked = false);
+  updateCount();
+}
+updateCount();
+</script>
+
+<?php require_once dirname(__DIR__) . '/includes/footer.php'; ?>

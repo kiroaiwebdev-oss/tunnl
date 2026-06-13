@@ -7,8 +7,8 @@ $shorts = $pdo->query("SELECT * FROM shorts ORDER BY created_at DESC")->fetchAll
 
 <div class="flex-between mb-24">
   <div>
-    <h2 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700">YouTube Shorts</h2>
-    <p class="text-muted"><?= count($shorts) ?> shorts total</p>
+    <h2 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700">Shorts</h2>
+    <p class="text-muted"><?= count($shorts) ?> shorts total &middot; YouTube, Instagram &amp; Facebook</p>
   </div>
   <a href="<?= ADMIN_URL ?>/shorts/add.php" class="btn btn-primary">
     <i class="fas fa-plus"></i> Add Short
@@ -23,11 +23,33 @@ $shorts = $pdo->query("SELECT * FROM shorts ORDER BY created_at DESC")->fetchAll
     No shorts yet. <a href="<?= ADMIN_URL ?>/shorts/add.php" style="color:var(--cyan)">Add one!</a>
   </div>
   <?php else: ?>
-  <?php foreach ($shorts as $s):
-    // Extract YouTube thumbnail from URL
-    preg_match('/(?:v=|\/shorts\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/', $s['youtube_url'], $m);
-    $vid   = $m[1] ?? '';
-    $thumb = $vid ? "https://img.youtube.com/vi/$vid/mqdefault.jpg" : '';
+  <?php
+  $platMeta = [
+    'youtube'   => ['#EF4444', 'fa-youtube',   'YouTube'],
+    'instagram' => ['#E1306C', 'fa-instagram', 'Instagram'],
+    'facebook'  => ['#1877F2', 'fa-facebook',  'Facebook'],
+    'telegram'  => ['#0088CC', 'fa-telegram',  'Telegram'],
+  ];
+  foreach ($shorts as $s):
+    $sUrl = !empty($s['youtube_url']) ? $s['youtube_url'] : ($s['url'] ?? '');
+    // Resolve platform (stored column first, then URL sniff).
+    $plat = strtolower(trim($s['platform'] ?? ''));
+    if (!isset($platMeta[$plat])) {
+      $lu = strtolower($sUrl);
+      if (strpos($lu, 'instagram') !== false)       $plat = 'instagram';
+      elseif (strpos($lu, 'facebook') !== false || strpos($lu, 'fb.watch') !== false) $plat = 'facebook';
+      elseif (strpos($lu, 't.me') !== false || strpos($lu, 'telegram') !== false)     $plat = 'telegram';
+      else $plat = 'youtube';
+    }
+    [$pColor, $pIcon, $pLabel] = $platMeta[$plat] ?? $platMeta['youtube'];
+
+    // Thumbnail: admin-provided first, then YouTube auto-thumb.
+    $thumb = $s['thumbnail_url'] ?? '';
+    if ($thumb === '' && $plat === 'youtube') {
+      preg_match('/(?:v=|\/shorts\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/', $sUrl, $m);
+      $vid   = $m[1] ?? '';
+      $thumb = $vid ? "https://img.youtube.com/vi/$vid/mqdefault.jpg" : '';
+    }
   ?>
   <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;
     transition:all 0.2s" onmouseover="this.style.borderColor='var(--cyan)';this.style.transform='translateY(-2px)'"
@@ -44,14 +66,21 @@ $shorts = $pdo->query("SELECT * FROM shorts ORDER BY created_at DESC")->fetchAll
       </div>
       <?php endif; ?>
       <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
-        <a href="<?= htmlspecialchars($s['youtube_url']) ?>" target="_blank"
-          style="width:44px;height:44px;background:rgba(255,0,0,0.9);border-radius:50%;
+        <a href="<?= htmlspecialchars($sUrl) ?>" target="_blank"
+          style="width:44px;height:44px;background:<?= $pColor ?>E6;border-radius:50%;
             display:flex;align-items:center;justify-content:center;color:white;font-size:16px;
             text-decoration:none;transition:transform 0.2s"
           onmouseover="this.style.transform='scale(1.1)'"
           onmouseout="this.style.transform=''">
           <i class="fas fa-play" style="margin-left:3px"></i>
         </a>
+      </div>
+      <!-- Platform badge -->
+      <div style="position:absolute;top:8px;left:8px">
+        <span style="background:<?= $pColor ?>;color:#fff;font-size:9px;font-weight:700;
+          padding:3px 8px;border-radius:20px;display:inline-flex;align-items:center;gap:4px">
+          <i class="fab <?= $pIcon ?>"></i> <?= $pLabel ?>
+        </span>
       </div>
       <!-- Status badge -->
       <div style="position:absolute;top:8px;right:8px">
@@ -100,7 +129,7 @@ $shorts = $pdo->query("SELECT * FROM shorts ORDER BY created_at DESC")->fetchAll
 <script>
 function deleteShort(id) {
   if (!confirm('Delete this short?')) return;
-  fetch('/admin/shorts/delete.php', {
+  fetch('delete.php', {
     method:'POST',
     headers:{'Content-Type':'application/x-www-form-urlencoded'},
     body:'id='+id

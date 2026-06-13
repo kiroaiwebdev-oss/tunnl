@@ -291,7 +291,7 @@ CREATE TABLE `sets` (
 
 CREATE TABLE `shorts` (
   `id` int(11) NOT NULL,
-  `platform` enum('youtube','instagram','telegram') NOT NULL,
+  `platform` enum('youtube','instagram','facebook','telegram') NOT NULL DEFAULT 'youtube',
   `title` varchar(200) NOT NULL,
   `url` varchar(500) NOT NULL,
   `thumbnail_url` varchar(500) DEFAULT '',

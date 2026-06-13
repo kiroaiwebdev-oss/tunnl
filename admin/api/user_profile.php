@@ -33,10 +33,12 @@ if ($method === 'GET') {
 
     $stats = $pdo->prepare("
         SELECT
-          COUNT(*)                    AS total_tests,
-          COALESCE(SUM(correct), 0)   AS total_correct,
-          COALESCE(AVG(accuracy), 0)  AS avg_accuracy,
-          COALESCE(MAX(score),    0)  AS best_score
+          COUNT(*)                          AS total_tests,
+          COALESCE(SUM(total_questions), 0) AS total_questions,
+          COALESCE(SUM(correct), 0)         AS total_correct,
+          COALESCE(SUM(wrong),   0)         AS total_wrong,
+          COALESCE(AVG(accuracy), 0)        AS avg_accuracy,
+          COALESCE(MAX(score),    0)        AS best_score
         FROM user_test_history
         WHERE user_id = ?
     ");
@@ -72,10 +74,12 @@ if ($method === 'GET') {
                 'created_at'     => $user['created_at']     ?? null,
             ],
             'stats' => [
-                'total_tests'   => intval($statsRow['total_tests']   ?? 0),
-                'total_correct' => intval($statsRow['total_correct'] ?? 0),
-                'avg_accuracy'  => round((float)($statsRow['avg_accuracy'] ?? 0), 1),
-                'best_score'    => intval($statsRow['best_score']    ?? 0),
+                'total_tests'     => intval($statsRow['total_tests']     ?? 0),
+                'total_questions' => intval($statsRow['total_questions'] ?? 0),
+                'total_correct'   => intval($statsRow['total_correct']   ?? 0),
+                'total_wrong'     => intval($statsRow['total_wrong']     ?? 0),
+                'avg_accuracy'    => round((float)($statsRow['avg_accuracy'] ?? 0), 1),
+                'best_score'      => intval($statsRow['best_score']      ?? 0),
             ],
             'recent_tests' => array_map(fn($r) => [
                 'category'        => $r['category'],

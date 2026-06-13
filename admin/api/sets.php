@@ -8,7 +8,7 @@ $page     = max(1, intval($_GET['page'] ?? 1));
 $perPage  = max(1, intval($_GET['per_page'] ?? 50));
 $offset   = ($page - 1) * $perPage;
 
-$validCats = ['mcq','simplification','previous_year'];
+$validCats = ['mcq','simplification','previous_year','tunnlity'];
 if (!in_array($category, $validCats, true)) error('Invalid category');
 
 $where  = ['s.category = ?'];
@@ -20,6 +20,17 @@ if (!empty($_GET['exam_id'])) {
     $where[]  = '(s.exam_id = ? OR s.exam_name = (SELECT exam_name FROM py_exams WHERE id = ?))';
     $params[] = intval($_GET['exam_id']);
     $params[] = intval($_GET['exam_id']);
+}
+
+// Filter mcq sets by exam_name (used by the 5000 MCQ exam-wise screen).
+if (!empty($_GET['exam_name'])) {
+    $where[]  = 's.exam_name = ?';
+    $params[] = trim($_GET['exam_name']);
+}
+
+// Only sets NOT tied to any exam (the "500 Free Practice MCQs" pool).
+if (!empty($_GET['ungrouped'])) {
+    $where[] = "(s.exam_name IS NULL OR s.exam_name = '')";
 }
 
 $whereSQL = implode(' AND ', $where);
@@ -46,7 +57,12 @@ $sets = $sets->fetchAll();
 $isPremium = $user ? !empty($user['is_premium']) : false;
 
 $result = array_map(function ($s) use ($isPremium) {
-    $premium = !empty($s['is_premium']);
+    // First 2 sets of practice categories are ALWAYS free (preview). The
+    // "Tunnlity" speed-test sets are fully free (guest feature).
+    $freePreview = $s['category'] === 'tunnlity'
+                   || (in_array($s['category'], ['mcq', 'simplification'], true)
+                       && intval($s['set_number']) <= 2);
+    $premium = !empty($s['is_premium']) && !$freePreview;
     return [
         'id'              => intval($s['id']),
         'set_number'      => intval($s['set_number']),
@@ -55,8 +71,9 @@ $result = array_map(function ($s) use ($isPremium) {
         'exam_name'       => $s['exam_name'] ?? '',
         'category'        => $s['category'],
         'level'           => $s['level']     ?? 'beginner',
-        'total_questions' => intval($s['total_questions'] ?? 0),
-        'question_count'  => intval($s['question_count']),
+        // Tunnl rule: every set is a 10-question set.
+        'total_questions' => 10,
+        'question_count'  => min(10, intval($s['question_count'])),
         'is_locked'       => !empty($s['is_locked']),
         'is_premium'      => $premium,
         'can_access'      => !$premium || $isPremium,

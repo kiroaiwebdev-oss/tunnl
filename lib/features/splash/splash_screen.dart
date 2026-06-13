@@ -9,6 +9,7 @@ import '../../core/network/api_endpoints.dart';
 import '../../core/services/app_settings_service.dart';
 import '../hub/hub_screen.dart';
 import '../auth/login_screen.dart';
+import '../auth/profile_setup_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -157,7 +158,10 @@ class _SplashScreenState extends State<SplashScreen>
     final prefs      = await SharedPreferences.getInstance();
     final isLoggedIn = prefs.getBool(AppConstants.prefIsLoggedIn) ?? false;
 
-    // ── 3. If logged in, verify token still valid
+    // ── 3. If logged in, refresh premium/name from server (best-effort).
+    //    IMPORTANT: never wipe the session here. The JWT is valid for 30 days;
+    //    a transient error (network/5xx/401) must NOT force the user to log in
+    //    again on every cold start. Real expiry is handled contextually.
     if (isLoggedIn) {
       _setStatus('VERIFYING USER');
       try {
@@ -166,12 +170,7 @@ class _SplashScreenState extends State<SplashScreen>
           auth: true,
         ).timeout(const Duration(seconds: 6));
 
-        // Token invalid — force logout
-        if ((profileRes['success'] == false && profileRes['status'] != true) &&
-            profileRes['message']?.toString().toLowerCase().contains('login') == true) {
-          await prefs.clear();
-        } else if (profileRes['success'] == true || profileRes['status'] == true) {
-          // Refresh premium status from server
+        if (profileRes['success'] == true || profileRes['status'] == true) {
           final user = profileRes['data']?['user'];
           if (user != null) {
             await prefs.setBool(
@@ -185,7 +184,7 @@ class _SplashScreenState extends State<SplashScreen>
           }
         }
       } catch (_) {
-        // Network error — use cached premium status
+        // Ignore — keep the cached session.
       }
     }
 
@@ -195,10 +194,18 @@ class _SplashScreenState extends State<SplashScreen>
     await splashFuture;
     if (!mounted) return;
 
+    // Decide the landing screen:
+    //   • Not logged in            → Login
+    //   • Logged in, no name yet   → Profile setup (force completion)
+    //   • Logged in + profile done → Hub
+    final loggedIn = prefs.getBool(AppConstants.prefIsLoggedIn) ?? false;
+    if (!loggedIn) {
+      _navigateTo(const LoginScreen());
+      return;
+    }
+    final cachedName = (prefs.getString(AppConstants.prefUserName) ?? '').trim();
     _navigateTo(
-      prefs.getBool(AppConstants.prefIsLoggedIn) ?? false
-          ? const HubScreen()
-          : const LoginScreen(),
+      cachedName.isEmpty ? const ProfileSetupScreen() : const HubScreen(),
     );
   }
 
@@ -251,7 +258,7 @@ class _SplashScreenState extends State<SplashScreen>
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
-            color: AppColors.neonCyan.withOpacity(0.3),
+            color: AppColors.neonCyan.withValues(alpha: 0.3),
           ),
         ),
         title: const Text(
@@ -356,7 +363,7 @@ class _SplashScreenState extends State<SplashScreen>
                     boxShadow: [
                       BoxShadow(
                         color: AppColors.neonCyan
-                            .withOpacity(0.12 * _glowAnim.value),
+                            .withValues(alpha: 0.12 * _glowAnim.value),
                         blurRadius: 90,
                         spreadRadius: 40,
                       ),
@@ -377,7 +384,7 @@ class _SplashScreenState extends State<SplashScreen>
                   child: _Ring(
                     diameter: 160,
                     strokeWidth: 1.2,
-                    color: AppColors.neonCyan.withOpacity(0.25),
+                    color: AppColors.neonCyan.withValues(alpha: 0.25),
                     dashed: false,
                   ),
                 ),
@@ -388,7 +395,7 @@ class _SplashScreenState extends State<SplashScreen>
                     shape: BoxShape.circle,
                     color: const Color(0xFF0B1A27),
                     border: Border.all(
-                      color: AppColors.neonCyan.withOpacity(0.12),
+                      color: AppColors.neonCyan.withValues(alpha: 0.12),
                       width: 1,
                     ),
                   ),
@@ -401,7 +408,7 @@ class _SplashScreenState extends State<SplashScreen>
                     boxShadow: [
                       BoxShadow(
                         color: AppColors.neonCyan
-                            .withOpacity(0.2 * _glowAnim.value),
+                            .withValues(alpha: 0.2 * _glowAnim.value),
                         blurRadius: 35,
                         spreadRadius: 12,
                       ),
@@ -442,7 +449,7 @@ class _SplashScreenState extends State<SplashScreen>
           letterSpacing: 10,
           shadows: [
             Shadow(
-              color: AppColors.neonCyan.withOpacity(0.25),
+              color: AppColors.neonCyan.withValues(alpha: 0.25),
               blurRadius: 24,
             ),
           ],
@@ -459,7 +466,7 @@ class _SplashScreenState extends State<SplashScreen>
         children: [
           Container(
             width: 44, height: 1,
-            color: AppColors.textMuted.withOpacity(0.5),
+            color: AppColors.textMuted.withValues(alpha: 0.5),
           ),
           const SizedBox(width: 10),
           Container(
@@ -472,7 +479,7 @@ class _SplashScreenState extends State<SplashScreen>
           const SizedBox(width: 10),
           Container(
             width: 44, height: 1,
-            color: AppColors.textMuted.withOpacity(0.5),
+            color: AppColors.textMuted.withValues(alpha: 0.5),
           ),
         ],
       ),
@@ -512,7 +519,7 @@ class _SplashScreenState extends State<SplashScreen>
                       height: 3,
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: AppColors.textMuted.withOpacity(0.25),
+                        color: AppColors.textMuted.withValues(alpha: 0.25),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -525,7 +532,7 @@ class _SplashScreenState extends State<SplashScreen>
                           borderRadius: BorderRadius.circular(2),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.neonCyan.withOpacity(0.7),
+                              color: AppColors.neonCyan.withValues(alpha: 0.7),
                               blurRadius: 8,
                               spreadRadius: 1,
                             ),
@@ -735,7 +742,7 @@ class _BracketPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.textMuted.withOpacity(0.4)
+      ..color = AppColors.textMuted.withValues(alpha: 0.4)
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.square;

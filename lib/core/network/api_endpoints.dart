@@ -30,5 +30,10 @@ class ApiEndpoints {
 
   // ── Leaderboard & Payments ────────────────────────
   static const String leaderboard     = 'leaderboard.php';
+  static const String createOrder      = 'create_order.php';
   static const String verifyPayment   = 'verify_payment.php';
+
+  // ── Coupons & MCQ exams ───────────────────────────
+  static const String coupons         = 'coupons.php';
+  static const String mcqExams        = 'mcq_exams.php';
 }

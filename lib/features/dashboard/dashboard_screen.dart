@@ -12,6 +12,7 @@ import '../solve_earn/solve_earn_leaderboard_screen.dart';
 import '../solve_earn/solve_earn_screen.dart';
 import '../profile/profile_screen.dart';
 import '../sets/sets_screen.dart';
+import '../mcq/mcq_exams_screen.dart';
 import '../tricks/tricks_screen.dart';
 import '../shorts/shorts_screen.dart';
 import '../previous_year/previous_year_screen.dart';
@@ -54,6 +55,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       'title':       'TUNNL TRICKS',
       'subtitle':    'Learn powerful strategies & tricks',
       'icon':        Icons.layers_rounded,
+      'image':       'assets/images/b1.jpg',
       'iconBg':      const Color(0xFF0D2233),
       'iconColor':   AppColors.neonCyan,
       'borderColor': AppColors.neonCyan,
@@ -63,6 +65,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       'title':       '5000 SPEED MATH\nMCQS',
       'subtitle':    'Practice unlimited MCQs',
       'icon':        Icons.quiz_rounded,
+      'image':       'assets/images/b2.jpg',
       'iconBg':      const Color(0xFF1A1040),
       'iconColor':   const Color(0xFF9C6FFF),
       'borderColor': const Color(0xFF4A1A8A),
@@ -72,6 +75,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       'title':       '500 FREQUENTLY\nASKED SIMPLIFICATION',
       'subtitle':    'Master simplification',
       'icon':        Icons.functions_rounded,
+      'image':       'assets/images/b7.jpg',
       'iconBg':      const Color(0xFF0D2233),
       'iconColor':   AppColors.neonCyan,
       'borderColor': AppColors.neonCyan,
@@ -81,6 +85,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       'title':       'SHORTS',
       'subtitle':    'Watch quick math tips',
       'icon':        Icons.play_circle_rounded,
+      'image':       'assets/images/b6.jpg',
       'iconBg':      const Color(0xFF2A1515),
       'iconColor':   const Color(0xFFFF6B6B),
       'borderColor': const Color(0xFF3A1A1A),
@@ -90,6 +95,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       'title':       'DAILY PRACTICE\nMCQS',
       'subtitle':    'Daily challenge sets',
       'icon':        Icons.calendar_today_rounded,
+      'image':       'assets/images/b4.jpg',
       'iconBg':      const Color(0xFF0D2233),
       'iconColor':   AppColors.neonCyan,
       'borderColor': AppColors.neonCyan,
@@ -99,6 +105,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       'title':       'PREVIOUS YEAR\nQUESTIONS',
       'subtitle':    'Complete PYQ access',
       'icon':        Icons.history_edu_rounded,
+      'image':       'assets/images/b3.jpg',
       'iconBg':      const Color(0xFF1A1040),
       'iconColor':   const Color(0xFF9C6FFF),
       'borderColor': const Color(0xFF4A1A8A),
@@ -108,6 +115,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       'title':       'SOLVE & EARN',
       'subtitle':    'Earn rewards by solving quizzes',
       'icon':        Icons.card_giftcard_rounded,
+      'image':       'assets/images/b5.jpg',
       'iconBg':      const Color(0xFF1A1A00),
       'iconColor':   AppColors.yellow,
       'borderColor': const Color(0xFF3A3A00),
@@ -222,13 +230,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         break;
       case 1:
         Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => SetsScreen(
-            title: '5000 Speed Math MCQs',
-            category: 'mcq',
-            questionsPerSet: 50,
-            totalSets: _isPremium ? 100 : 10,
-            showLeaderboard: true,
-          ),
+          builder: (_) => McqExamsScreen(isPremium: _isPremium),
         ));
         break;
       case 2:
@@ -236,7 +238,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           builder: (_) => SetsScreen(
             title: '500 Simplification',
             category: 'simplification',
-            questionsPerSet: 50,
+            questionsPerSet: 20,
             totalSets: _isPremium ? 10 : 1,
             showLeaderboard: false,
           ),
@@ -252,7 +254,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           builder: (_) => SetsScreen(
             title: 'Daily Practice MCQs',
             category: 'daily',
-            questionsPerSet: 10,
+            questionsPerSet: 20,
             totalSets: _isPremium ? 30 : 1,
             showLeaderboard: false,
             subtitle: _isPremium ? 'All daily sets' : "Today's set — Free",
@@ -387,10 +389,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                 padding: const EdgeInsets.symmetric(
                     horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: AppColors.orange.withOpacity(0.12),
+                  color: AppColors.orange.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: AppColors.orange.withOpacity(0.3),
+                    color: AppColors.orange.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Row(
@@ -414,10 +416,10 @@ class _DashboardScreenState extends State<DashboardScreen>
               padding: const EdgeInsets.symmetric(
                   horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: AppColors.neonCyan.withOpacity(0.1),
+                color: AppColors.neonCyan.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: AppColors.neonCyan.withOpacity(0.3),
+                  color: AppColors.neonCyan.withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
@@ -463,7 +465,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     return Column(
       children: [
         SizedBox(
-          height: 130,
+          height: 175,
           child: PageView.builder(
             itemCount: _banners.length,
             onPageChanged: (i) => setState(() => _currentBanner = i),
@@ -475,14 +477,14 @@ class _DashboardScreenState extends State<DashboardScreen>
                   borderRadius: BorderRadius.circular(16),
                   color: const Color(0xFF0D2233),
                   border: Border.all(
-                    color: AppColors.neonCyan.withOpacity(0.15),
+                    color: AppColors.neonCyan.withValues(alpha: 0.15),
                   ),
                   image: b.imageUrl.isNotEmpty
                       ? DecorationImage(
                           image: NetworkImage(b.imageUrl),
                           fit: BoxFit.cover,
                           colorFilter: ColorFilter.mode(
-                            Colors.black.withOpacity(0.35),
+                            Colors.black.withValues(alpha: 0.35),
                             BlendMode.darken,
                           ),
                         )
@@ -530,7 +532,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 decoration: BoxDecoration(
                   color: _currentBanner == i
                       ? AppColors.neonCyan
-                      : AppColors.textMuted.withOpacity(0.4),
+                      : AppColors.textMuted.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(2),
                 ),
               );
@@ -543,7 +545,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   // ── BANNER SHIMMER ────────────────────────────────
   Widget _buildBannerShimmer() {
-    return _shimmerBox(double.infinity, 130, radius: 16);
+    return _shimmerBox(double.infinity, 175, radius: 16);
   }
 
   // ── SHIMMER HELPER ────────────────────────────────
@@ -586,7 +588,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 shape: BoxShape.circle,
                 color: AppColors.darkCard,
                 border: Border.all(
-                  color: AppColors.neonCyan.withOpacity(0.3),
+                  color: AppColors.neonCyan.withValues(alpha: 0.3),
                   width: 1.5,
                 ),
               ),
@@ -650,10 +652,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                   padding: const EdgeInsets.symmetric(
                       horizontal: 12, vertical: 5),
                   decoration: BoxDecoration(
-                    color: AppColors.orange.withOpacity(0.15),
+                    color: AppColors.orange.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: AppColors.orange.withOpacity(0.4),
+                      color: AppColors.orange.withValues(alpha: 0.4),
                     ),
                   ),
                   child: Row(
@@ -676,7 +678,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             else
               const SizedBox(height: 16),
 
-            Divider(color: AppColors.textMuted.withOpacity(0.15)),
+            Divider(color: AppColors.textMuted.withValues(alpha: 0.15)),
             const SizedBox(height: 8),
 
             _drawerTile(Icons.home_rounded, 'Home', () {
@@ -717,7 +719,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
             const Spacer(),
 
-            Divider(color: AppColors.textMuted.withOpacity(0.15)),
+            Divider(color: AppColors.textMuted.withValues(alpha: 0.15)),
             _drawerTile(
               Icons.logout_rounded, 'Logout',
               () { Navigator.pop(context); _logout(); },
@@ -812,7 +814,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         color: AppColors.darkBg,
         border: Border(
           top: BorderSide(
-            color: AppColors.textMuted.withOpacity(0.15), width: 1,
+            color: AppColors.textMuted.withValues(alpha: 0.15), width: 1,
           ),
         ),
       ),
@@ -824,33 +826,31 @@ class _DashboardScreenState extends State<DashboardScreen>
           final isActive = _selectedTab == i;
 
           return GestureDetector(
-            onTap: () {
+            onTap: () async {
+              if (i == 0) {
+                setState(() => _selectedTab = 0);
+                return;
+              }
               setState(() => _selectedTab = i);
               switch (i) {
-                case 0: break;
                 case 1:
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => SetsScreen(
-                      title: '5000 Speed Math MCQs',
-                      category: 'mcq',
-                      subtitle: 'Practice for Speed & Accuracy',
-                      totalSets: _isPremium ? 100 : 10,
-                      questionsPerSet: 50,
-                      showLeaderboard: true,
-                    ),
+                  await Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => McqExamsScreen(isPremium: _isPremium),
                   ));
                   break;
                 case 2:
-                  Navigator.of(context).push(MaterialPageRoute(
+                  await Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => const SolveEarnLeaderboardScreen(),
                   ));
                   break;
                 case 3:
-                  Navigator.of(context).push(MaterialPageRoute(
+                  await Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => const ProfileScreen(),
                   ));
                   break;
               }
+              // Back on the dashboard → Home (LEARN) is the active tab.
+              if (mounted) setState(() => _selectedTab = 0);
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
@@ -869,7 +869,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                             shape: BoxShape.circle,
                             boxShadow: isActive
                                 ? [BoxShadow(
-                                    color: AppColors.neonCyan.withOpacity(0.4),
+                                    color: AppColors.neonCyan.withValues(alpha: 0.4),
                                     blurRadius: 14, spreadRadius: 2,
                                   )]
                                 : null,
@@ -965,7 +965,7 @@ class _DashboardItemState extends State<_DashboardItem>
             color: AppColors.darkCard,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: borderColor.withOpacity(0.2), width: 1.2,
+              color: borderColor.withValues(alpha: 0.2), width: 1.2,
             ),
           ),
           child: Row(
@@ -976,8 +976,18 @@ class _DashboardItemState extends State<_DashboardItem>
                   color: iconBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(data['icon'] as IconData,
-                  color: iconColor, size: 26),
+                clipBehavior: Clip.antiAlias,
+                padding: const EdgeInsets.all(6),
+                child: (data['image'] != null)
+                    ? Image.asset(
+                        data['image'] as String,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Icon(
+                          data['icon'] as IconData,
+                          color: iconColor, size: 26),
+                      )
+                    : Icon(data['icon'] as IconData,
+                        color: iconColor, size: 26),
               ),
               const SizedBox(width: 16),
               Expanded(

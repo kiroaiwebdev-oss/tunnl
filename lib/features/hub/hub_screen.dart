@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/app_settings_service.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/content_service.dart';
@@ -18,6 +19,8 @@ import '../question/question_screen.dart';
 import '../premium/premium_screen.dart';
 import '../previous_year/previous_year_screen.dart';
 import '../profile/profile_screen.dart';
+import '../tricks/tricks_screen.dart';
+import '../solve_earn/solve_earn_screen.dart';
 
 class HubScreen extends StatefulWidget {
   const HubScreen({super.key});
@@ -45,55 +48,6 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
 
   List<BannerModel> _apiBanners     = [];
   bool              _bannersLoading = true;
-
-  // Static fallback — sirf tab jab API fail ho
-  final List<Map<String, dynamic>> _staticBanners = [
-    {
-      'title':       'NEW! SSC CGL 2024',
-      'subtitle':    'Previous year papers live now',
-      'gradient':    [const Color(0xFF0D2233), const Color(0xFF1A3A4A)],
-      'borderColor': AppColors.neonCyan,
-      'icon':        Icons.history_edu_rounded,
-      'iconColor':   AppColors.neonCyan,
-      'actionValue': 'previous_year',
-    },
-    {
-      'title':       'TUNNL TRICKS',
-      'subtitle':    '8 powerful math shortcuts added',
-      'gradient':    [const Color(0xFF1A1040), const Color(0xFF2A1A60)],
-      'borderColor': const Color(0xFF9C6FFF),
-      'icon':        Icons.layers_rounded,
-      'iconColor':   const Color(0xFF9C6FFF),
-      'actionValue': 'tricks',
-    },
-    {
-      'title':       'SOLVE & EARN 🎁',
-      'subtitle':    'Win rewards — top 3 get prizes!',
-      'gradient':    [const Color(0xFF1A1A00), const Color(0xFF2A2A00)],
-      'borderColor': AppColors.yellow,
-      'icon':        Icons.card_giftcard_rounded,
-      'iconColor':   AppColors.yellow,
-      'actionValue': 'solve_earn',
-    },
-    {
-      'title':       'UPGRADE TO PREMIUM',
-      'subtitle':    'Full access for just ₹50 only',
-      'gradient':    [const Color(0xFF1A0A00), const Color(0xFF2A1200)],
-      'borderColor': AppColors.orange,
-      'icon':        Icons.workspace_premium_rounded,
-      'iconColor':   AppColors.orange,
-      'actionValue': 'premium',
-    },
-    {
-      'title':       '5000 MCQs UPDATED',
-      'subtitle':    'New speed math questions added',
-      'gradient':    [const Color(0xFF0D1A26), const Color(0xFF1A2A3A)],
-      'borderColor': AppColors.neonCyan,
-      'icon':        Icons.quiz_rounded,
-      'iconColor':   AppColors.neonCyan,
-      'actionValue': 'mcq',
-    },
-  ];
 
   @override
   void initState() {
@@ -174,10 +128,8 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
     _autoScrollTimer?.cancel();
     _autoScrollTimer = Timer.periodic(const Duration(seconds: 3), (_) {
       if (!mounted || !_pageCtrl.hasClients) return;
-      final total = _apiBanners.isNotEmpty
-          ? _apiBanners.length
-          : _staticBanners.length;
-      if (total == 0) return;
+      final total = _apiBanners.length;
+      if (total <= 1) return;
       final next = (_currentPage + 1) % total;
       _pageCtrl.animateToPage(
         next,
@@ -195,7 +147,9 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
         break;
       case 'premium':
         Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => const PremiumScreen())).then((_) {
+          builder: (_) => _isPremium
+              ? const DashboardScreen()
+              : const PremiumScreen())).then((_) {
             if (mounted) _loadAll();
           });
         break;
@@ -211,23 +165,35 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
         Navigator.of(context).push(MaterialPageRoute(
           builder: (_) => const ShortsScreen()));
         break;
+      case 'tricks':
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => TricksScreen(isPremium: _isPremium)));
+        break;
+      case 'solve_earn':
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => const SolveEarnScreen()));
+        break;
     }
   }
 
   Future<void> _onTicketTap() async {
-    if (!_isLoadingUser) {
+    // Not logged in → login first.
+    final loggedIn = _isLoadingUser ? await AuthService.isLoggedIn() : _isLoggedIn;
+    if (!mounted) return;
+    if (!loggedIn) {
       Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => _isLoggedIn
-            ? const DashboardScreen()
-            : const LoginScreen(),
+        builder: (_) => const LoginScreen(),
       ));
       return;
     }
-    final loggedIn = await AuthService.isLoggedIn();
+    // This card sells the ₹50 premium upgrade — send NON-premium users to the
+    // Premium page. Already-premium users enter the full dashboard.
+    final premium = _isLoadingUser ? await AuthService.isPremium() : _isPremium;
     if (!mounted) return;
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (_) => loggedIn ? const DashboardScreen() : const LoginScreen(),
+    await Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => premium ? const DashboardScreen() : const PremiumScreen(),
     ));
+    if (mounted) _loadAll();
   }
 
   @override
@@ -269,24 +235,38 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
                             onTap: () => Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (_) => const QuestionScreen(
-                                  mode: 'tunnelity', category: 'mcq',
+                                  mode: 'tunnelity', category: 'tunnlity',
                                   setNumber: 1, totalQuestions: 10,
                                 ),
                               ),
                             ),
                           ),
                           const SizedBox(height: 12),
-                          _HubCard(
-                            title:       'Ticket to Tunnl',
-                            subtitle:    'Unlock full access & advanced features',
-                            borderColor: AppColors.orange,
-                            iconBgColor: AppColors.orange,
-                            icon:        Icons.workspace_premium_rounded,
-                            iconColor:   Colors.white,
-                            titleColor:  AppColors.orange,
-                            priceBadge:  '₹50',
-                            onTap:       _onTicketTap,
-                          ),
+                          _isPremium
+                              ? _HubCard(
+                                  title:       'Your Dashboard',
+                                  subtitle:    'Premium unlocked — explore everything',
+                                  borderColor: AppColors.neonCyan,
+                                  iconBgColor: AppColors.neonCyan,
+                                  icon:        Icons.dashboard_rounded,
+                                  iconColor:   AppColors.darkBg,
+                                  titleColor:  Colors.white,
+                                  onTap: () => Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => const DashboardScreen()),
+                                  ).then((_) { if (mounted) _loadAll(); }),
+                                )
+                              : _HubCard(
+                                  title:       'Ticket to Tunnl',
+                                  subtitle:    'Unlock full access & advanced features',
+                                  borderColor: AppColors.orange,
+                                  iconBgColor: AppColors.orange,
+                                  icon:        Icons.workspace_premium_rounded,
+                                  iconColor:   Colors.white,
+                                  titleColor:  AppColors.orange,
+                                  priceBadge:  '₹${AppSettingsService.instance.getInt('premium_price', 50)}',
+                                  onTap:       _onTicketTap,
+                                ),
                           const SizedBox(height: 12),
                           _HubCard(
                             title:       '500 Free Practice MCQs',
@@ -344,13 +324,13 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
               decoration: BoxDecoration(
                 color: _isLoggedIn
-                    ? AppColors.neonCyan.withOpacity(0.1)
-                    : AppColors.orange.withOpacity(0.12),
+                    ? AppColors.neonCyan.withValues(alpha: 0.1)
+                    : AppColors.orange.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: _isLoggedIn
-                      ? AppColors.neonCyan.withOpacity(0.35)
-                      : AppColors.orange.withOpacity(0.4),
+                      ? AppColors.neonCyan.withValues(alpha: 0.35)
+                      : AppColors.orange.withValues(alpha: 0.4),
                 ),
               ),
               child: _isLoadingUser
@@ -358,7 +338,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
                       width: 14, height: 14,
                       child: CircularProgressIndicator(
                         strokeWidth: 1.5,
-                        color: AppColors.neonCyan.withOpacity(0.6),
+                        color: AppColors.neonCyan.withValues(alpha: 0.6),
                       ),
                     )
                   : Row(
@@ -411,48 +391,49 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildCarousel() {
-    final bool useApi = _apiBanners.isNotEmpty;
-    final int  total  = useApi ? _apiBanners.length : _staticBanners.length;
+    final int total = _apiBanners.length;
+
+    // Loading → show a placeholder shimmer box.
+    if (_bannersLoading) {
+      return SizedBox(
+        height: 200,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0D1A26),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.15)),
+          ),
+          child: Center(
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.neonCyan.withValues(alpha: 0.6),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // No admin banners → render nothing (no hardcoded fallback content).
+    if (total == 0) return const SizedBox.shrink();
 
     return Column(
       children: [
         SizedBox(
-          height: 160,
-          child: _bannersLoading
-              ? Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0D1A26),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: AppColors.neonCyan.withOpacity(0.15)),
-                  ),
-                  child: Center(
-                    child: SizedBox(
-                      width: 24, height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.neonCyan.withOpacity(0.6),
-                      ),
-                    ),
-                  ),
-                )
-              : PageView.builder(
-                  controller: _pageCtrl,
-                  itemCount: total,
-                  onPageChanged: (i) => setState(() => _currentPage = i),
-                  itemBuilder: (_, i) {
-                    if (useApi) return _buildApiBanner(_apiBanners[i]);
-                    return GestureDetector(
-                      onTap: () => _onBannerTap(
-                          _staticBanners[i]['actionValue'] as String),
-                      child: _buildPlaceholderBanner(i),
-                    );
-                  },
-                ),
+          height: 200,
+          child: PageView.builder(
+            controller: _pageCtrl,
+            itemCount: total,
+            onPageChanged: (i) => setState(() => _currentPage = i),
+            itemBuilder: (_, i) => _buildApiBanner(_apiBanners[i]),
+          ),
         ),
         const SizedBox(height: 10),
-        if (!_bannersLoading)
+        if (total > 1)
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(total, (i) {
@@ -460,12 +441,12 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
               return AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 margin: const EdgeInsets.symmetric(horizontal: 3),
-                width:  isActive ? 18 : 5,
+                width: isActive ? 18 : 5,
                 height: 5,
                 decoration: BoxDecoration(
                   color: isActive
                       ? AppColors.neonCyan
-                      : AppColors.textMuted.withOpacity(0.3),
+                      : AppColors.textMuted.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(3),
                 ),
               );
@@ -491,13 +472,13 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
               : null,
           color: b.imageUrl.isNotEmpty ? const Color(0xFF0D2233) : null,
           border: Border.all(
-            color: AppColors.neonCyan.withOpacity(0.2)),
+            color: AppColors.neonCyan.withValues(alpha: 0.2)),
           image: b.imageUrl.isNotEmpty
               ? DecorationImage(
                   image: NetworkImage(b.imageUrl),
                   fit: BoxFit.cover,
                   colorFilter: ColorFilter.mode(
-                    Colors.black.withOpacity(0.4),
+                    Colors.black.withValues(alpha: 0.4),
                     BlendMode.darken,
                   ),
                 )
@@ -511,10 +492,10 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: AppColors.neonCyan.withOpacity(0.15),
+                color: AppColors.neonCyan.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
-                  color: AppColors.neonCyan.withOpacity(0.3)),
+                  color: AppColors.neonCyan.withValues(alpha: 0.3)),
               ),
               child: Text(
                 _actionLabel(b.actionValue),
@@ -556,58 +537,6 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
     return labels[action] ?? action.toUpperCase();
   }
 
-  Widget _buildPlaceholderBanner(int index) {
-    final banner = _staticBanners[index];
-    final List<Color> gradient = List<Color>.from(banner['gradient']);
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        gradient: LinearGradient(
-          colors: gradient,
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        border: Border.all(
-          color: (banner['borderColor'] as Color).withOpacity(0.35)),
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Row(
-        children: [
-          Container(
-            width: 52, height: 52,
-            decoration: BoxDecoration(
-              color: (banner['borderColor'] as Color).withOpacity(0.15),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(banner['icon'] as IconData,
-              color: banner['iconColor'] as Color, size: 26),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(banner['title'] as String,
-                  style: GoogleFonts.poppins(
-                    fontSize: 15, fontWeight: FontWeight.w700,
-                    color: Colors.white, height: 1.2)),
-                const SizedBox(height: 4),
-                Text(banner['subtitle'] as String,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12, color: AppColors.textSecondary)),
-              ],
-            ),
-          ),
-          Icon(Icons.arrow_forward_ios_rounded,
-            color: (banner['borderColor'] as Color).withOpacity(0.6),
-            size: 14),
-        ],
-      ),
-    );
-  }
-
   Widget _buildDrawer() {
     return Drawer(
       backgroundColor: AppColors.darkBg,
@@ -635,9 +564,9 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                   decoration: BoxDecoration(
-                    color: AppColors.orange.withOpacity(0.15),
+                    color: AppColors.orange.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.orange.withOpacity(0.4)),
+                    border: Border.all(color: AppColors.orange.withValues(alpha: 0.4)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -656,7 +585,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
             else
               const SizedBox(height: 16),
 
-            Divider(color: AppColors.textMuted.withOpacity(0.15)),
+            Divider(color: AppColors.textMuted.withValues(alpha: 0.15)),
             const SizedBox(height: 8),
 
             _drawerTile(Icons.home_rounded, 'Home',
@@ -695,7 +624,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
               ),
 
             const Spacer(),
-            Divider(color: AppColors.textMuted.withOpacity(0.15)),
+            Divider(color: AppColors.textMuted.withValues(alpha: 0.15)),
 
             if (_isLoggedIn)
               _drawerTile(
@@ -756,14 +685,14 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(width: 30, height: 1,
-            color: AppColors.neonCyan.withOpacity(0.3)),
+            color: AppColors.neonCyan.withValues(alpha: 0.3)),
           const SizedBox(width: 10),
           Text('Enter the Tunnel. Master Speed Math.',
             style: GoogleFonts.poppins(
               fontSize: 11, color: AppColors.textMuted, letterSpacing: 0.5)),
           const SizedBox(width: 10),
           Container(width: 30, height: 1,
-            color: AppColors.neonCyan.withOpacity(0.3)),
+            color: AppColors.neonCyan.withValues(alpha: 0.3)),
         ],
       ),
     );
@@ -824,7 +753,7 @@ class _HubCardState extends State<_HubCard>
             color: AppColors.darkCard,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: widget.borderColor.withOpacity(0.25), width: 1.2),
+              color: widget.borderColor.withValues(alpha: 0.25), width: 1.2),
           ),
           child: Row(
             children: [
@@ -857,9 +786,9 @@ class _HubCardState extends State<_HubCard>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.orange.withOpacity(0.15),
+                    color: AppColors.orange.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.orange.withOpacity(0.4)),
+                    border: Border.all(color: AppColors.orange.withValues(alpha: 0.4)),
                   ),
                   child: Text(widget.priceBadge!,
                     style: GoogleFonts.poppins(
