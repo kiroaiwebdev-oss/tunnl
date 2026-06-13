@@ -232,6 +232,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
                             icon:        Icons.bolt_rounded,
                             iconColor:   AppColors.darkBg,
                             titleColor:  Colors.white,
+                            imageAsset:  'assets/images/b10.png',
                             onTap: () => Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (_) => const QuestionScreen(
@@ -251,6 +252,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
                                   icon:        Icons.dashboard_rounded,
                                   iconColor:   AppColors.darkBg,
                                   titleColor:  Colors.white,
+                                  imageAsset:  'assets/images/b11.png',
                                   onTap: () => Navigator.of(context).push(
                                     MaterialPageRoute(
                                       builder: (_) => const DashboardScreen()),
@@ -264,6 +266,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
                                   icon:        Icons.workspace_premium_rounded,
                                   iconColor:   Colors.white,
                                   titleColor:  AppColors.orange,
+                                  imageAsset:  'assets/images/b11.png',
                                   priceBadge:  '₹${AppSettingsService.instance.getInt('premium_price', 50)}',
                                   onTap:       _onTicketTap,
                                 ),
@@ -276,6 +279,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
                             icon:        Icons.quiz_rounded,
                             iconColor:   Colors.white,
                             titleColor:  Colors.white,
+                            imageAsset:  'assets/images/b12.png',
                             onTap: () => Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (_) => const TestListScreen()),
@@ -706,6 +710,7 @@ class _HubCard extends StatefulWidget {
   final String title, subtitle;
   final Color  borderColor, iconBgColor, iconColor, titleColor;
   final IconData icon;
+  final String?  imageAsset;
   final String?  priceBadge;
   final VoidCallback onTap;
 
@@ -714,6 +719,7 @@ class _HubCard extends StatefulWidget {
     required this.borderColor, required this.iconBgColor,
     required this.icon,     required this.iconColor,
     required this.titleColor, required this.onTap,
+    this.imageAsset,
     this.priceBadge,
   });
 
@@ -759,11 +765,22 @@ class _HubCardState extends State<_HubCard>
             children: [
               Container(
                 width: 52, height: 52,
+                clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
                   color: widget.iconBgColor,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(widget.icon, color: widget.iconColor, size: 26),
+                child: widget.imageAsset != null
+                    ? Image.asset(
+                        widget.imageAsset!,
+                        width: 52, height: 52,
+                        fit: BoxFit.cover,
+                        // Agar image file abhi missing hai to crash na ho —
+                        // graceful fallback to the original icon.
+                        errorBuilder: (_, __, ___) => Icon(
+                          widget.icon, color: widget.iconColor, size: 26),
+                      )
+                    : Icon(widget.icon, color: widget.iconColor, size: 26),
               ),
               const SizedBox(width: 16),
               Expanded(
