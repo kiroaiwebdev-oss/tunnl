@@ -55,7 +55,7 @@ class _PremiumScreenState extends State<PremiumScreen>
 
   final List<Map<String, dynamic>> _premiumBenefits = [
     {
-      'icon': Icons.all_inclusive_rounded,
+      'icon': Icons.quiz_rounded,
       'title': '5000 Speed Math MCQs',
       'subtitle': 'Unlimited practice questions',
       'color': AppColors.yellow,
@@ -85,7 +85,7 @@ class _PremiumScreenState extends State<PremiumScreen>
       'color': AppColors.yellow,
     },
     {
-      'icon': Icons.history_rounded,
+      'icon': Icons.history_edu_rounded,
       'title': 'Previous Year Questions',
       'subtitle': 'Complete PYQ access',
       'color': AppColors.yellow,
@@ -97,7 +97,7 @@ class _PremiumScreenState extends State<PremiumScreen>
       'color': AppColors.yellow,
     },
     {
-      'icon': Icons.emoji_events_rounded,
+      'icon': Icons.bar_chart_rounded,
       'title': 'Leaderboard Access',
       'subtitle': 'Compete with 12,000+ students',
       'color': AppColors.yellow,
@@ -562,24 +562,32 @@ class _PremiumScreenState extends State<PremiumScreen>
             ),
             child: Column(
               children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.yellow.withValues(alpha: 0.15),
-                    border: Border.all(
-                      color: AppColors.yellow.withValues(alpha: 0.4),
-                      width: 1.5,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: Image.asset(
+                    'assets/images/pre.jpg',
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.yellow.withValues(alpha: 0.15),
+                        border: Border.all(
+                          color: AppColors.yellow.withValues(alpha: 0.4),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.workspace_premium_rounded,
+                        color: AppColors.yellow,
+                        size: 30,
+                      ),
                     ),
                   ),
-                  child: const Icon(
-                    Icons.workspace_premium_rounded,
-                    color: AppColors.yellow,
-                    size: 30,
-                  ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 16),
                 Text(
                   'UNLOCK FULL ACCESS',
                   style: GoogleFonts.orbitron(

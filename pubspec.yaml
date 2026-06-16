@@ -31,10 +31,10 @@ dev_dependencies:
 flutter_icons:
   android: true
   ios: false
-  image_path: "assets/images/tunnel_logo.png"
+  image_path: "assets/images/image.png"
   min_sdk_android: 21
   adaptive_icon_background: "#0D2233"
-  adaptive_icon_foreground: "assets/images/tunnel_logo.png"
+  adaptive_icon_foreground: "assets/images/image.png"
   android_format: adaptiveAndRound
   web:
     generate: false
