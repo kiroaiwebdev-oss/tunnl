@@ -74,6 +74,19 @@ class _ResultScreenState extends State<ResultScreen>
   bool   _savedOk     = false;
   bool   _isPremium   = false;
 
+  // Same premium benefits shown on the Premium ("Ticket to Tunnl") screen,
+  // kept in sync so the result-screen upsell lists the real features.
+  static const List<String> _premiumBenefits = [
+    'Tunnl Tricks — strategies & shortcuts',
+    '5000 Speed Math MCQs',
+    '500 Simplification Questions',
+    'Shorts — quick math tip videos',
+    'Daily Practice Sets',
+    'Previous Year Questions',
+    'Solve & Earn rewards',
+    'Leaderboard Access',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -623,11 +636,10 @@ class _ResultScreenState extends State<ResultScreen>
             ],
           ),
           const SizedBox(height: 16),
-          const _PremiumFeature(text: '5000+ Advanced Mathematics MCQs'),
-          const SizedBox(height: 10),
-          const _PremiumFeature(text: 'Vedic Math Shortcuts & Tricks'),
-          const SizedBox(height: 10),
-          const _PremiumFeature(text: 'Elite Speed Solving Methods'),
+          for (int i = 0; i < _premiumBenefits.length; i++) ...[
+            _PremiumFeature(text: _premiumBenefits[i]),
+            if (i != _premiumBenefits.length - 1) const SizedBox(height: 10),
+          ],
           const SizedBox(height: 20),
           GestureDetector(
             onTap: () => Navigator.of(context).push(
