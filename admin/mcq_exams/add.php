@@ -19,16 +19,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($name === '') {
         $error = 'Exam name is required.';
     } else {
+        // ── Optional custom icon image upload ──
+        $iconUrl = trim($_POST['icon_url_manual'] ?? '');
+        if (!empty($_FILES['icon_image']['name'])) {
+            $ext     = strtolower(pathinfo($_FILES['icon_image']['name'], PATHINFO_EXTENSION));
+            $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+            if (!in_array($ext, $allowed)) {
+                $error = 'Icon must be a JPG, PNG, or WEBP image.';
+            } elseif ($_FILES['icon_image']['size'] > 2 * 1024 * 1024) {
+                $error = 'Maximum icon size is 2MB.';
+            } else {
+                $uploadDir = dirname(__DIR__) . '/uploads/exam_icons/';
+                if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+                $filename = 'mcq_' . time() . '_' . mt_rand(100, 999) . '.' . $ext;
+                if (move_uploaded_file($_FILES['icon_image']['tmp_name'], $uploadDir . $filename)) {
+                    $iconUrl = 'https://' . $_SERVER['HTTP_HOST'] . '/uploads/exam_icons/' . $filename;
+                }
+            }
+        }
+    }
+
+    if ($name !== '' && $error === '') {
         try {
             $pdo->prepare("
                 INSERT INTO mcq_exams
-                  (exam_name, exam_full_name, exam_category, icon, difficulty, is_premium, is_active, sort_order)
-                VALUES (?,?,?,?,?,?,?,?)
+                  (exam_name, exam_full_name, exam_category, icon, icon_url, difficulty, is_premium, is_active, sort_order)
+                VALUES (?,?,?,?,?,?,?,?,?)
             ")->execute([
                 $name,
                 trim($_POST['exam_full_name'] ?? ''),
                 $_POST['exam_category'] ?? 'OTHER',
                 $_POST['icon'] ?? 'school',
+                $iconUrl,
                 $_POST['difficulty'] ?? 'Medium',
                 isset($_POST['is_premium']) ? 1 : 0,
                 isset($_POST['is_active']) ? 1 : 0,
@@ -63,7 +85,7 @@ require_once dirname(__DIR__) . '/includes/header.php';
 </div>
 <?php endif; ?>
 
-<form method="POST">
+<form method="POST" enctype="multipart/form-data">
 <div class="card">
   <div class="form-row">
     <div class="form-group">
@@ -97,8 +119,26 @@ require_once dirname(__DIR__) . '/includes/header.php';
         <option value="<?= $k ?>"><?= $label ?></option>
         <?php endforeach; ?>
       </select>
+      <p style="font-size:11px;color:var(--muted);margin-top:4px">Fallback icon (used if no custom image is uploaded below).</p>
     </div>
   </div>
+
+  <!-- Custom Icon Image (shows in the app instead of the built-in icon) -->
+  <div class="form-group">
+    <label class="form-label">Custom Exam Icon (image)</label>
+    <input type="file" name="icon_image" class="form-input" accept=".jpg,.jpeg,.png,.webp"
+           style="padding:8px" onchange="previewIcon(this)">
+    <p style="font-size:11px;color:var(--muted);margin-top:4px">
+      JPG/PNG/WEBP · Max 2MB · Recommended square (e.g. 256×256). Shown in the app for this exam.
+    </p>
+    <div id="iconPreview" style="margin-top:10px"></div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Or Paste Icon URL</label>
+    <input type="url" name="icon_url_manual" class="form-input"
+           placeholder="https://example.com/icon.png"
+           value="<?= htmlspecialchars($_POST['icon_url_manual'] ?? '') ?>">
+    <p style="font-size:11px;color:var(--muted);margin-top:4px">Use the upload above or a direct URL. Upload takes priority if both given.</p>
 
   <div class="form-row">
     <div class="form-group">
@@ -133,5 +173,18 @@ require_once dirname(__DIR__) . '/includes/header.php';
 </div>
 </form>
 </div>
+
+<script>
+function previewIcon(input) {
+  const p = document.getElementById('iconPreview');
+  if (input.files && input.files[0]) {
+    const r = new FileReader();
+    r.onload = e => {
+      p.innerHTML = '<img src="' + e.target.result + '" style="height:64px;width:64px;object-fit:cover;border-radius:12px;border:2px solid var(--cyan)">';
+    };
+    r.readAsDataURL(input.files[0]);
+  }
+}
+</script>
 
 <?php require_once dirname(__DIR__) . '/includes/footer.php'; ?>

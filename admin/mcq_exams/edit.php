@@ -27,10 +27,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($name === '') {
         $error = 'Exam name is required.';
     } else {
+        // ── Optional custom icon image upload (keep existing if none) ──
+        $iconUrl = trim($_POST['icon_url_manual'] ?? ($e['icon_url'] ?? ''));
+        if (!empty($_FILES['icon_image']['name'])) {
+            $ext     = strtolower(pathinfo($_FILES['icon_image']['name'], PATHINFO_EXTENSION));
+            $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+            if (!in_array($ext, $allowed)) {
+                $error = 'Icon must be a JPG, PNG, or WEBP image.';
+            } elseif ($_FILES['icon_image']['size'] > 2 * 1024 * 1024) {
+                $error = 'Maximum icon size is 2MB.';
+            } else {
+                $uploadDir = dirname(__DIR__) . '/uploads/exam_icons/';
+                if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+                $filename = 'mcq_' . time() . '_' . mt_rand(100, 999) . '.' . $ext;
+                if (move_uploaded_file($_FILES['icon_image']['tmp_name'], $uploadDir . $filename)) {
+                    $iconUrl = 'https://' . $_SERVER['HTTP_HOST'] . '/uploads/exam_icons/' . $filename;
+                }
+            }
+        }
+        if (isset($_POST['remove_icon'])) $iconUrl = '';
+    }
+
+    if ($name !== '' && $error === '') {
         try {
             $pdo->prepare("
                 UPDATE mcq_exams SET
-                  exam_name=?, exam_full_name=?, exam_category=?, icon=?,
+                  exam_name=?, exam_full_name=?, exam_category=?, icon=?, icon_url=?,
                   difficulty=?, is_premium=?, is_active=?, sort_order=?
                 WHERE id=?
             ")->execute([
@@ -38,6 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 trim($_POST['exam_full_name'] ?? ''),
                 $_POST['exam_category'] ?? 'OTHER',
                 $_POST['icon'] ?? 'school',
+                $iconUrl,
                 $_POST['difficulty'] ?? 'Medium',
                 isset($_POST['is_premium']) ? 1 : 0,
                 isset($_POST['is_active']) ? 1 : 0,
@@ -56,6 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'exam_full_name' => trim($_POST['exam_full_name'] ?? ''),
             'exam_category' => $_POST['exam_category'] ?? 'OTHER',
             'icon' => $_POST['icon'] ?? 'school',
+            'icon_url' => $iconUrl,
             'difficulty' => $_POST['difficulty'] ?? 'Medium',
             'is_premium' => isset($_POST['is_premium']) ? 1 : 0,
             'is_active' => isset($_POST['is_active']) ? 1 : 0,
@@ -83,7 +107,7 @@ require_once dirname(__DIR__) . '/includes/header.php';
 </div>
 <?php endif; ?>
 
-<form method="POST">
+<form method="POST" enctype="multipart/form-data">
 <div class="card">
   <div class="form-row">
     <div class="form-group">
@@ -112,8 +136,34 @@ require_once dirname(__DIR__) . '/includes/header.php';
         <option value="<?= $k ?>" <?= $e['icon']===$k?'selected':'' ?>><?= $label ?></option>
         <?php endforeach; ?>
       </select>
+      <p style="font-size:11px;color:var(--muted);margin-top:4px">Fallback icon (used if no custom image is set below).</p>
     </div>
   </div>
+
+  <!-- Custom Icon Image (shows in the app instead of the built-in icon) -->
+  <div class="form-group">
+    <label class="form-label">Custom Exam Icon (image)</label>
+    <?php if (!empty($e['icon_url'])): ?>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+      <img src="<?= htmlspecialchars($e['icon_url']) ?>" style="height:56px;width:56px;object-fit:cover;border-radius:12px;border:2px solid var(--cyan)">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--text2)">
+        <input type="checkbox" name="remove_icon" style="accent-color:var(--warning);width:15px;height:15px"> Remove current icon
+      </label>
+    </div>
+    <?php endif; ?>
+    <input type="file" name="icon_image" class="form-input" accept=".jpg,.jpeg,.png,.webp"
+           style="padding:8px" onchange="previewIcon(this)">
+    <p style="font-size:11px;color:var(--muted);margin-top:4px">
+      JPG/PNG/WEBP · Max 2MB · Recommended square. Upload to replace the current icon.
+    </p>
+    <div id="iconPreview" style="margin-top:10px"></div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Or Paste Icon URL</label>
+    <input type="url" name="icon_url_manual" class="form-input"
+           placeholder="https://example.com/icon.png"
+           value="<?= htmlspecialchars($e['icon_url'] ?? '') ?>">
+    <p style="font-size:11px;color:var(--muted);margin-top:4px">Use the upload above or a direct URL. Upload takes priority if both given.</p>
 
   <div class="form-row">
     <div class="form-group">
@@ -148,5 +198,18 @@ require_once dirname(__DIR__) . '/includes/header.php';
 </div>
 </form>
 </div>
+
+<script>
+function previewIcon(input) {
+  const p = document.getElementById('iconPreview');
+  if (input.files && input.files[0]) {
+    const r = new FileReader();
+    r.onload = e => {
+      p.innerHTML = '<img src="' + e.target.result + '" style="height:64px;width:64px;object-fit:cover;border-radius:12px;border:2px solid var(--cyan)">';
+    };
+    r.readAsDataURL(input.files[0]);
+  }
+}
+</script>
 
 <?php require_once dirname(__DIR__) . '/includes/footer.php'; ?>

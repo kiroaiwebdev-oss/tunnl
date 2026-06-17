@@ -26,10 +26,30 @@ $icons = [
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    try {
+    // ── Optional custom icon image upload (keep existing if none) ──
+    $iconUrl = trim($_POST['icon_url_manual'] ?? ($exam['icon_url'] ?? ''));
+    if (!empty($_FILES['icon_image']['name'])) {
+        $ext     = strtolower(pathinfo($_FILES['icon_image']['name'], PATHINFO_EXTENSION));
+        $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+        if (!in_array($ext, $allowed)) {
+            $error = 'Icon must be a JPG, PNG, or WEBP image.';
+        } elseif ($_FILES['icon_image']['size'] > 2 * 1024 * 1024) {
+            $error = 'Maximum icon size is 2MB.';
+        } else {
+            $uploadDir = dirname(__DIR__) . '/uploads/exam_icons/';
+            if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+            $filename = 'py_' . time() . '_' . mt_rand(100, 999) . '.' . $ext;
+            if (move_uploaded_file($_FILES['icon_image']['tmp_name'], $uploadDir . $filename)) {
+                $iconUrl = 'https://' . $_SERVER['HTTP_HOST'] . '/uploads/exam_icons/' . $filename;
+            }
+        }
+    }
+    if (isset($_POST['remove_icon'])) $iconUrl = '';
+
+    if (empty($error)) try {
         $pdo->prepare("
             UPDATE py_exams SET
-              exam_name=?, exam_full_name=?, exam_category=?, icon=?,
+              exam_name=?, exam_full_name=?, exam_category=?, icon=?, icon_url=?,
               exam_year=?, exam_date=?,
               total_sets=?, total_questions=?, difficulty=?,
               is_premium=?, is_active=?
@@ -39,6 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             trim($_POST['exam_full_name'] ?? ''),
             $_POST['exam_category'] ?? 'OTHER',
             $_POST['icon']          ?? 'school',
+            $iconUrl,
             intval($_POST['exam_year']),
             !empty($_POST['exam_date']) ? $_POST['exam_date'] : null,
             intval($_POST['total_sets'] ?? 1),
@@ -83,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </div>
 </div>
 
-<form method="POST">
+<form method="POST" enctype="multipart/form-data">
 <div class="card">
 
   <div class="form-row">
@@ -117,8 +138,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </option>
         <?php endforeach; ?>
       </select>
+      <p style="font-size:11px;color:var(--muted);margin-top:4px">Fallback icon (used if no custom image is set below).</p>
     </div>
   </div>
+
+  <!-- Custom Icon Image (shows in the app instead of the built-in icon) -->
+  <div class="form-group">
+    <label class="form-label">Custom Exam Icon (image)</label>
+    <?php if (!empty($exam['icon_url'])): ?>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+      <img src="<?= htmlspecialchars($exam['icon_url']) ?>" style="height:56px;width:56px;object-fit:cover;border-radius:12px;border:2px solid var(--cyan)">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--text2)">
+        <input type="checkbox" name="remove_icon" style="accent-color:var(--warning);width:15px;height:15px"> Remove current icon
+      </label>
+    </div>
+    <?php endif; ?>
+    <input type="file" name="icon_image" class="form-input" accept=".jpg,.jpeg,.png,.webp"
+           style="padding:8px" onchange="previewIcon(this)">
+    <p style="font-size:11px;color:var(--muted);margin-top:4px">JPG/PNG/WEBP · Max 2MB · square recommended. Upload to replace current icon.</p>
+    <div id="iconPreview" style="margin-top:10px"></div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Or Paste Icon URL</label>
+    <input type="url" name="icon_url_manual" class="form-input"
+           placeholder="https://example.com/icon.png"
+           value="<?= htmlspecialchars($exam['icon_url'] ?? '') ?>">
+    <p style="font-size:11px;color:var(--muted);margin-top:4px">Upload takes priority if both given.</p>
 
   <div class="form-row">
     <div class="form-group">
@@ -181,5 +226,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </div>
 </form>
 </div>
+
+<script>
+function previewIcon(input) {
+  const p = document.getElementById('iconPreview');
+  if (input.files && input.files[0]) {
+    const r = new FileReader();
+    r.onload = e => {
+      p.innerHTML = '<img src="' + e.target.result + '" style="height:64px;width:64px;object-fit:cover;border-radius:12px;border:2px solid var(--cyan)">';
+    };
+    r.readAsDataURL(input.files[0]);
+  }
+}
+</script>
 
 <?php require_once dirname(__DIR__) . '/includes/footer.php'; ?>

@@ -418,6 +418,7 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
           return _ExamSquare(
             name: year > 0 ? '$name $year' : name,
             icon: icon,
+            iconUrl: (exam['icon_url'] ?? '').toString(),
             color: color,
             subtitle: '$setCount set${setCount == 1 ? '' : 's'}',
             locked: locked,
@@ -433,6 +434,7 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
 class _ExamSquare extends StatelessWidget {
   final String name;
   final IconData icon;
+  final String iconUrl;
   final Color color;
   final String subtitle;
   final bool locked;
@@ -441,6 +443,7 @@ class _ExamSquare extends StatelessWidget {
   const _ExamSquare({
     required this.name,
     required this.icon,
+    this.iconUrl = '',
     required this.color,
     required this.subtitle,
     required this.locked,
@@ -471,7 +474,19 @@ class _ExamSquare extends StatelessWidget {
                     color: color.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(icon, color: color, size: 24),
+                  clipBehavior: Clip.antiAlias,
+                  child: iconUrl.isNotEmpty
+                      ? Image.network(
+                          iconUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              Icon(icon, color: color, size: 24),
+                          loadingBuilder: (c, child, progress) =>
+                              progress == null
+                                  ? child
+                                  : Icon(icon, color: color, size: 24),
+                        )
+                      : Icon(icon, color: color, size: 24),
                 ),
                 if (locked)
                   Positioned(

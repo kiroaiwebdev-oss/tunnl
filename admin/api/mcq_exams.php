@@ -46,6 +46,7 @@ $out = array_map(function ($e) use ($isPremium) {
         'exam_full_name'  => $e['exam_full_name'] ?? '',
         'exam_category'   => $e['exam_category']  ?? 'OTHER',
         'icon'            => $e['icon']           ?? 'school',
+        'icon_url'        => $e['icon_url']       ?? '',
         'difficulty'      => $e['difficulty']     ?? 'Medium',
         'is_premium'      => $premium,
         'can_access'      => !$premium || $isPremium,

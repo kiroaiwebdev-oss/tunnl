@@ -77,6 +77,7 @@ try {
             `exam_full_name` VARCHAR(200) DEFAULT '',
             `exam_category`  ENUM('SSC','RAILWAY','BANK','DEFENCE','OTHER') DEFAULT 'OTHER',
             `icon`           VARCHAR(50)  DEFAULT 'school',
+            `icon_url`       VARCHAR(255) DEFAULT '',
             `difficulty`     ENUM('Easy','Medium','Hard') DEFAULT 'Medium',
             `is_premium`     TINYINT DEFAULT 0,
             `is_active`      TINYINT DEFAULT 1,
@@ -126,6 +127,24 @@ try {
             ");
         } catch (Throwable $e) { /* ignore */ }
     }
+    // ── exams: add per-exam custom icon image (icon_url) if missing ──
+    // Lets the admin upload a custom icon per exam (Practice Sets + Previous
+    // Year). The app shows this image when present, else falls back to the
+    // built-in Material icon mapped from the `icon` column.
+    foreach (['mcq_exams', 'py_exams'] as $examTable) {
+        try {
+            if (!$tableExists($examTable)) continue;
+            $chk = $pdo->prepare(
+                "SELECT COUNT(*) FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = 'icon_url'"
+            );
+            $chk->execute([$examTable]);
+            if ((int)$chk->fetchColumn() === 0) {
+                $pdo->exec("ALTER TABLE `{$examTable}` ADD COLUMN `icon_url` VARCHAR(255) DEFAULT '' AFTER `icon`");
+            }
+        } catch (Throwable $e) { /* ignore */ }
+    }
+
     // ── tricks.category: widen enum → VARCHAR so admins can add custom
     //    categories (PERCENTAGE, ALGEBRA, …) without "Data truncated" errors ──
     try {
