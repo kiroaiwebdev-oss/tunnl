@@ -31,76 +31,105 @@ class _PremiumScreenState extends State<PremiumScreen>
   late AnimationController _badgeCtrl;
   late Animation<double> _badgeScaleAnim;
 
-  // Benefits list
+  // Benefits list — styled with the same icon tiles as the dashboard
   final List<Map<String, dynamic>> _guestBenefits = [
     {
       'icon': Icons.quiz_rounded,
       'title': '500 Free MCQs',
       'subtitle': '10 sets × 50 questions',
       'color': AppColors.neonCyan,
+      'iconBg': const Color(0xFF0D2233),
+      'iconColor': AppColors.neonCyan,
     },
     {
       'icon': Icons.bolt_rounded,
       'title': 'Test Your Tunnelity',
       'subtitle': '10 question speed test',
       'color': AppColors.neonCyan,
+      'iconBg': const Color(0xFF0D2233),
+      'iconColor': AppColors.neonCyan,
     },
     {
       'icon': Icons.wb_sunny_rounded,
       'title': 'Daily Dose',
       'subtitle': '1 question daily pop-up',
       'color': AppColors.neonCyan,
+      'iconBg': const Color(0xFF0D2233),
+      'iconColor': AppColors.neonCyan,
     },
   ];
 
   final List<Map<String, dynamic>> _premiumBenefits = [
     {
+      'icon': Icons.layers_rounded,
+      'title': 'Tunnl Tricks',
+      'subtitle': 'Powerful strategies & shortcuts',
+      'color': AppColors.yellow,
+      'image': 'assets/images/b1.jpg',
+      'iconBg': const Color(0xFF0D2233),
+      'iconColor': AppColors.neonCyan,
+    },
+    {
       'icon': Icons.quiz_rounded,
       'title': '5000 Speed Math MCQs',
       'subtitle': 'Unlimited practice questions',
       'color': AppColors.yellow,
+      'image': 'assets/images/b2.jpg',
+      'iconBg': const Color(0xFF1A1040),
+      'iconColor': const Color(0xFF9C6FFF),
     },
     {
       'icon': Icons.functions_rounded,
       'title': '500 Simplification Questions',
       'subtitle': 'Master simplification tricks',
       'color': AppColors.yellow,
-    },
-    {
-      'icon': Icons.layers_rounded,
-      'title': 'Tunnel Tricks',
-      'subtitle': 'Powerful strategies & shortcuts',
-      'color': AppColors.yellow,
+      'image': 'assets/images/b7.jpg',
+      'iconBg': const Color(0xFF0D2233),
+      'iconColor': AppColors.neonCyan,
     },
     {
       'icon': Icons.play_circle_rounded,
       'title': 'Shorts',
       'subtitle': 'Quick math tip videos',
       'color': AppColors.yellow,
+      'image': 'assets/images/b6.jpg',
+      'iconBg': const Color(0xFF2A1515),
+      'iconColor': const Color(0xFFFF6B6B),
     },
     {
       'icon': Icons.calendar_today_rounded,
       'title': 'Daily Practice Sets',
       'subtitle': "Today's set in dashboard",
       'color': AppColors.yellow,
+      'image': 'assets/images/b4.jpg',
+      'iconBg': const Color(0xFF0D2233),
+      'iconColor': AppColors.neonCyan,
     },
     {
       'icon': Icons.history_edu_rounded,
       'title': 'Previous Year Questions',
       'subtitle': 'Complete PYQ access',
       'color': AppColors.yellow,
+      'image': 'assets/images/b3.jpg',
+      'iconBg': const Color(0xFF1A1040),
+      'iconColor': const Color(0xFF9C6FFF),
     },
     {
       'icon': Icons.card_giftcard_rounded,
       'title': 'Solve & Earn',
       'subtitle': 'Earn rewards by solving',
       'color': AppColors.yellow,
+      'image': 'assets/images/b5.jpg',
+      'iconBg': const Color(0xFF1A1A00),
+      'iconColor': AppColors.yellow,
     },
     {
       'icon': Icons.bar_chart_rounded,
       'title': 'Leaderboard Access',
       'subtitle': 'Compete with 12,000+ students',
       'color': AppColors.yellow,
+      'iconBg': const Color(0xFF1A1A00),
+      'iconColor': AppColors.yellow,
     },
   ];
 
@@ -1033,6 +1062,10 @@ class _BenefitRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color color = data['color'] as Color;
+    final Color iconBg =
+        (data['iconBg'] as Color?) ?? color.withValues(alpha: 0.1);
+    final Color iconColor = (data['iconColor'] as Color?) ?? color;
+    final String? image = data['image'] as String?;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -1042,24 +1075,36 @@ class _BenefitRow extends StatelessWidget {
         color: AppColors.darkCard,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: color.withValues(alpha: 0.12),
+          color: color.withValues(alpha: 0.15),
           width: 1,
         ),
       ),
       child: Row(
         children: [
           Container(
-            width: 38,
-            height: 38,
+            width: 46,
+            height: 46,
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: color.withValues(alpha: 0.1),
+              color: iconBg,
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              data['icon'] as IconData,
-              color: color,
-              size: 18,
-            ),
+            clipBehavior: Clip.antiAlias,
+            padding: const EdgeInsets.all(6),
+            child: image != null
+                ? Image.asset(
+                    image,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => Icon(
+                      data['icon'] as IconData,
+                      color: iconColor,
+                      size: 22,
+                    ),
+                  )
+                : Icon(
+                    data['icon'] as IconData,
+                    color: iconColor,
+                    size: 22,
+                  ),
           ),
           const SizedBox(width: 12),
           Expanded(
