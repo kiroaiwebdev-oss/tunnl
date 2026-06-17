@@ -353,13 +353,14 @@ Future<void> _verifyOtp() async {
           ),
         ],
       ),
-      padding: const EdgeInsets.all(18),
+      clipBehavior: Clip.antiAlias,
+      padding: const EdgeInsets.all(8),
       child: _isVerified
           ? const Icon(Icons.check_circle_rounded,
               color: AppColors.neonCyan, size: 36)
           : Image.asset(
               'assets/images/tunnel_logo.png',
-              fit: BoxFit.contain,
+              fit: BoxFit.cover,
               errorBuilder: (_, __, ___) => const Icon(
                 Icons.all_inclusive_rounded,
                 color: AppColors.neonCyan, size: 36,

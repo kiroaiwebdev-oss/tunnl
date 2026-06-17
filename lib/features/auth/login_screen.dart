@@ -319,10 +319,11 @@ class _LoginScreenState extends State<LoginScreen>
                     color: AppColors.neonCyan.withValues(alpha: 0.3), width: 1,
                   ),
                 ),
-                padding: const EdgeInsets.all(14),
+                clipBehavior: Clip.antiAlias,
+                padding: const EdgeInsets.all(4),
                 child: Image.asset(
                   'assets/images/tunnel_logo.png',
-                  fit: BoxFit.contain,
+                  fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => const Icon(
                     Icons.all_inclusive_rounded,
                     color: AppColors.neonCyan, size: 30,
@@ -339,37 +340,20 @@ class _LoginScreenState extends State<LoginScreen>
   Widget _buildTitleSection() {
     return Column(
       children: [
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            Text(
-              'Tunnl',
-              style: GoogleFonts.orbitron(
-                fontSize: 44,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-                letterSpacing: 8,
-                shadows: [
-                  Shadow(
-                    color: AppColors.neonCyan.withValues(alpha: 0.2),
-                    blurRadius: 20,
-                  ),
-                ],
+        Text(
+          'Tunnl',
+          style: GoogleFonts.orbitron(
+            fontSize: 44,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+            letterSpacing: 8,
+            shadows: [
+              Shadow(
+                color: AppColors.neonCyan.withValues(alpha: 0.2),
+                blurRadius: 20,
               ),
-            ),
-            Positioned(
-              right: 20,
-              child: GestureDetector(
-                onTap: () => Navigator.of(context).maybePop(),
-                child: Text('×',
-                  style: GoogleFonts.poppins(
-                    fontSize: 22,
-                    color: AppColors.textMuted,
-                    fontWeight: FontWeight.w300,
-                  )),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 8),
         Text(
