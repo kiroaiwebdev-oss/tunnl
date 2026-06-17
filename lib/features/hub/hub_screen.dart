@@ -400,7 +400,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
     // Loading → show a placeholder shimmer box.
     if (_bannersLoading) {
       return SizedBox(
-        height: 200,
+        height: 175,
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 20),
           decoration: BoxDecoration(
@@ -428,7 +428,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
     return Column(
       children: [
         SizedBox(
-          height: 200,
+          height: 175,
           child: PageView.builder(
             controller: _pageCtrl,
             itemCount: total,
@@ -436,7 +436,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
             itemBuilder: (_, i) => _buildApiBanner(_apiBanners[i]),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         if (total > 1)
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
