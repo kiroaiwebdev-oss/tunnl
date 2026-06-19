@@ -16,7 +16,6 @@ import '../mcq/mcq_exams_screen.dart';
 import '../tricks/tricks_screen.dart';
 import '../shorts/shorts_screen.dart';
 import '../previous_year/previous_year_screen.dart';
-import '../leaderboard/leaderboard_screen.dart';
 import '../history/history_screen.dart';
 import '../premium/premium_screen.dart';
 import '../auth/login_screen.dart';
@@ -675,7 +674,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             _drawerTile(Icons.bar_chart_rounded, 'Leaderboard', () {
               Navigator.pop(context);
               Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const LeaderboardScreen()));
+                MaterialPageRoute(builder: (_) => const SolveEarnLeaderboardScreen()));
             }),
             _drawerTile(Icons.history_rounded, 'History', () {
               Navigator.pop(context);

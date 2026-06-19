@@ -13,7 +13,7 @@ import '../../core/models/banner_model.dart';
 import '../auth/login_screen.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../shorts/shorts_screen.dart';
-import '../leaderboard/leaderboard_screen.dart';
+import '../solve_earn/solve_earn_leaderboard_screen.dart';
 import '../testlist/test_list_screen.dart';
 import '../tunnlity/tunnlity_screen.dart';
 import '../premium/premium_screen.dart';
@@ -159,7 +159,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
         break;
       case 'leaderboard':
         Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => const LeaderboardScreen()));
+          builder: (_) => const SolveEarnLeaderboardScreen()));
         break;
       case 'shorts':
         Navigator.of(context).push(MaterialPageRoute(
@@ -609,7 +609,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
             _drawerTile(Icons.bar_chart_rounded, 'Leaderboard', () {
               Navigator.pop(context);
               Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => const LeaderboardScreen()));
+                builder: (_) => const SolveEarnLeaderboardScreen()));
             }),
             if (!_isPremium)
               _drawerTile(
