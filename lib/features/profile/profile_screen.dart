@@ -963,6 +963,13 @@ Future<void> _loadFromApi() async {
         'onTap': _showNotificationSettings,
       },
       {
+        'icon': Icons.bug_report_rounded,
+        'label': 'Report a Technical Error',
+        'subtitle': 'Tell us about a technical issue',
+        'color': AppColors.orange,
+        'onTap': _showReportError,
+      },
+      {
         'icon': Icons.help_rounded,
         'label': 'Help & Support',
         'subtitle': 'Get help from our team',

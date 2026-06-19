@@ -15,7 +15,7 @@ import '../dashboard/dashboard_screen.dart';
 import '../shorts/shorts_screen.dart';
 import '../leaderboard/leaderboard_screen.dart';
 import '../testlist/test_list_screen.dart';
-import '../question/question_screen.dart';
+import '../tunnlity/tunnlity_screen.dart';
 import '../premium/premium_screen.dart';
 import '../previous_year/previous_year_screen.dart';
 import '../profile/profile_screen.dart';
@@ -235,10 +235,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
                             imageAsset:  'assets/images/b10.png',
                             onTap: () => Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (_) => const QuestionScreen(
-                                  mode: 'tunnelity', category: 'tunnlity',
-                                  setNumber: 1, totalQuestions: 10,
-                                ),
+                                builder: (_) => const TunnlityScreen(),
                               ),
                             ),
                           ),

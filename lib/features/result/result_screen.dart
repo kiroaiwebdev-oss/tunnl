@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/result_service.dart';
 import '../../core/services/auth_service.dart';
@@ -137,9 +138,32 @@ class _ResultScreenState extends State<ResultScreen>
     await Future.wait([
       _saveResult(),
       _checkPremium(),
+      _saveTunnlityScore(),
     ]);
 
     if (mounted) setState(() => _isSaving = false);
+  }
+
+  // Persist Tunnlity speed-test score locally so the Tunnlity screen can show
+  // "View Score" + a personal best (its own mini leaderboard).
+  Future<void> _saveTunnlityScore() async {
+    if (widget.mode != 'tunnelity') return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final attempts = (prefs.getInt('tunnlity_attempts') ?? 0) + 1;
+      await prefs.setInt('tunnlity_attempts', attempts);
+      await prefs.setDouble('tunnlity_last_score', _scoreOutOf10);
+      await prefs.setDouble('tunnlity_last_accuracy', _accuracyPct);
+      await prefs.setInt('tunnlity_last_correct', widget.correct);
+      await prefs.setInt('tunnlity_last_total', widget.totalQuestions);
+      await prefs.setString(
+          'tunnlity_last_date', DateTime.now().toIso8601String());
+      final bestScore = prefs.getDouble('tunnlity_best_score') ?? 0;
+      if (_scoreOutOf10 >= bestScore) {
+        await prefs.setDouble('tunnlity_best_score', _scoreOutOf10);
+        await prefs.setDouble('tunnlity_best_accuracy', _accuracyPct);
+      }
+    } catch (_) {}
   }
 
   Future<void> _saveResult() async {
