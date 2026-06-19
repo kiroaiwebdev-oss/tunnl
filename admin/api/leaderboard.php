@@ -17,8 +17,8 @@ if ($type === 'weekly') {
 $leaders = $pdo->query("
     SELECT id, name, phone, total_xp, current_streak, rank_position, profile_image
     FROM users
-    WHERE total_xp > 0 $dateFilter
-    ORDER BY total_xp DESC
+    WHERE 1=1 $dateFilter
+    ORDER BY total_xp DESC, last_active DESC, id ASC
     LIMIT $limit
 ")->fetchAll();
 

@@ -9,6 +9,7 @@ import '../../core/services/app_settings_service.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/user_service.dart';
+import '../../core/services/content_service.dart';
 import '../hub/hub_screen.dart';
 import '../history/history_screen.dart';
 import '../premium/premium_screen.dart';
@@ -286,54 +287,6 @@ Future<void> _loadFromApi() async {
     );
   }
 
-  // ── Privacy policy ────────────────────────────────
-  void _showPrivacyPolicy() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppColors.darkCard,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.6,
-        maxChildSize: 0.9,
-        builder: (_, controller) => Padding(
-          padding: const EdgeInsets.fromLTRB(24, 20, 24, 30),
-          child: ListView(
-            controller: controller,
-            children: [
-              Center(child: Container(
-                width: 40, height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.textMuted.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(10)),
-              )),
-              const SizedBox(height: 20),
-              Text('Privacy Policy',
-                style: GoogleFonts.poppins(
-                  fontSize: 18, fontWeight: FontWeight.w700,
-                  color: Colors.white)),
-              const SizedBox(height: 16),
-              Text(
-                'Tunnl collects minimal user data including phone number and '
-                'test performance to provide a personalized learning experience.\n\n'
-                'Your data is never shared with third parties without your '
-                'consent. All test history and scores are stored securely.\n\n'
-                'We use your performance data only to improve your learning '
-                'experience and show relevant content.\n\n'
-                'You can request account deletion by contacting our support team.\n\n'
-                'For any privacy concerns, contact: support@tunnel.app',
-                style: GoogleFonts.poppins(
-                  fontSize: 13, color: AppColors.textSecondary, height: 1.7),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   // ── Help & support ────────────────────────────────
   void _showHelpSupport() {
     showModalBottomSheet(
@@ -394,18 +347,86 @@ Future<void> _loadFromApi() async {
             _SupportTile(
               icon: Icons.bug_report_rounded,
               color: AppColors.orange,
-              title: 'Report a Bug',
-              subtitle: 'Help us improve the app',
-              onTap: () async {
+              title: 'Report a Technical Error',
+              subtitle: 'Tell us about a technical issue',
+              onTap: () {
                 Navigator.pop(context);
-                final uri = Uri(
-                  scheme: 'mailto',
-                  path: 'support@tunnel.app',
-                  query: 'subject=Bug Report — Tunnl App',
-                );
-                if (await canLaunchUrl(uri)) launchUrl(uri);
-                _showSnack('Thank you! Bug reported.');
+                _showReportError();
               },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Report a technical error ──────────────────────
+  void _showReportError() {
+    final controller = TextEditingController();
+    bool submitting = false;
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          backgroundColor: AppColors.darkCard,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(color: AppColors.orange.withValues(alpha: 0.4))),
+          title: Text('Report a Technical Error',
+            style: GoogleFonts.poppins(
+              color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Describe the problem you faced. Our team will look into it.',
+                style: GoogleFonts.poppins(
+                  color: AppColors.textSecondary, fontSize: 12)),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                maxLines: 4,
+                maxLength: 500,
+                style: GoogleFonts.poppins(color: Colors.white, fontSize: 13),
+                decoration: InputDecoration(
+                  hintText: 'e.g. App crashes when opening Previous Year...',
+                  hintStyle: GoogleFonts.poppins(
+                    color: AppColors.textMuted, fontSize: 12),
+                  filled: true,
+                  fillColor: AppColors.darkSurface,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: submitting ? null : () => Navigator.pop(ctx),
+              child: Text('Cancel',
+                style: GoogleFonts.poppins(color: AppColors.textMuted)),
+            ),
+            TextButton(
+              onPressed: submitting
+                  ? null
+                  : () async {
+                      final msg = controller.text.trim();
+                      if (msg.isEmpty) {
+                        _showSnack('Please describe the issue.');
+                        return;
+                      }
+                      setLocal(() => submitting = true);
+                      final ok =
+                          await ContentService.submitTechReport(msg);
+                      if (!mounted) return;
+                      Navigator.pop(ctx);
+                      _showSnack(ok
+                          ? 'Thank you! Your report was submitted.'
+                          : 'Could not submit. Please try again.');
+                    },
+              child: Text(submitting ? 'Sending...' : 'Submit',
+                style: GoogleFonts.poppins(
+                  color: AppColors.orange, fontWeight: FontWeight.w700)),
             ),
           ],
         ),
@@ -940,13 +961,6 @@ Future<void> _loadFromApi() async {
         'subtitle': 'Manage alerts & reminders',
         'color': AppColors.orange,
         'onTap': _showNotificationSettings,
-      },
-      {
-        'icon': Icons.privacy_tip_rounded,
-        'label': 'Privacy Policy',
-        'subtitle': 'Read our privacy policy',
-        'color': AppColors.textSecondary,
-        'onTap': _showPrivacyPolicy,
       },
       {
         'icon': Icons.help_rounded,

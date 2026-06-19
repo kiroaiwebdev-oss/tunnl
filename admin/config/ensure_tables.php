@@ -127,6 +127,20 @@ try {
             ");
         } catch (Throwable $e) { /* ignore */ }
     }
+    // ── tech_reports: user-submitted technical error reports ──
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `tech_reports` (
+            `id`          INT AUTO_INCREMENT PRIMARY KEY,
+            `user_id`     INT          DEFAULT NULL,
+            `name`        VARCHAR(120) DEFAULT '',
+            `phone`       VARCHAR(20)  DEFAULT '',
+            `message`     TEXT         NOT NULL,
+            `app_version` VARCHAR(30)  DEFAULT '',
+            `status`      ENUM('open','resolved') DEFAULT 'open',
+            `created_at`  TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
+
     // ── exams: add per-exam custom icon image (icon_url) if missing ──
     // Lets the admin upload a custom icon per exam (Practice Sets + Previous
     // Year). The app shows this image when present, else falls back to the

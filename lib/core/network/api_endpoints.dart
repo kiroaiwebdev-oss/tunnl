@@ -36,4 +36,7 @@ class ApiEndpoints {
   // ── Coupons & MCQ exams ───────────────────────────
   static const String coupons         = 'coupons.php';
   static const String mcqExams        = 'mcq_exams.php';
+
+  // ── Misc ──────────────────────────────────────────
+  static const String reportError     = 'report_error.php';
 }

@@ -6,7 +6,6 @@ require_once dirname(__DIR__) . '/config/constants.php';
 
 $labels = [
     'mcq'            => '5000 Speed Math MCQ (Practice Sets)',
-    'simplification' => '500 Simplification',
     'tunnlity'       => 'Test Your Tunnlity',
     'previous_year'  => 'Previous Year',
 ];
@@ -75,7 +74,6 @@ require_once dirname(__DIR__) . '/includes/header.php';
       <?php else: ?>
         <select name="category" class="form-select" required>
           <option value="mcq">5000 Speed Math MCQ (Practice Sets)</option>
-          <option value="simplification">500 Simplification</option>
           <option value="tunnlity">Test Your Tunnlity</option>
           <option value="previous_year">Previous Year</option>
         </select>

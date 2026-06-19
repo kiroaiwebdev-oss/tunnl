@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/content_service.dart';
 import '../../core/services/user_service.dart';
@@ -126,7 +127,81 @@ class _QuestionScreenState extends State<QuestionScreen>
       _questions = qs;
       _isLoading = false;
     });
-    _startTimer();
+    _ensureTermsThenStart();
+  }
+
+  // ── Quiz Terms & Conditions (shown once, before the first quiz) ──
+  Future<void> _ensureTermsThenStart() async {
+    bool accepted = false;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      accepted = prefs.getBool('quiz_terms_accepted') ?? false;
+    } catch (_) {}
+
+    if (accepted) {
+      _startTimer();
+      return;
+    }
+    if (!mounted) return;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.darkCard,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: AppColors.neonCyan.withValues(alpha: 0.4))),
+        title: Row(
+          children: [
+            const Icon(Icons.gavel_rounded,
+                color: AppColors.neonCyan, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text('Quiz Terms & Conditions',
+                style: GoogleFonts.poppins(
+                  color: Colors.white, fontWeight: FontWeight.w700,
+                  fontSize: 16)),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Text(
+            '• Each question is timed — answer before the timer runs out.\n\n'
+            '• Once you confirm an answer you cannot change it.\n\n'
+            '• Skipped or timed-out questions are marked incorrect.\n\n'
+            '• Do not close or leave the test — your progress will be lost.\n\n'
+            '• Scores and XP are added to your profile and leaderboard.\n\n'
+            'By tapping "I Agree" you accept these terms and play fairly.',
+            style: GoogleFonts.poppins(
+              color: AppColors.textSecondary, fontSize: 13, height: 1.6),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              if (mounted) Navigator.pop(context); // leave the quiz
+            },
+            child: Text('Cancel',
+              style: GoogleFonts.poppins(color: AppColors.textMuted)),
+          ),
+          TextButton(
+            onPressed: () async {
+              try {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setBool('quiz_terms_accepted', true);
+              } catch (_) {}
+              if (ctx.mounted) Navigator.pop(ctx);
+              _startTimer();
+            },
+            child: Text('I Agree',
+              style: GoogleFonts.poppins(
+                color: AppColors.neonCyan, fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showApiError(String msg) {

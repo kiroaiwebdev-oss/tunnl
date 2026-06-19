@@ -373,4 +373,20 @@ class ContentService {
       return [];
     }
   }
+
+  // ── Submit a technical error report ───────────────
+  /// Returns true on success. Sends the message (+ app version) to the admin.
+  static Future<bool> submitTechReport(String message) async {
+    try {
+      final res = await ApiClient.post(
+        ApiEndpoints.reportError,
+        {'message': message},
+        auth: true,
+      );
+      return _ok(res);
+    } catch (e) {
+      debugPrint('[submitTechReport] ERROR: $e');
+      return false;
+    }
+  }
 }

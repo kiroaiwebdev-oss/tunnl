@@ -72,13 +72,13 @@ class _DashboardScreenState extends State<DashboardScreen>
       'titleColor':  Colors.white,
     },
     {
-      'title':       '500 FREQUENTLY\nASKED SIMPLIFICATION',
-      'subtitle':    'Master simplification',
-      'icon':        Icons.functions_rounded,
-      'image':       'assets/images/b7.jpg',
-      'iconBg':      const Color(0xFF0D2233),
-      'iconColor':   AppColors.neonCyan,
-      'borderColor': AppColors.neonCyan,
+      'title':       '5000+ PREVIOUS YEAR\nQUESTIONS',
+      'subtitle':    'Complete PYQ access',
+      'icon':        Icons.history_edu_rounded,
+      'image':       'assets/images/b3.jpg',
+      'iconBg':      const Color(0xFF1A1040),
+      'iconColor':   const Color(0xFF9C6FFF),
+      'borderColor': const Color(0xFF4A1A8A),
       'titleColor':  Colors.white,
     },
     {
@@ -99,16 +99,6 @@ class _DashboardScreenState extends State<DashboardScreen>
       'iconBg':      const Color(0xFF0D2233),
       'iconColor':   AppColors.neonCyan,
       'borderColor': AppColors.neonCyan,
-      'titleColor':  Colors.white,
-    },
-    {
-      'title':       'PREVIOUS YEAR\nQUESTIONS',
-      'subtitle':    'Complete PYQ access',
-      'icon':        Icons.history_edu_rounded,
-      'image':       'assets/images/b3.jpg',
-      'iconBg':      const Color(0xFF1A1040),
-      'iconColor':   const Color(0xFF9C6FFF),
-      'borderColor': const Color(0xFF4A1A8A),
       'titleColor':  Colors.white,
     },
     {
@@ -235,13 +225,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         break;
       case 2:
         Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => SetsScreen(
-            title: '500 Simplification',
-            category: 'simplification',
-            questionsPerSet: 20,
-            totalSets: _isPremium ? 10 : 1,
-            showLeaderboard: false,
-          ),
+          builder: (_) => PreviousYearScreen(isPremium: _isPremium),
         ));
         break;
       case 3:
@@ -262,11 +246,6 @@ class _DashboardScreenState extends State<DashboardScreen>
         ));
         break;
       case 5:
-        Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => PreviousYearScreen(isPremium: _isPremium),
-        ));
-        break;
-      case 6:
         Navigator.of(context).push(MaterialPageRoute(
           builder: (_) => const SolveEarnScreen(),
         ));

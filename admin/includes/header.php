@@ -471,10 +471,6 @@ function navSectionActive($currentPage, $currentCat, $cat) {
        class="nav-item <?= navSectionActive($currentPage, $currentCat, 'mcq') ?>">
       <i class="fas fa-quote-right"></i> Free Practice MCQs
     </a>
-    <a href="<?= ADMIN_URL ?>/sets/index.php?cat=simplification"
-       class="nav-item <?= navSectionActive($currentPage, $currentCat, 'simplification') ?>">
-      <i class="fas fa-calculator"></i> 500 Simplification
-    </a>
     <a href="<?= ADMIN_URL ?>/sets/index.php?cat=tunnlity"
        class="nav-item <?= navSectionActive($currentPage, $currentCat, 'tunnlity') ?>">
       <i class="fas fa-bolt"></i> Test Your Tunnlity
@@ -516,6 +512,10 @@ function navSectionActive($currentPage, $currentCat, $cat) {
     <a href="<?= ADMIN_URL ?>/notifications/index.php"
        class="nav-item <?= $currentPage === 'notifications' ? 'active' : '' ?>">
       <i class="fas fa-bell"></i> Notifications
+    </a>
+    <a href="<?= ADMIN_URL ?>/reports/index.php"
+       class="nav-item <?= $currentPage === 'reports' ? 'active' : '' ?>">
+      <i class="fas fa-triangle-exclamation"></i> Technical Reports
     </a>
 
     <div class="nav-section">Users</div>

@@ -65,6 +65,7 @@ class _ResultScreenState extends State<ResultScreen>
 
   // ── Computed ───────────────────────────────────────
   late double _scoreOutOf10;
+  late double _accuracyPct;
   late int    _xpEarned;
   late String _performanceMsg;
   late Color  _scoreColor;
@@ -103,6 +104,12 @@ class _ResultScreenState extends State<ResultScreen>
         ? (widget.correct / widget.totalQuestions) * 10
         : 0;
 
+    // Derive accuracy from correct/total so it ALWAYS shows correctly
+    // (e.g. the Tunnlity speed test where a passed value may be missing).
+    _accuracyPct = widget.totalQuestions > 0
+        ? (widget.correct / widget.totalQuestions) * 100
+        : (widget.accuracy.isFinite ? widget.accuracy : 0);
+
     _xpEarned = (widget.correct * 10) +
         (widget.accuracy > 80 ? 20 : 0) +
         (widget.avgSpeedSeconds < 5 ? 15 : 0);
@@ -113,9 +120,9 @@ class _ResultScreenState extends State<ResultScreen>
             ? AppColors.yellow
             : AppColors.error;
 
-    _performanceMsg = widget.accuracy >= 80
+    _performanceMsg = _accuracyPct >= 80
         ? 'Excellent! You are in the top tier 🔥'
-        : widget.accuracy >= 60
+        : _accuracyPct >= 60
             ? 'Good effort! Keep pushing!'
             : 'Keep practicing to improve!';
   }
@@ -394,7 +401,7 @@ class _ResultScreenState extends State<ResultScreen>
               icon: Icons.track_changes_rounded,
               label: 'ACCURACY',
               valueWidget: Text(
-                '${widget.accuracy.toStringAsFixed(0)}%',
+                '${_accuracyPct.toStringAsFixed(0)}%',
                 style: GoogleFonts.orbitron(
                   fontSize: 22, fontWeight: FontWeight.w700,
                   color: AppColors.neonCyan)),
