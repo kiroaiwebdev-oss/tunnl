@@ -62,12 +62,13 @@ $pdo->prepare("
     WHERE id = ?
 ")->execute([$newXp, $newStreak, $newMaxStreak, $user['id']]);
 
-// Update leaderboard rank (simple batch update every submission)
-$pdo->query("
-    SET @rank := 0;
-    UPDATE users SET rank_position = (@rank := @rank + 1)
-    ORDER BY total_xp DESC;
-");
+// Update leaderboard rank — safe (no multi-statement query, never 500s)
+try {
+    $pdo->exec("SET @rank := 0");
+    $pdo->exec("UPDATE users SET rank_position = (@rank := @rank + 1) ORDER BY total_xp DESC");
+} catch (Throwable $e) {
+    // Non-critical: ranks recompute on next submission / leaderboard load.
+}
 
 response([
     'success'      => true,

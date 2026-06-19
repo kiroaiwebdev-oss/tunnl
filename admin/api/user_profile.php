@@ -50,7 +50,7 @@ if ($method === 'GET') {
                time_taken, xp_earned, completed_at
         FROM user_test_history
         WHERE user_id = ?
-        ORDER BY completed_at DESC LIMIT 5
+        ORDER BY completed_at DESC LIMIT 50
     ");
     $recent->execute([$user['id']]);
     $recentRows = $recent->fetchAll();
