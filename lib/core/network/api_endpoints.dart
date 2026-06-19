@@ -39,4 +39,5 @@ class ApiEndpoints {
 
   // ── Misc ──────────────────────────────────────────
   static const String reportError     = 'report_error.php';
+  static const String tunnlityLeaderboard = 'tunnlity_leaderboard.php';
 }

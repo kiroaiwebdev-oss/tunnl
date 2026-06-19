@@ -168,8 +168,10 @@ class _ResultScreenState extends State<ResultScreen>
 
   Future<void> _saveResult() async {
     try {
-      // If we don't have a real set_id (e.g. tunnelity speed test), skip API save.
-      if (widget.setId <= 0) {
+      // If we don't have a real set_id, skip API save — EXCEPT the Tunnlity
+      // speed test (set_id=0), which we DO save so it powers the Tunnlity
+      // leaderboard.
+      if (widget.setId <= 0 && widget.mode != 'tunnelity') {
         if (mounted) setState(() => _savedOk = false);
         return;
       }

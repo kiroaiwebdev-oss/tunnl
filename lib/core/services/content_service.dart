@@ -375,7 +375,7 @@ class ContentService {
   }
 
   // ── Submit a technical error report ───────────────
-  /// Returns true on success. Sends the message (+ app version) to the admin.
+  /// Returns true on success. Sends the message to the admin.
   static Future<bool> submitTechReport(String message) async {
     try {
       final res = await ApiClient.post(
@@ -387,6 +387,35 @@ class ContentService {
     } catch (e) {
       debugPrint('[submitTechReport] ERROR: $e');
       return false;
+    }
+  }
+
+  // ── Tunnlity leaderboard ──────────────────────────
+  /// Returns { leaderboard: [...], my_rank, my_best }.
+  static Future<Map<String, dynamic>> getTunnlityLeaderboard() async {
+    try {
+      final res = await ApiClient.get(
+        ApiEndpoints.tunnlityLeaderboard,
+        auth: true,
+      );
+      if (!_ok(res)) {
+        return {'leaderboard': const [], 'my_rank': null, 'my_best': null};
+      }
+      final raw = res['leaderboard'];
+      final list = (raw is List)
+          ? raw
+              .whereType<Map>()
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList()
+          : <Map<String, dynamic>>[];
+      return {
+        'leaderboard': list,
+        'my_rank': res['my_rank'],
+        'my_best': res['my_best'],
+      };
+    } catch (e) {
+      debugPrint('[TunnlityLeaderboard] ERROR: $e');
+      return {'leaderboard': const [], 'my_rank': null, 'my_best': null};
     }
   }
 }

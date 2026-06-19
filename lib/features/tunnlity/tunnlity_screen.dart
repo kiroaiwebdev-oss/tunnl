@@ -10,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_colors.dart';
 import '../question/question_screen.dart';
+import 'tunnlity_leaderboard_screen.dart';
 
 class TunnlityScreen extends StatefulWidget {
   const TunnlityScreen({super.key});
@@ -318,6 +319,32 @@ class _TunnlityScreenState extends State<TunnlityScreen> {
             ),
           ),
         ],
+        const SizedBox(height: 12),
+        GestureDetector(
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => const TunnlityLeaderboardScreen())),
+          child: Container(
+            height: 56,
+            decoration: BoxDecoration(
+              color: AppColors.yellow.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(
+                  color: AppColors.yellow.withValues(alpha: 0.5)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.emoji_events_rounded,
+                    color: AppColors.yellow, size: 20),
+                const SizedBox(width: 10),
+                Text('VIEW LEADERBOARD',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14, fontWeight: FontWeight.w700,
+                    color: AppColors.yellow, letterSpacing: 2)),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
