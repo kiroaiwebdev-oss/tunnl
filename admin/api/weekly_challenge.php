@@ -41,14 +41,14 @@ if ($method === 'GET') {
         $questions = $qs->fetchAll();
     }
 
-    // Leaderboard top 10
+    // Leaderboard top 10 — ranked by accuracy, then fastest time, then score.
     $top = $pdo->prepare("
         SELECT e.score, e.accuracy, e.time_taken, u.name,
-          RANK() OVER (ORDER BY e.score DESC, e.time_taken ASC) as rank
+          RANK() OVER (ORDER BY e.accuracy DESC, e.time_taken ASC, e.score DESC) as rank
         FROM challenge_entries e
         JOIN users u ON e.user_id = u.id
         WHERE e.challenge_id = ?
-        ORDER BY e.score DESC, e.time_taken ASC
+        ORDER BY e.accuracy DESC, e.time_taken ASC, e.score DESC
         LIMIT 10
     ");
     $top->execute([$challenge['id']]);
