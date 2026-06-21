@@ -5,6 +5,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/content_service.dart';
 import '../../core/services/user_service.dart';
+import '../../core/services/app_settings_service.dart';
 import '../../core/models/banner_model.dart';
 import '../hub/hub_screen.dart';
 import '../daily_dose/daily_dose_popup.dart';
@@ -49,9 +50,16 @@ class _DashboardScreenState extends State<DashboardScreen>
   late AnimationController _entryCtrl;
   late Animation<double>   _fadeAnim;
 
+  // Admin-renamable section title: uses the app_settings override when set,
+  // else the built-in default.
+  static String _label(String key, String fallback) {
+    final v = AppSettingsService.instance.get(key, '').trim();
+    return v.isEmpty ? fallback : v;
+  }
+
   final List<Map<String, dynamic>> _coreItems = [
     {
-      'title':       'TUNNL TRICKS',
+      'title':       _label('label_tricks', 'TUNNL TRICKS'),
       'subtitle':    'Learn powerful strategies & tricks',
       'icon':        Icons.layers_rounded,
       'image':       'assets/images/b1.jpg',
@@ -61,7 +69,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       'titleColor':  Colors.white,
     },
     {
-      'title':       '5000 SPEED MATH\nMCQS',
+      'title':       _label('label_mcq', '5000 SPEED MATH\nMCQS'),
       'subtitle':    'Practice unlimited MCQs',
       'icon':        Icons.quiz_rounded,
       'image':       'assets/images/b2.jpg',
@@ -71,7 +79,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       'titleColor':  Colors.white,
     },
     {
-      'title':       '5000+ PREVIOUS YEAR\nQUESTIONS',
+      'title':       _label('label_pyq', '5000+ PREVIOUS YEAR\nQUESTIONS'),
       'subtitle':    'Complete PYQ access',
       'icon':        Icons.history_edu_rounded,
       'image':       'assets/images/b3.jpg',
@@ -81,7 +89,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       'titleColor':  Colors.white,
     },
     {
-      'title':       'SHORTS',
+      'title':       _label('label_shorts', 'SHORTS'),
       'subtitle':    'Watch quick math tips',
       'icon':        Icons.play_circle_rounded,
       'image':       'assets/images/b6.jpg',
@@ -91,7 +99,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       'titleColor':  Colors.white,
     },
     {
-      'title':       'DAILY PRACTICE\nMCQS',
+      'title':       _label('label_daily', 'DAILY PRACTICE\nMCQS'),
       'subtitle':    'Daily challenge sets',
       'icon':        Icons.calendar_today_rounded,
       'image':       'assets/images/b4.jpg',
@@ -101,7 +109,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       'titleColor':  Colors.white,
     },
     {
-      'title':       'SOLVE & EARN',
+      'title':       _label('label_solve_earn', 'SOLVE & EARN'),
       'subtitle':    'Earn rewards by solving quizzes',
       'icon':        Icons.card_giftcard_rounded,
       'image':       'assets/images/b5.jpg',

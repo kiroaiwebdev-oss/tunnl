@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             intval($_POST['set_number']),
             trim($_POST['title'] ?? ''),
             $_POST['level'],
-            min(10, max(1, intval($_POST['total_questions'] ?? 10))),
+            max(1, intval($_POST['total_questions'] ?? 10)),
             isset($_POST['is_locked']) ? 1 : 0,
             isset($_POST['is_premium']) ? 1 : 0,
         ]);
@@ -108,8 +108,8 @@ require_once dirname(__DIR__) . '/includes/header.php';
     </div>
     <div class="form-group">
       <label class="form-label">Total Questions *</label>
-      <input type="number" name="total_questions" class="form-input" value="10" required min="1" max="10">
-      <p style="font-size:11px;color:var(--muted);margin-top:4px">Every set is capped at 10 questions.</p>
+      <input type="number" name="total_questions" class="form-input" value="10" required min="1" max="200">
+      <p style="font-size:11px;color:var(--muted);margin-top:4px">Default 10. Increase if you want a longer test. For a random pool (e.g. Tunnlity), upload more questions than this and each attempt picks this many at random.</p>
     </div>
   </div>
 

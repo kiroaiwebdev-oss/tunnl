@@ -17,6 +17,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'min_app_version', 'premium_price',
             'premium_yearly_price', 'premium_lifetime_price',
             'daily_dose_text', 'daily_dose_active',
+            // Weekly challenge winner (admin-announced)
+            'weekly_winner',
+            // Dashboard / Hub section name overrides (shown in the app)
+            'label_tricks', 'label_mcq', 'label_pyq',
+            'label_shorts', 'label_daily', 'label_solve_earn',
             // Razorpay
             'razorpay_enabled', 'razorpay_key_id', 'razorpay_key_secret',
             // OTP / SMS
@@ -72,6 +77,9 @@ foreach ($settingsRaw as $row) {
   </button>
   <button type="button" class="tab-btn" onclick="showTab('content',this)">
     <i class="fas fa-file-alt"></i> Content
+  </button>
+  <button type="button" class="tab-btn" onclick="showTab('sections',this)">
+    <i class="fas fa-table-cells-large"></i> Sections & Winner
   </button>
   <button type="button" class="tab-btn" onclick="showTab('premium',this)">
     <i class="fas fa-crown"></i> Premium
@@ -341,6 +349,60 @@ foreach ($settingsRaw as $row) {
     </div>
     <textarea name="about_us" class="form-textarea" rows="6" style="width:100%"
       placeholder="Write about your app..."><?= htmlspecialchars($s['about_us'] ?? '') ?></textarea>
+  </div>
+</div>
+
+<!-- ════ TAB: SECTIONS & WINNER ════ -->
+<div class="tab-panel" id="tab-sections">
+  <div class="card mb-24">
+    <div class="card-header">
+      <div class="card-title-text">
+        <i class="fas fa-table-cells-large" style="color:var(--cyan)"></i> Dashboard Section Names
+      </div>
+    </div>
+    <p class="text-muted" style="margin:0 0 8px;font-size:12px">
+      Rename the cards shown on the app dashboard/hub. Leave blank to use the default name.
+    </p>
+    <?php
+      $labelDefs = [
+        'label_tricks'      => ['Tunnl Tricks',           'TUNNL TRICKS'],
+        'label_mcq'         => ['5000 Speed Math MCQs',   '5000 SPEED MATH MCQS'],
+        'label_pyq'         => ['Previous Year',          '5000+ PREVIOUS YEAR QUESTIONS'],
+        'label_shorts'      => ['Shorts',                 'SHORTS'],
+        'label_daily'       => ['Daily Practice MCQs',    'DAILY PRACTICE MCQS'],
+        'label_solve_earn'  => ['Solve & Earn',           'SOLVE & EARN'],
+      ];
+      foreach ($labelDefs as $key => $def):
+    ?>
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-title"><?= htmlspecialchars($def[0]) ?></div>
+        <div class="setting-desc">Default: <?= htmlspecialchars($def[1]) ?></div>
+      </div>
+      <div class="setting-control">
+        <input type="text" name="<?= $key ?>" class="form-input"
+          value="<?= htmlspecialchars($s[$key] ?? '') ?>"
+          placeholder="<?= htmlspecialchars($def[1]) ?>">
+      </div>
+    </div>
+    <?php endforeach; ?>
+  </div>
+
+  <div class="card mb-24">
+    <div class="card-header">
+      <div class="card-title-text">
+        <i class="fas fa-trophy" style="color:var(--warning)"></i> Weekly Challenge Winner
+      </div>
+    </div>
+    <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:10px">
+      <div class="setting-info" style="margin:0">
+        <div class="setting-title">Announce Winner</div>
+        <div class="setting-desc">Shown as a banner on the Weekly Challenge leaderboard in the app. Leave blank to hide.</div>
+      </div>
+      <input type="text" name="weekly_winner" class="form-input" style="width:100%"
+        value="<?= htmlspecialchars($s['weekly_winner'] ?? '') ?>"
+        placeholder="e.g. 🏆 This week's winner: Rahul Kumar (NTPC Set)">
+    </div>
   </div>
 </div>
 

@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             intval($_POST['set_number']),
             trim($_POST['title'] ?? ''),
             $_POST['level'],
-            min(10, max(1, intval($_POST['total_questions'] ?? 10))),
+            max(1, intval($_POST['total_questions'] ?? 10)),
             isset($_POST['is_locked'])  ? 1 : 0,
             isset($_POST['is_premium']) ? 1 : 0,
             $id
@@ -125,8 +125,8 @@ require_once dirname(__DIR__) . '/includes/header.php';
     <div class="form-group">
       <label class="form-label">Total Questions *</label>
       <input type="number" name="total_questions" class="form-input"
-        value="<?= min(10, (int)$set['total_questions']) ?>" required min="1" max="10">
-      <p style="font-size:11px;color:var(--muted);margin-top:4px">Every set is capped at 10 questions.</p>
+        value="<?= max(1, (int)$set['total_questions']) ?>" required min="1" max="200">
+      <p style="font-size:11px;color:var(--muted);margin-top:4px">Default 10. Increase for a longer test, or keep small with a bigger question pool for random sets.</p>
     </div>
   </div>
   <div style="display:flex;gap:24px;margin-bottom:20px">

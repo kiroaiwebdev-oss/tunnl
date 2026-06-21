@@ -19,15 +19,19 @@ if ($set['is_premium'] && !$user['is_premium']) {
     error('Premium required to access this set', 403);
 }
 
-// Get questions (shuffle). Tunnl rule: EVERY set is capped at 10 questions,
-// regardless of category (mcq / simplification / previous_year / tunnlity).
+// Questions per set is admin-controlled via the set's `total_questions`
+// column (defaults to 10). With shuffle on, this also gives a random subset
+// from a larger pool (e.g. Tunnlity's 200-question bank → 10 random each time).
+$limit = intval($set['total_questions'] ?? 0);
+if ($limit <= 0) $limit = 10;
+
 $questions = $pdo->prepare("
     SELECT id, question_text, option_a, option_b, option_c, option_d,
            correct_option, explanation, difficulty, time_limit
     FROM questions
     WHERE set_id = ? AND is_active = 1
     ORDER BY " . (!empty($_GET['shuffle']) ? 'RAND()' : 'order_num ASC') . "
-    LIMIT 10
+    LIMIT $limit
 ");
 $questions->execute([$setId]);
 $questions = $questions->fetchAll();

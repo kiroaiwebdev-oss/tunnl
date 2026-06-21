@@ -71,9 +71,10 @@ $result = array_map(function ($s) use ($isPremium) {
         'exam_name'       => $s['exam_name'] ?? '',
         'category'        => $s['category'],
         'level'           => $s['level']     ?? 'beginner',
-        // Tunnl rule: every set is a 10-question set.
-        'total_questions' => 10,
-        'question_count'  => min(10, intval($s['question_count'])),
+        // Admin-controlled question count (defaults to 10).
+        'total_questions' => (intval($s['total_questions'] ?? 0) > 0
+                               ? intval($s['total_questions']) : 10),
+        'question_count'  => intval($s['question_count']),
         'is_locked'       => !empty($s['is_locked']),
         'is_premium'      => $premium,
         'can_access'      => !$premium || $isPremium,

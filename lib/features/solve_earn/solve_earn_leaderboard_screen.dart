@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/user_service.dart';
+import '../../core/services/app_settings_service.dart';
 
 class SolveEarnLeaderboardScreen extends StatefulWidget {
   const SolveEarnLeaderboardScreen({super.key});
@@ -107,6 +108,45 @@ class _SolveEarnLeaderboardScreenState
     return '$m:${s.toString().padLeft(2, '0')}';
   }
 
+  // Admin-announced weekly winner banner (hidden when not set).
+  Widget _buildWinnerBanner() {
+    final winner = AppSettingsService.instance.get('weekly_winner', '').trim();
+    if (winner.isEmpty) return const SizedBox.shrink();
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF3A2E00), Color(0xFF1A1400)]),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.yellow.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.workspace_premium_rounded,
+              color: AppColors.yellow, size: 26),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('WINNER ANNOUNCED',
+                    style: GoogleFonts.orbitron(
+                        fontSize: 10, fontWeight: FontWeight.w700,
+                        color: AppColors.yellow, letterSpacing: 1.5)),
+                const SizedBox(height: 3),
+                Text(winner,
+                    style: GoogleFonts.poppins(
+                        fontSize: 13, fontWeight: FontWeight.w600,
+                        color: Colors.white)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -138,6 +178,7 @@ class _SolveEarnLeaderboardScreenState
                                       horizontal: 20),
                                   child: _buildWeeklyBanner(),
                                 ),
+                                _buildWinnerBanner(),
                                 const SizedBox(height: 16),
                                 if (_leaderboard.isEmpty)
                                   _buildEmpty()
