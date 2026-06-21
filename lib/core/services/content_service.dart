@@ -408,14 +408,27 @@ class ContentService {
               .map((e) => Map<String, dynamic>.from(e))
               .toList()
           : <Map<String, dynamic>>[];
-      return {
-        'leaderboard': list,
-        'my_rank': res['my_rank'],
-        'my_best': res['my_best'],
-      };
+  // ── Per-set leaderboard (result-page ranking) ─────
+  /// Returns { top: [...], my_rank, total } for a given set.
+  static Future<Map<String, dynamic>> getSetLeaderboard(int setId) async {
+    try {
+      final res = await ApiClient.get(
+        ApiEndpoints.setLeaderboard,
+        params: {'set_id': '$setId'},
+        auth: true,
+      );
+      if (!_ok(res)) return {'top': const [], 'my_rank': null, 'total': 0};
+      final raw = res['top'];
+      final top = (raw is List)
+          ? raw
+              .whereType<Map>()
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList()
+          : <Map<String, dynamic>>[];
+      return {'top': top, 'my_rank': res['my_rank'], 'total': res['total'] ?? 0};
     } catch (e) {
-      debugPrint('[TunnlityLeaderboard] ERROR: $e');
-      return {'leaderboard': const [], 'my_rank': null, 'my_best': null};
+      debugPrint('[SetLeaderboard] ERROR: $e');
+      return {'top': const [], 'my_rank': null, 'total': 0};
     }
   }
 }

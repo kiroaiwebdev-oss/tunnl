@@ -76,6 +76,11 @@ class _ResultScreenState extends State<ResultScreen>
   bool   _savedOk     = false;
   bool   _isPremium   = false;
 
+  // ── Per-set ranking (shown on result page for real sets) ──
+  List<Map<String, dynamic>> _setTop = [];
+  int? _setRank;
+  int  _setTotal = 0;
+
   // Same premium benefits shown on the Premium ("Ticket to Tunnl") screen,
   // kept in sync so the result-screen upsell lists the real features.
   static const List<String> _premiumBenefits = [
@@ -134,14 +139,33 @@ class _ResultScreenState extends State<ResultScreen>
   Future<void> _saveResultAndCheckPremium() async {
     setState(() => _isSaving = true);
 
-    // Parallel
+    // Save first so this attempt is included in the per-set ranking below.
+    await _saveResult();
+
     await Future.wait([
-      _saveResult(),
       _checkPremium(),
       _saveTunnlityScore(),
+      _loadSetRanking(),
     ]);
 
     if (mounted) setState(() => _isSaving = false);
+  }
+
+  // Per-set ranking (any real set: PYQ, 5000+ MCQ, etc.). Tunnlity has its own
+  // dedicated leaderboard, so it is excluded here.
+  Future<void> _loadSetRanking() async {
+    if (widget.setId <= 0 || widget.mode == 'tunnelity') return;
+    final res = await ContentService.getSetLeaderboard(widget.setId);
+    if (!mounted) return;
+    setState(() {
+      _setTop = (res['top'] as List?)
+              ?.whereType<Map>()
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList() ??
+          [];
+      _setRank  = (res['my_rank'] as num?)?.toInt();
+      _setTotal = (res['total'] as num?)?.toInt() ?? 0;
+    });
   }
 
   // Persist Tunnlity speed-test score locally so the Tunnlity screen can show
@@ -358,6 +382,8 @@ class _ResultScreenState extends State<ResultScreen>
           const SizedBox(height: 16),
           _buildPerformanceCard(),
           const SizedBox(height: 24),
+          if (_setTotal > 0) _buildRankingCard(),
+          if (_setTotal > 0) const SizedBox(height: 16),
           _buildRetryButton(),
           const SizedBox(height: 12),
           _buildDashboardButton(),
@@ -549,6 +575,78 @@ class _ResultScreenState extends State<ResultScreen>
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  // ── Per-set ranking card (your rank + top 3) ──────
+  Widget _buildRankingCard() {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.darkCard,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.yellow.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.leaderboard_rounded,
+                  color: AppColors.yellow, size: 20),
+              const SizedBox(width: 8),
+              Text('Your Ranking',
+                  style: GoogleFonts.poppins(
+                      fontSize: 15, fontWeight: FontWeight.w700,
+                      color: Colors.white)),
+              const Spacer(),
+              if (_setRank != null)
+                Text('#$_setRank of $_setTotal',
+                    style: GoogleFonts.orbitron(
+                        fontSize: 14, fontWeight: FontWeight.w700,
+                        color: AppColors.yellow)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text('$_setTotal student${_setTotal == 1 ? '' : 's'} attempted this set',
+              style: GoogleFonts.poppins(
+                  fontSize: 11, color: AppColors.textSecondary)),
+          const SizedBox(height: 14),
+          ..._setTop.map((e) {
+            final medal = e['medal'] as String?;
+            final isMe = e['is_me'] == true;
+            final name = '${e['name'] ?? 'Anonymous'}';
+            final score = (e['best_score'] as num?)?.toInt() ?? 0;
+            final acc = (e['best_accuracy'] as num?)?.toDouble() ?? 0.0;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 28,
+                    child: Text(medal ?? '#${e['rank']}',
+                        style: const TextStyle(fontSize: 16)),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(isMe ? '$name (You)' : name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            fontWeight:
+                                isMe ? FontWeight.w700 : FontWeight.w500,
+                            color: isMe ? AppColors.yellow : Colors.white)),
+                  ),
+                  Text('$score pts • ${acc.toStringAsFixed(0)}%',
+                      style: GoogleFonts.poppins(
+                          fontSize: 11, color: AppColors.textSecondary)),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );
