@@ -47,7 +47,7 @@ function ytId(string $url): ?string {
 // Detect the platform: prefer the stored column, fall back to URL sniffing.
 function detectPlatform(array $s, string $url): string {
     $p = strtolower(trim($s['platform'] ?? ''));
-    if (in_array($p, ['youtube', 'instagram', 'facebook', 'telegram'], true)) {
+    if (in_array($p, ['youtube', 'instagram', 'facebook', 'telegram', 'local'], true)) {
         return $p;
     }
     $u = strtolower($url);

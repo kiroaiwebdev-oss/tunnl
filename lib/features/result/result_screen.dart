@@ -833,6 +833,40 @@ class _ResultScreenState extends State<ResultScreen>
                   ),
                 ),
 
+              // Solution / explanation (from CSV `explanation` column)
+              if ((item['explanation']?.toString() ?? '').trim().isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.neonCyan.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: AppColors.neonCyan.withValues(alpha: 0.25)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.lightbulb_rounded,
+                            color: AppColors.neonCyan, size: 14),
+                          const SizedBox(width: 6),
+                          Text('Solution',
+                            style: GoogleFonts.poppins(
+                              fontSize: 11, fontWeight: FontWeight.w700,
+                              color: AppColors.neonCyan)),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(item['explanation'].toString(),
+                        style: GoogleFonts.poppins(
+                          fontSize: 12, color: AppColors.textSecondary,
+                          height: 1.5)),
+                    ],
+                  ),
+                ),
+
               // Time taken
               Padding(
                 padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),

@@ -15,11 +15,32 @@ $success = $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $platform  = strtolower(trim($_POST['platform'] ?? 'youtube'));
-        if (!in_array($platform, ['youtube', 'instagram', 'facebook'], true)) {
+        if (!in_array($platform, ['youtube', 'instagram', 'facebook', 'local'], true)) {
             $platform = 'youtube';
         }
         $videoUrl  = trim($_POST['video_url'] ?? '');
         $thumbnail = trim($_POST['thumbnail_url'] ?? '');
+
+        // Optional: replace with a locally-uploaded video file
+        if (!empty($_FILES['video_file']['name'])) {
+            $ext     = strtolower(pathinfo($_FILES['video_file']['name'], PATHINFO_EXTENSION));
+            $allowed = ['mp4', 'webm', 'mov', 'm4v'];
+            if (!in_array($ext, $allowed)) {
+                throw new Exception('Only MP4, WEBM, MOV or M4V videos are allowed.');
+            }
+            if ($_FILES['video_file']['size'] > 60 * 1024 * 1024) {
+                throw new Exception('Maximum video size is 60MB.');
+            }
+            $dir = dirname(__DIR__) . '/uploads/shorts/';
+            if (!is_dir($dir)) mkdir($dir, 0755, true);
+            $fname = 'short_' . time() . '_' . mt_rand(100, 999) . '.' . $ext;
+            if (move_uploaded_file($_FILES['video_file']['tmp_name'], $dir . $fname)) {
+                $videoUrl = 'https://' . $_SERVER['HTTP_HOST'] . '/uploads/shorts/' . $fname;
+                $platform = 'local';
+            } else {
+                throw new Exception('Failed to save the uploaded video.');
+            }
+        }
 
         if ($thumbnail === '' && $platform === 'youtube') {
             if (preg_match('/(?:v=|\/shorts\/|youtu\.be\/|\/embed\/)([a-zA-Z0-9_-]{11})/', $videoUrl, $m)) {
@@ -51,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $curUrl      = !empty($short['youtube_url']) ? $short['youtube_url'] : ($short['url'] ?? '');
 $curPlatform = strtolower($short['platform'] ?? 'youtube');
-if (!in_array($curPlatform, ['youtube', 'instagram', 'facebook'], true)) {
+if (!in_array($curPlatform, ['youtube', 'instagram', 'facebook', 'local'], true)) {
     $curPlatform = 'youtube';
 }
 $curThumb = $short['thumbnail_url'] ?? '';
@@ -80,12 +101,12 @@ $curThumb = $short['thumbnail_url'] ?? '';
   </a>
 </div>
 
-<form method="POST">
+<form method="POST" enctype="multipart/form-data">
 <div class="card mb-16">
   <div class="form-group">
     <label class="form-label">Platform *</label>
     <select name="platform" id="platform" class="form-select" required onchange="onPlatformChange()">
-      <?php foreach (['youtube'=>'▶️ YouTube','instagram'=>'📸 Instagram','facebook'=>'📘 Facebook'] as $v=>$l): ?>
+      <?php foreach (['youtube'=>'▶️ YouTube','instagram'=>'📸 Instagram','facebook'=>'📘 Facebook','local'=>'📁 Local Upload'] as $v=>$l): ?>
       <option value="<?= $v ?>" <?= $curPlatform===$v?'selected':'' ?>><?= $l ?></option>
       <?php endforeach; ?>
     </select>
@@ -103,6 +124,14 @@ $curThumb = $short['thumbnail_url'] ?? '';
     <input type="url" name="video_url" id="videoUrl" class="form-input" required
       value="<?= htmlspecialchars($curUrl) ?>"
       oninput="updatePreview()">
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Replace with Local Video (optional)</label>
+    <input type="file" name="video_file" class="form-input" accept=".mp4,.webm,.mov,.m4v" style="padding:8px">
+    <div style="font-size:11px;color:var(--muted);margin-top:4px">
+      Upload to replace with a local video (MP4/WEBM/MOV, max 60MB). This switches the platform to Local.
+    </div>
   </div>
 
   <div class="form-group">

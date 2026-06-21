@@ -7,11 +7,35 @@ $success = $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $platform  = strtolower(trim($_POST['platform'] ?? 'youtube'));
-        if (!in_array($platform, ['youtube', 'instagram', 'facebook'], true)) {
+        if (!in_array($platform, ['youtube', 'instagram', 'facebook', 'local'], true)) {
             $platform = 'youtube';
         }
         $videoUrl  = trim($_POST['video_url'] ?? '');
         $thumbnail = trim($_POST['thumbnail_url'] ?? '');
+
+        // Local video file upload
+        if ($platform === 'local' && !empty($_FILES['video_file']['name'])) {
+            $ext     = strtolower(pathinfo($_FILES['video_file']['name'], PATHINFO_EXTENSION));
+            $allowed = ['mp4', 'webm', 'mov', 'm4v'];
+            if (!in_array($ext, $allowed)) {
+                throw new Exception('Only MP4, WEBM, MOV or M4V videos are allowed.');
+            }
+            if ($_FILES['video_file']['size'] > 60 * 1024 * 1024) {
+                throw new Exception('Maximum video size is 60MB.');
+            }
+            $dir = dirname(__DIR__) . '/uploads/shorts/';
+            if (!is_dir($dir)) mkdir($dir, 0755, true);
+            $fname = 'short_' . time() . '_' . mt_rand(100, 999) . '.' . $ext;
+            if (move_uploaded_file($_FILES['video_file']['tmp_name'], $dir . $fname)) {
+                $videoUrl = 'https://' . $_SERVER['HTTP_HOST'] . '/uploads/shorts/' . $fname;
+            } else {
+                throw new Exception('Failed to save the uploaded video.');
+            }
+        }
+
+        if ($videoUrl === '') {
+            throw new Exception('Provide a video URL or upload a video file.');
+        }
 
         // Auto-derive YouTube thumbnail if admin left it empty.
         if ($thumbnail === '' && $platform === 'youtube') {
@@ -69,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </a>
 </div>
 
-<form method="POST">
+<form method="POST" enctype="multipart/form-data">
 <div class="card mb-16">
   <div class="form-group">
     <label class="form-label">Platform *</label>
@@ -77,6 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <option value="youtube">▶️ YouTube</option>
       <option value="instagram">📸 Instagram</option>
       <option value="facebook">📘 Facebook</option>
+      <option value="local">📁 Local Upload</option>
     </select>
     <div id="platformHint" style="font-size:11px;color:var(--muted);margin-top:4px">
       Paste a YouTube Shorts/video link.
@@ -90,12 +115,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       placeholder="e.g. 11 ka table ek second mein!">
   </div>
 
-  <div class="form-group">
-    <label class="form-label">Video URL *</label>
-    <input type="url" name="video_url" id="videoUrl" class="form-input" required
+  <div class="form-group" id="urlGroup">
+    <label class="form-label">Video URL <span id="urlReq">*</span></label>
+    <input type="url" name="video_url" id="videoUrl" class="form-input"
       value="<?= htmlspecialchars($_POST['video_url'] ?? '') ?>"
       placeholder="https://youtube.com/shorts/..."
       oninput="updatePreview()">
+  </div>
+
+  <div class="form-group" id="fileGroup" style="display:none">
+    <label class="form-label">Upload Video File *</label>
+    <input type="file" name="video_file" class="form-input" accept=".mp4,.webm,.mov,.m4v" style="padding:8px">
+    <div style="font-size:11px;color:var(--muted);margin-top:4px">
+      MP4 / WEBM / MOV · Max 60MB. Uploaded videos play directly in the app.
+    </div>
   </div>
 
   <div class="form-group">
@@ -182,7 +215,18 @@ function onPlatformChange() {
     hint.textContent = 'Paste a Facebook video/reel link. Add a thumbnail image URL below.';
     thumbReq.textContent = '(recommended)';
     icon.className = 'fab fa-facebook'; icon.style.color = '#1877F2';
+  } else if (p === 'local') {
+    hint.textContent = 'Upload a video file (MP4/WEBM/MOV). It will play directly in the app.';
+    thumbReq.textContent = '(recommended)';
+    icon.className = 'fas fa-file-video'; icon.style.color = '#10B981';
   }
+
+  // Toggle URL vs file-upload inputs for local platform
+  const isLocal = (p === 'local');
+  document.getElementById('urlGroup').style.display  = isLocal ? 'none' : 'block';
+  document.getElementById('fileGroup').style.display = isLocal ? 'block' : 'none';
+  document.getElementById('urlReq').textContent = isLocal ? '' : '*';
+
   updatePreview();
 }
 
