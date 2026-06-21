@@ -5,7 +5,37 @@ checkApiKey();
 $method = $_SERVER['REQUEST_METHOD'];
 $user   = requireAuth($pdo);
 
-// GET — Active challenge
+// ── 7-day challenge config ──────────────────────────
+// A challenge runs 7 days. Each day has 10 questions, mapped from the assigned
+// questions' order_num (1-10 = day 1, 11-20 = day 2, ... 61-70 = day 7).
+// Final ranking aggregates all days: total correct (accuracy) then total time.
+const WC_DAYS    = 7;
+const WC_PER_DAY = 10;
+
+/**
+ * Returns [currentDay, sevenDayMode, totalAssigned].
+ * Legacy challenges (<=10 questions assigned) stay single-day so old data works.
+ */
+function wc_day_info(PDO $pdo, array $challenge): array {
+    $total = (int)$pdo->query(
+        "SELECT COUNT(*) FROM challenge_questions WHERE challenge_id = " . (int)$challenge['id']
+    )->fetchColumn();
+
+    $sevenDay = $total > WC_PER_DAY;
+    if (!$sevenDay) return [1, false, $total];
+
+    $startStr = !empty($challenge['start_date']) ? $challenge['start_date'] : ($challenge['created_at'] ?? date('Y-m-d'));
+    $start    = strtotime(date('Y-m-d', strtotime($startStr)));
+    $today    = strtotime(date('Y-m-d'));
+    $day      = (int)floor(($today - $start) / 86400) + 1;
+    if ($day < 1) $day = 1;
+    if ($day > WC_DAYS) $day = WC_DAYS;
+    return [$day, true, $total];
+}
+
+// ══════════════════════════════════════════════════════
+// GET — Active challenge (today's questions + aggregate leaderboard)
+// ══════════════════════════════════════════════════════
 if ($method === 'GET') {
     $challenge = $pdo->query("
         SELECT * FROM weekly_challenges
@@ -18,79 +48,124 @@ if ($method === 'GET') {
         response(['success'=>true,'challenge'=>null,'message'=>'No active challenge']);
     }
 
-    // Check if user already participated
-    $entry = $pdo->prepare("
-        SELECT * FROM challenge_entries
-        WHERE challenge_id=? AND user_id=? LIMIT 1
-    ");
-    $entry->execute([$challenge['id'], $user['id']]);
-    $entry = $entry->fetch();
+    [$day, $sevenDay, $totalAssigned] = wc_day_info($pdo, $challenge);
 
-    // Questions (only if not attempted yet)
+    // Has the user attempted TODAY's day?
+    $entryStmt = $pdo->prepare("
+        SELECT * FROM challenge_entries
+        WHERE challenge_id=? AND user_id=? AND day_number=? LIMIT 1
+    ");
+    $entryStmt->execute([$challenge['id'], $user['id'], $day]);
+    $entry = $entryStmt->fetch();
+
+    // Today's questions (only if not attempted yet today)
     $questions = [];
     if (!$entry) {
-        $qs = $pdo->prepare("
-            SELECT q.id, q.question_text, q.option_a, q.option_b,
-                   q.option_c, q.option_d, q.difficulty
-            FROM challenge_questions cq
-            JOIN questions q ON cq.question_id = q.id
-            WHERE cq.challenge_id = ?
-            ORDER BY cq.order_num ASC
-        ");
-        $qs->execute([$challenge['id']]);
+        if ($sevenDay) {
+            $startOrd = ($day - 1) * WC_PER_DAY + 1;
+            $endOrd   = $day * WC_PER_DAY;
+            $qs = $pdo->prepare("
+                SELECT q.id, q.question_text, q.option_a, q.option_b,
+                       q.option_c, q.option_d, q.difficulty,
+                       q.question_text_hi, q.option_a_hi, q.option_b_hi,
+                       q.option_c_hi, q.option_d_hi
+                FROM challenge_questions cq
+                JOIN questions q ON cq.question_id = q.id
+                WHERE cq.challenge_id = ? AND cq.order_num BETWEEN ? AND ?
+                ORDER BY cq.order_num ASC
+            ");
+            $qs->execute([$challenge['id'], $startOrd, $endOrd]);
+        } else {
+            $qs = $pdo->prepare("
+                SELECT q.id, q.question_text, q.option_a, q.option_b,
+                       q.option_c, q.option_d, q.difficulty,
+                       q.question_text_hi, q.option_a_hi, q.option_b_hi,
+                       q.option_c_hi, q.option_d_hi
+                FROM challenge_questions cq
+                JOIN questions q ON cq.question_id = q.id
+                WHERE cq.challenge_id = ?
+                ORDER BY cq.order_num ASC
+            ");
+            $qs->execute([$challenge['id']]);
+        }
         $questions = $qs->fetchAll();
     }
 
-    // Leaderboard top 10 — ranked by accuracy, then fastest time, then score.
+    // Aggregate leaderboard (sum across all days) — accuracy then time.
     $top = $pdo->prepare("
-        SELECT e.score, e.accuracy, e.time_taken, u.name,
-          RANK() OVER (ORDER BY e.accuracy DESC, e.time_taken ASC, e.score DESC) as rank
+        SELECT u.name,
+               SUM(e.correct)        AS score,
+               SUM(e.time_taken)     AS time_taken,
+               ROUND(AVG(e.accuracy),1) AS accuracy,
+               RANK() OVER (ORDER BY SUM(e.correct) DESC, SUM(e.time_taken) ASC) AS rank
         FROM challenge_entries e
         JOIN users u ON e.user_id = u.id
         WHERE e.challenge_id = ?
-        ORDER BY e.accuracy DESC, e.time_taken ASC, e.score DESC
+        GROUP BY e.user_id, u.name
+        ORDER BY SUM(e.correct) DESC, SUM(e.time_taken) ASC
         LIMIT 10
     ");
     $top->execute([$challenge['id']]);
     $top = $top->fetchAll();
+
+    // My aggregate so far
+    $mine = $pdo->prepare("
+        SELECT SUM(correct) AS total_correct, SUM(time_taken) AS total_time,
+               ROUND(AVG(accuracy),1) AS accuracy, COUNT(*) AS days_played
+        FROM challenge_entries WHERE challenge_id=? AND user_id=?
+    ");
+    $mine->execute([$challenge['id'], $user['id']]);
+    $mine = $mine->fetch() ?: [];
 
     response([
         'success'     => true,
         'challenge'   => [
             'id'             => intval($challenge['id']),
             'title'          => $challenge['title'],
-            'description'    => $challenge['description'],
-            'start_date'     => $challenge['start_date'],
-            'end_date'       => $challenge['end_date'],
-            'prize_amount'   => floatval($challenge['prize_amount']),
-            'total_questions'=> intval($challenge['total_questions']),
-            'time_limit'     => intval($challenge['time_limit']),
-            'is_attempted'   => (bool)$entry,
+            'description'    => $challenge['description'] ?? '',
+            'start_date'     => $challenge['start_date'] ?? null,
+            'end_date'       => $challenge['end_date'] ?? null,
+            'prize_amount'   => floatval($challenge['prize_amount'] ?? 0),
+            'total_questions'=> $sevenDay ? (WC_DAYS * WC_PER_DAY) : intval($challenge['total_questions'] ?? 0),
+            'time_limit'     => intval($challenge['time_limit'] ?? 10),
+            'current_day'    => $day,
+            'total_days'     => $sevenDay ? WC_DAYS : 1,
+            'per_day'        => WC_PER_DAY,
+            'is_attempted'   => (bool)$entry,          // attempted TODAY
+            'my_total_correct' => intval($mine['total_correct'] ?? 0),
+            'my_total_time'    => intval($mine['total_time'] ?? 0),
+            'my_days_played'   => intval($mine['days_played'] ?? 0),
             'my_entry'       => $entry ? [
-                'score'     => intval($entry['score']),
-                'accuracy'  => round($entry['accuracy'],1),
-                'time_taken'=> intval($entry['time_taken']),
-                'is_winner' => (bool)$entry['is_winner'],
-                'prize_won' => floatval($entry['prize_won']),
+                'score'     => intval($entry['correct'] ?? $entry['score'] ?? 0),
+                'accuracy'  => round(($entry['accuracy'] ?? 0), 1),
+                'time_taken'=> intval($entry['time_taken'] ?? 0),
+                'is_winner' => (bool)($entry['is_winner'] ?? 0),
             ] : null,
         ],
         'questions'   => array_map(fn($q) => [
-            'id'       => intval($q['id']),
-            'question' => $q['question_text'],
-            'options'  => ['a'=>$q['option_a'],'b'=>$q['option_b'],'c'=>$q['option_c'],'d'=>$q['option_d']],
+            'id'        => intval($q['id']),
+            'question'  => $q['question_text'],
+            'options'   => ['a'=>$q['option_a'],'b'=>$q['option_b'],'c'=>$q['option_c'],'d'=>$q['option_d']],
+            'question_hi'=> $q['question_text_hi'] ?? '',
+            'options_hi'=> [
+                'a'=>$q['option_a_hi'] ?? '', 'b'=>$q['option_b_hi'] ?? '',
+                'c'=>$q['option_c_hi'] ?? '', 'd'=>$q['option_d_hi'] ?? '',
+            ],
             'difficulty'=> $q['difficulty'],
         ], $questions),
         'leaderboard' => array_map(fn($r) => [
             'rank'      => intval($r['rank']),
             'name'      => $r['name'] ?: 'Anonymous',
             'score'     => intval($r['score']),
-            'accuracy'  => round($r['accuracy'],1),
+            'accuracy'  => round($r['accuracy'], 1),
             'time_taken'=> intval($r['time_taken']),
         ], $top),
     ]);
 }
 
-// POST — Submit challenge attempt
+// ══════════════════════════════════════════════════════
+// POST — Submit a day's attempt
+// ══════════════════════════════════════════════════════
 if ($method === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 
@@ -101,22 +176,29 @@ if ($method === 'POST') {
 
     if (!$challengeId) error('challenge_id required');
 
-    // Check already submitted
+    $ch = $pdo->prepare("SELECT * FROM weekly_challenges WHERE id=? LIMIT 1");
+    $ch->execute([$challengeId]);
+    $ch = $ch->fetch();
+    if (!$ch) error('Challenge not found', 404);
+
+    [$day] = wc_day_info($pdo, $ch);
+
+    // One attempt per day
     $exists = $pdo->prepare("
         SELECT id FROM challenge_entries
-        WHERE challenge_id=? AND user_id=? LIMIT 1
+        WHERE challenge_id=? AND user_id=? AND day_number=? LIMIT 1
     ");
-    $exists->execute([$challengeId, $user['id']]);
-    if ($exists->fetch()) error('Already submitted for this challenge');
+    $exists->execute([$challengeId, $user['id'], $day]);
+    if ($exists->fetch()) error("You've already submitted today's challenge. Come back tomorrow!");
 
     $total    = $correct + $wrong;
     $accuracy = $total > 0 ? round(($correct/$total)*100, 2) : 0;
 
     $pdo->prepare("
         INSERT INTO challenge_entries
-          (challenge_id, user_id, score, correct, wrong, accuracy, time_taken, submitted_at)
-        VALUES (?,?,?,?,?,?,?,NOW())
-    ")->execute([$challengeId, $user['id'], $correct, $correct, $wrong, $accuracy, $timeTaken]);
+          (challenge_id, user_id, day_number, score, correct, wrong, accuracy, time_taken, submitted_at)
+        VALUES (?,?,?,?,?,?,?,?,NOW())
+    ")->execute([$challengeId, $user['id'], $day, $correct, $correct, $wrong, $accuracy, $timeTaken]);
 
     // XP for participation
     $xp = 30 + ($correct * 5);
@@ -125,11 +207,12 @@ if ($method === 'POST') {
 
     response([
         'success'   => true,
-        'message'   => 'Challenge submitted!',
+        'message'   => "Day $day submitted!",
         'result'    => [
             'score'    => $correct,
             'total'    => $total,
             'accuracy' => $accuracy,
+            'day'      => $day,
             'xp_earned'=> $xp,
         ],
     ]);

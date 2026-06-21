@@ -207,6 +207,13 @@ function cv($post, $challenge, $key, $default = '') {
     <span id="selectedCount" style="font-size:12px;color:var(--cyan);font-weight:700">0 selected</span>
   </div>
 
+  <div style="background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.2);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--muted);line-height:1.6">
+    <i class="fas fa-circle-info" style="color:var(--cyan)"></i>
+    <strong style="color:var(--cyan)">7-Day Challenge:</strong> assign <strong>70 questions in order</strong> —
+    first 10 = Day 1, next 10 = Day 2 … last 10 = Day 7. The app shows each day's 10 automatically,
+    and the leaderboard ranks the 7-day total (accuracy, then time). Assign 10 or fewer to keep it a single-day challenge.
+  </div>
+
   <div style="display:flex;gap:8px;margin-bottom:12px">
     <input type="text" class="form-input" placeholder="Search questions..."
       oninput="filterQ(this.value)" style="flex:1">

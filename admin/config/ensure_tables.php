@@ -141,6 +141,42 @@ try {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     ");
 
+    // ── weekly challenge: per-day entries (7-day aggregate) ──
+    if ($tableExists('challenge_entries')) {
+        foreach ([
+            'day_number' => 'INT DEFAULT 1',
+            'correct'    => 'INT DEFAULT 0',
+            'wrong'      => 'INT DEFAULT 0',
+            'accuracy'   => 'DECIMAL(5,2) DEFAULT 0',
+        ] as $col => $type) {
+            try {
+                $chk = $pdo->prepare(
+                    "SELECT COUNT(*) FROM information_schema.COLUMNS
+                     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'challenge_entries' AND COLUMN_NAME = ?"
+                );
+                $chk->execute([$col]);
+                if ((int)$chk->fetchColumn() === 0) {
+                    $pdo->exec("ALTER TABLE `challenge_entries` ADD COLUMN `{$col}` {$type}");
+                }
+            } catch (Throwable $e) { /* ignore */ }
+        }
+        // Widen the unique key to (challenge_id, user_id, day_number) so a user
+        // can submit once per day across the 7-day challenge.
+        try {
+            $idx = $pdo->query(
+                "SELECT GROUP_CONCAT(COLUMN_NAME ORDER BY SEQ_IN_INDEX) AS cols
+                 FROM information_schema.STATISTICS
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'challenge_entries'
+                   AND INDEX_NAME = 'unique_entry'"
+            )->fetch();
+            $cols = $idx['cols'] ?? '';
+            if ($cols !== '' && strpos($cols, 'day_number') === false) {
+                $pdo->exec("ALTER TABLE `challenge_entries` DROP INDEX `unique_entry`");
+                $pdo->exec("ALTER TABLE `challenge_entries` ADD UNIQUE KEY `unique_entry` (`challenge_id`,`user_id`,`day_number`)");
+            }
+        } catch (Throwable $e) { /* ignore */ }
+    }
+
     // ── questions: bilingual (Hindi) columns for language switching ──
     // Lets admin store Hindi versions; the app toggles EN/HI per question.
     foreach ([
