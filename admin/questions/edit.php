@@ -21,7 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             UPDATE questions SET
               set_id=?, category=?, question_text=?,
               option_a=?, option_b=?, option_c=?, option_d=?,
-              correct_option=?, explanation=?, difficulty=?
+              correct_option=?, explanation=?, difficulty=?,
+              question_text_hi=?, option_a_hi=?, option_b_hi=?, option_c_hi=?, option_d_hi=?, explanation_hi=?
             WHERE id=?
         ")->execute([
             $_POST['set_id'], $_POST['category'],
@@ -31,6 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_POST['correct_option'],
             trim($_POST['explanation'] ?? ''),
             $_POST['difficulty'],
+            trim($_POST['question_text_hi'] ?? ''),
+            trim($_POST['option_a_hi'] ?? ''),
+            trim($_POST['option_b_hi'] ?? ''),
+            trim($_POST['option_c_hi'] ?? ''),
+            trim($_POST['option_d_hi'] ?? ''),
+            trim($_POST['explanation_hi'] ?? ''),
             $id
         ]);
         $success = 'Question updated successfully!';
@@ -135,6 +142,29 @@ require_once dirname(__DIR__) . '/includes/header.php';
     <div class="form-group mt-16">
       <label class="form-label">Explanation</label>
       <textarea name="explanation" class="form-textarea" rows="2"><?= htmlspecialchars($question['explanation']) ?></textarea>
+    </div>
+  </div>
+
+  <div class="card mb-16">
+    <div class="card-header">
+      <div class="card-title-text"><i class="fas fa-language" style="color:var(--purple)"></i> Hindi Version (Optional)</div>
+    </div>
+    <p class="text-muted" style="font-size:12px;margin:0 0 10px">Fill these so users can switch this question to Hindi in the app.</p>
+    <div class="form-group">
+      <label class="form-label">Question (Hindi)</label>
+      <textarea name="question_text_hi" class="form-textarea" rows="2" placeholder="प्रश्न..."><?= htmlspecialchars($question['question_text_hi'] ?? '') ?></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Option A (Hindi)</label><input type="text" name="option_a_hi" class="form-input" value="<?= htmlspecialchars($question['option_a_hi'] ?? '') ?>"></div>
+      <div class="form-group"><label class="form-label">Option B (Hindi)</label><input type="text" name="option_b_hi" class="form-input" value="<?= htmlspecialchars($question['option_b_hi'] ?? '') ?>"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Option C (Hindi)</label><input type="text" name="option_c_hi" class="form-input" value="<?= htmlspecialchars($question['option_c_hi'] ?? '') ?>"></div>
+      <div class="form-group"><label class="form-label">Option D (Hindi)</label><input type="text" name="option_d_hi" class="form-input" value="<?= htmlspecialchars($question['option_d_hi'] ?? '') ?>"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Explanation (Hindi)</label>
+      <textarea name="explanation_hi" class="form-textarea" rows="2" placeholder="व्याख्या..."><?= htmlspecialchars($question['explanation_hi'] ?? '') ?></textarea>
     </div>
   </div>
 

@@ -27,7 +27,8 @@ if ($limit <= 0) $limit = 10;
 
 $questions = $pdo->prepare("
     SELECT id, question_text, option_a, option_b, option_c, option_d,
-           correct_option, explanation, difficulty, time_limit
+           correct_option, explanation, difficulty, time_limit,
+           question_text_hi, option_a_hi, option_b_hi, option_c_hi, option_d_hi, explanation_hi
     FROM questions
     WHERE set_id = ? AND is_active = 1
     ORDER BY " . (!empty($_GET['shuffle']) ? 'RAND()' : 'order_num ASC') . "
@@ -57,6 +58,14 @@ response([
         ],
         'correct'        => $q['correct_option'],
         'explanation'    => $q['explanation'],
+        'question_hi'    => $q['question_text_hi'] ?? '',
+        'options_hi'     => [
+            'a' => $q['option_a_hi'] ?? '',
+            'b' => $q['option_b_hi'] ?? '',
+            'c' => $q['option_c_hi'] ?? '',
+            'd' => $q['option_d_hi'] ?? '',
+        ],
+        'explanation_hi' => $q['explanation_hi'] ?? '',
         'difficulty'     => $q['difficulty'],
         'time_limit'     => intval($q['time_limit'] ?? 30),
     ], $questions),

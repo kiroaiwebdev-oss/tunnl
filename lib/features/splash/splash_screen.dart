@@ -7,6 +7,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/network/api_client.dart';
 import '../../core/network/api_endpoints.dart';
 import '../../core/services/app_settings_service.dart';
+import '../../core/services/language_service.dart';
 import '../hub/hub_screen.dart';
 import '../auth/login_screen.dart';
 import '../auth/profile_setup_screen.dart';
@@ -104,6 +105,7 @@ class _SplashScreenState extends State<SplashScreen>
       // Initialise the settings singleton — this loads the disk cache
       // immediately and kicks off a background refresh.
       await AppSettingsService.instance.init();
+      await LanguageService.instance.init();
 
       final settingsRes = await ApiClient.get(ApiEndpoints.appSettings)
           .timeout(const Duration(seconds: 8));

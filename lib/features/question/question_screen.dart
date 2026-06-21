@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/content_service.dart';
 import '../../core/services/user_service.dart';
+import '../../core/services/language_service.dart';
 import '../../core/models/question_model.dart';
 import '../result/result_screen.dart';
 
@@ -40,6 +41,7 @@ class _QuestionScreenState extends State<QuestionScreen>
   // ── Question data ──────────────────────────────────
   List<QuestionModel> _questions = [];
   int  _currentIndex    = 0;
+  bool _hindi           = LanguageService.instance.isHindi;
   int? _selectedOption;
   int? _confirmedOption;
   bool _isAnswered      = false;
@@ -328,13 +330,13 @@ class _QuestionScreenState extends State<QuestionScreen>
 
     _timeTaken.add(timeTaken);
     _summary.add({
-      'question': q.questionText,
-      'options': q.options,
+      'question': q.questionFor(_hindi),
+      'options': q.optionsFor(_hindi),
       'selected': selected,
       'correct': q.correctIndex,
       'isCorrect': isCorrect,
       'timeTaken': timeTaken,
-      'explanation': q.explanation,
+      'explanation': q.explanationFor(_hindi),
     });
 
     // For submit_result API
@@ -617,6 +619,8 @@ class _QuestionScreenState extends State<QuestionScreen>
           ),
 
           const Spacer(),
+          _buildLangToggle(),
+          const SizedBox(width: 10),
           _buildTimerRing(),
           const SizedBox(width: 16),
 
@@ -636,6 +640,33 @@ class _QuestionScreenState extends State<QuestionScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ── LANGUAGE TOGGLE (per-test EN/Hindi) ───────────
+  Widget _buildLangToggle() {
+    return GestureDetector(
+      onTap: () => setState(() => _hindi = !_hindi),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: AppColors.neonCyan.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.translate_rounded,
+                color: AppColors.neonCyan, size: 14),
+            const SizedBox(width: 5),
+            Text(_hindi ? 'हिं' : 'EN',
+                style: GoogleFonts.poppins(
+                    fontSize: 12, fontWeight: FontWeight.w700,
+                    color: AppColors.neonCyan)),
+          ],
+        ),
       ),
     );
   }
@@ -717,7 +748,7 @@ class _QuestionScreenState extends State<QuestionScreen>
                 ],
               ),
               const SizedBox(height: 20),
-              Text(q.questionText,
+              Text(q.questionFor(_hindi),
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                   fontSize: 26, fontWeight: FontWeight.w700,
@@ -731,7 +762,7 @@ class _QuestionScreenState extends State<QuestionScreen>
 
   // ── OPTIONS ───────────────────────────────────────
   Widget _buildOptions(QuestionModel q) {
-    final options = q.options;
+    final options = q.optionsFor(_hindi);
     final correctIndex = q.correctIndex;
     final labels = ['A', 'B', 'C', 'D'];
 

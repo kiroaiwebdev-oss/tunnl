@@ -10,6 +10,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/user_service.dart';
 import '../../core/services/content_service.dart';
+import '../../core/services/language_service.dart';
 import '../hub/hub_screen.dart';
 import '../history/history_screen.dart';
 import '../premium/premium_screen.dart';
@@ -354,6 +355,81 @@ Future<void> _loadFromApi() async {
                 _showReportError();
               },
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Language picker (English / Hindi) ─────────────
+  void _showLanguagePicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.darkCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 36),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(child: Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.textMuted.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(10)),
+            )),
+            const SizedBox(height: 18),
+            Text('App Language',
+              style: GoogleFonts.poppins(
+                fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+            const SizedBox(height: 4),
+            Text('Switch the whole app. Questions show in this language by default.',
+              style: GoogleFonts.poppins(
+                fontSize: 12, color: AppColors.textSecondary)),
+            const SizedBox(height: 16),
+            _langOption('English', false),
+            const SizedBox(height: 10),
+            _langOption('हिंदी (Hindi)', true),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _langOption(String label, bool hi) {
+    final selected = LanguageService.instance.isHindi == hi;
+    return GestureDetector(
+      onTap: () async {
+        await LanguageService.instance.setHindi(hi);
+        if (!mounted) return;
+        Navigator.pop(context);
+        setState(() {});
+        _showSnack(hi ? 'भाषा हिंदी कर दी गई' : 'Language set to English');
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.neonCyan.withValues(alpha: 0.12)
+              : AppColors.darkSurface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected
+                ? AppColors.neonCyan.withValues(alpha: 0.5)
+                : AppColors.textMuted.withValues(alpha: 0.15)),
+        ),
+        child: Row(
+          children: [
+            Icon(selected ? Icons.radio_button_checked : Icons.radio_button_off,
+              color: selected ? AppColors.neonCyan : AppColors.textMuted,
+              size: 20),
+            const SizedBox(width: 12),
+            Text(label,
+              style: GoogleFonts.poppins(
+                fontSize: 14, fontWeight: FontWeight.w600,
+                color: Colors.white)),
           ],
         ),
       ),
@@ -961,6 +1037,13 @@ Future<void> _loadFromApi() async {
         'subtitle': 'Manage alerts & reminders',
         'color': AppColors.orange,
         'onTap': _showNotificationSettings,
+      },
+      {
+        'icon': Icons.language_rounded,
+        'label': 'Language',
+        'subtitle': LanguageService.instance.isHindi ? 'हिंदी (Hindi)' : 'English',
+        'color': AppColors.neonCyan,
+        'onTap': _showLanguagePicker,
       },
       {
         'icon': Icons.bug_report_rounded,

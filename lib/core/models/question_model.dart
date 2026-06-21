@@ -28,6 +28,14 @@ class QuestionModel {
   final String imageUrl;
   final int timeLimit;
 
+  // Hindi versions (empty when admin hasn't provided them).
+  final String questionTextHi;
+  final String optionAHi;
+  final String optionBHi;
+  final String optionCHi;
+  final String optionDHi;
+  final String explanationHi;
+
   QuestionModel({
     required this.id,
     required this.questionText,
@@ -40,6 +48,12 @@ class QuestionModel {
     required this.difficulty,
     required this.imageUrl,
     required this.timeLimit,
+    this.questionTextHi = '',
+    this.optionAHi = '',
+    this.optionBHi = '',
+    this.optionCHi = '',
+    this.optionDHi = '',
+    this.explanationHi = '',
   });
 
   String get correctLetter {
@@ -49,6 +63,23 @@ class QuestionModel {
   }
 
   List<String> get options => [optionA, optionB, optionC, optionD];
+
+  // ── Language-aware getters (fall back to English if Hindi missing) ──
+  String questionFor(bool hi) =>
+      (hi && questionTextHi.trim().isNotEmpty) ? questionTextHi : questionText;
+
+  String _pick(bool hi, String en, String hindi) =>
+      (hi && hindi.trim().isNotEmpty) ? hindi : en;
+
+  List<String> optionsFor(bool hi) => [
+        _pick(hi, optionA, optionAHi),
+        _pick(hi, optionB, optionBHi),
+        _pick(hi, optionC, optionCHi),
+        _pick(hi, optionD, optionDHi),
+      ];
+
+  String explanationFor(bool hi) =>
+      (hi && explanationHi.trim().isNotEmpty) ? explanationHi : explanation;
 
   factory QuestionModel.fromJson(Map<String, dynamic> j) {
     // ── Question text (new key first, fall back to old)
@@ -105,6 +136,7 @@ class QuestionModel {
       }
     }
 
+    final optHi = j['options_hi'];
     return QuestionModel(
       id: (j['id'] as num?)?.toInt() ?? 0,
       questionText: qText,
@@ -117,6 +149,12 @@ class QuestionModel {
       difficulty: (j['difficulty'] ?? 'medium').toString(),
       imageUrl: (j['image_url'] ?? '').toString(),
       timeLimit: (j['time_limit'] as num?)?.toInt() ?? 30,
+      questionTextHi: (j['question_hi'] ?? '').toString(),
+      optionAHi: (optHi is Map ? (optHi['a'] ?? '') : '').toString(),
+      optionBHi: (optHi is Map ? (optHi['b'] ?? '') : '').toString(),
+      optionCHi: (optHi is Map ? (optHi['c'] ?? '') : '').toString(),
+      optionDHi: (optHi is Map ? (optHi['d'] ?? '') : '').toString(),
+      explanationHi: (j['explanation_hi'] ?? '').toString(),
     );
   }
 }

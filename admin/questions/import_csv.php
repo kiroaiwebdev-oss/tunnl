@@ -47,14 +47,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
         $stmt = $pdo->prepare("
             INSERT INTO questions
               (set_id, category, question_text, option_a, option_b, option_c, option_d,
-               correct_option, explanation, difficulty, is_active)
-            VALUES (?,?,?,?,?,?,?,?,?,?,1)
+               correct_option, explanation, difficulty, is_active,
+               question_text_hi, option_a_hi, option_b_hi, option_c_hi, option_d_hi, explanation_hi)
+            VALUES (?,?,?,?,?,?,?,?,?,?,1,?,?,?,?,?,?)
         ");
 
         while (($row = fgetcsv($handle)) !== false) {
             if (count($row) < 6) continue;
             [$question_text, $option_a, $option_b, $option_c, $option_d,
-             $correct_option, $explanation, $difficulty] = array_pad($row, 8, '');
+             $correct_option, $explanation, $difficulty,
+             $q_hi, $a_hi, $b_hi, $c_hi, $d_hi, $e_hi] = array_pad($row, 14, '');
 
             if (empty(trim($question_text))) continue;
 
@@ -66,6 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                 strtoupper(trim($correct_option)) ?: 'A',
                 trim($explanation),
                 in_array(strtolower(trim($difficulty)), ['easy','hard']) ? strtolower(trim($difficulty)) : 'medium',
+                trim($q_hi), trim($a_hi), trim($b_hi), trim($c_hi), trim($d_hi), trim($e_hi),
             ]);
             $imported++;
         }
@@ -112,6 +115,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
     question_text, option_a, option_b, option_c, option_d, correct_option, explanation, difficulty<br>
     "What is 15% of 200?", "25", "30", "35", "40", "B", "15/100 × 200 = 30", "easy"<br>
     "Simplify: 3/4 + 1/4", "1/2", "1", "3/2", "2", "B", "3+1/4 = 4/4 = 1", "medium"
+    <br><br>
+    <span style="color:var(--muted)">Optional Hindi columns (append after difficulty, in order):</span><br>
+    question_text_hi, option_a_hi, option_b_hi, option_c_hi, option_d_hi, explanation_hi
   </div>
   <div style="margin-top:12px;display:flex;gap:16px;flex-wrap:wrap">
     <span style="font-size:12px;color:var(--muted)"><i class="fas fa-check" style="color:var(--success)"></i> correct_option: A / B / C / D</span>

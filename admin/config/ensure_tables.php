@@ -141,6 +141,28 @@ try {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     ");
 
+    // ── questions: bilingual (Hindi) columns for language switching ──
+    // Lets admin store Hindi versions; the app toggles EN/HI per question.
+    foreach ([
+        'question_text_hi' => "TEXT",
+        'option_a_hi'      => "TEXT",
+        'option_b_hi'      => "TEXT",
+        'option_c_hi'      => "TEXT",
+        'option_d_hi'      => "TEXT",
+        'explanation_hi'   => "TEXT",
+    ] as $col => $type) {
+        try {
+            $chk = $pdo->prepare(
+                "SELECT COUNT(*) FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'questions' AND COLUMN_NAME = ?"
+            );
+            $chk->execute([$col]);
+            if ((int)$chk->fetchColumn() === 0) {
+                $pdo->exec("ALTER TABLE `questions` ADD COLUMN `{$col}` {$type} NULL");
+            }
+        } catch (Throwable $e) { /* ignore */ }
+    }
+
     // ── exams: add per-exam custom icon image (icon_url) if missing ──
     // Lets the admin upload a custom icon per exam (Practice Sets + Previous
     // Year). The app shows this image when present, else falls back to the
