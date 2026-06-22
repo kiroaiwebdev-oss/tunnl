@@ -8,6 +8,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/services/content_service.dart';
 import '../../core/services/user_service.dart';
 import '../../core/services/language_service.dart';
+import '../../core/services/app_strings.dart';
 import '../../core/models/question_model.dart';
 import '../result/result_screen.dart';
 
@@ -20,6 +21,11 @@ class QuestionScreen extends StatefulWidget {
   final int challengeId;
   final VoidCallback? onSetCompleted;
 
+  /// Pre-loaded questions (e.g. the Weekly Challenge's assigned day questions).
+  /// When provided & non-empty, the screen uses these directly instead of
+  /// fetching from the API.
+  final List<QuestionModel>? presetQuestions;
+
   const QuestionScreen({
     super.key,
     required this.mode,
@@ -29,6 +35,7 @@ class QuestionScreen extends StatefulWidget {
     this.totalQuestions = 10,
     this.challengeId = 0,
     this.onSetCompleted,
+    this.presetQuestions,
   });
 
   @override
@@ -83,6 +90,12 @@ class _QuestionScreenState extends State<QuestionScreen>
   // ─────────────────────────────────────────────────
   Future<void> _loadQuestionsFromApi() async {
     setState(() { _isLoading = true; _hasError = false; });
+
+    // Pre-loaded questions (e.g. Weekly Challenge day questions) → use directly.
+    if (widget.presetQuestions != null && widget.presetQuestions!.isNotEmpty) {
+      _applyQuestions(widget.presetQuestions!);
+      return;
+    }
 
     if (widget.setId == 0) {
       // No set_id provided (e.g. the "Tunnelity" speed test from hub) →
@@ -141,7 +154,7 @@ class _QuestionScreenState extends State<QuestionScreen>
     } catch (_) {}
 
     if (accepted) {
-      _startTimer();
+      _askLanguageThenStart();
       return;
     }
     if (!mounted) return;
@@ -160,7 +173,7 @@ class _QuestionScreenState extends State<QuestionScreen>
                 color: AppColors.neonCyan, size: 20),
             const SizedBox(width: 8),
             Expanded(
-              child: Text('Quiz Terms & Conditions',
+              child: Text(tr('Quiz Terms & Conditions'),
                 style: GoogleFonts.poppins(
                   color: Colors.white, fontWeight: FontWeight.w700,
                   fontSize: 16)),
@@ -185,7 +198,7 @@ class _QuestionScreenState extends State<QuestionScreen>
               Navigator.pop(ctx);
               if (mounted) Navigator.pop(context); // leave the quiz
             },
-            child: Text('Cancel',
+            child: Text(tr('Cancel'),
               style: GoogleFonts.poppins(color: AppColors.textMuted)),
           ),
           TextButton(
@@ -195,14 +208,81 @@ class _QuestionScreenState extends State<QuestionScreen>
                 await prefs.setBool('quiz_terms_accepted', true);
               } catch (_) {}
               if (ctx.mounted) Navigator.pop(ctx);
-              _startTimer();
+              _askLanguageThenStart();
             },
-            child: Text('I Agree',
+            child: Text(tr('I Agree'),
               style: GoogleFonts.poppins(
                 color: AppColors.neonCyan, fontWeight: FontWeight.w700)),
           ),
         ],
       ),
+    );
+  }
+
+  // ── Language picker (shown at the start of every test) ──
+  // F6: lets the user pick the test language before starting; they can still
+  // flip a single question with the in-quiz EN/हिं toggle.
+  Future<void> _askLanguageThenStart() async {
+    if (!mounted) {
+      _startTimer();
+      return;
+    }
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.darkCard,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: AppColors.neonCyan.withValues(alpha: 0.4))),
+        title: Row(
+          children: [
+            const Icon(Icons.translate_rounded,
+                color: AppColors.neonCyan, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(tr('Select Language'),
+                style: GoogleFonts.poppins(
+                  color: Colors.white, fontWeight: FontWeight.w700,
+                  fontSize: 16)),
+            ),
+          ],
+        ),
+        content: Text(
+          tr('Choose the language for this test'),
+          style: GoogleFonts.poppins(
+            color: AppColors.textSecondary, fontSize: 13, height: 1.5),
+        ),
+        actions: [
+          _langChoiceButton('English', false, ctx),
+          _langChoiceButton('हिंदी', true, ctx),
+        ],
+      ),
+    );
+  }
+
+  Widget _langChoiceButton(String label, bool hi, BuildContext ctx) {
+    final selected = _hindi == hi;
+    return TextButton(
+      onPressed: () {
+        setState(() => _hindi = hi);
+        if (ctx.mounted) Navigator.pop(ctx);
+        _startTimer();
+      },
+      style: TextButton.styleFrom(
+        backgroundColor: selected
+            ? AppColors.neonCyan.withValues(alpha: 0.15)
+            : Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+          side: BorderSide(
+            color: AppColors.neonCyan.withValues(alpha: selected ? 0.6 : 0.2)),
+        ),
+      ),
+      child: Text(label,
+        style: GoogleFonts.poppins(
+          color: AppColors.neonCyan,
+          fontWeight: selected ? FontWeight.w700 : FontWeight.w500)),
     );
   }
 
@@ -425,22 +505,22 @@ class _QuestionScreenState extends State<QuestionScreen>
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: BorderSide(color: AppColors.error.withValues(alpha: 0.4))),
-        title: Text('Exit Test?',
+        title: Text(tr('Exit Test?'),
           style: GoogleFonts.poppins(
             color: Colors.white, fontWeight: FontWeight.w700)),
         content: Text(
-          'Your progress will be lost.\nAre you sure?',
+          tr('Your progress will be lost.\nAre you sure?'),
           style: GoogleFonts.poppins(
             color: AppColors.textSecondary, fontSize: 13)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Continue',
+            child: Text(tr('Continue'),
               style: GoogleFonts.poppins(color: AppColors.neonCyan)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Exit',
+            child: Text(tr('Exit'),
               style: GoogleFonts.poppins(color: AppColors.error)),
           ),
         ],
@@ -491,7 +571,7 @@ class _QuestionScreenState extends State<QuestionScreen>
                     const Icon(Icons.wifi_off_rounded,
                       color: AppColors.textMuted, size: 56),
                     const SizedBox(height: 16),
-                    Text('Failed to Load',
+                    Text(tr('Failed to Load'),
                       style: GoogleFonts.poppins(
                         fontSize: 18, fontWeight: FontWeight.w700,
                         color: Colors.white)),
@@ -506,7 +586,7 @@ class _QuestionScreenState extends State<QuestionScreen>
                       children: [
                         TextButton(
                           onPressed: () => Navigator.of(context).pop(),
-                          child: Text('Go Back',
+                          child: Text(tr('Go Back'),
                             style: GoogleFonts.poppins(
                               color: AppColors.textMuted)),
                         ),
@@ -518,7 +598,7 @@ class _QuestionScreenState extends State<QuestionScreen>
                               borderRadius: BorderRadius.circular(12)),
                           ),
                           onPressed: _loadQuestionsFromApi,
-                          child: Text('Retry',
+                          child: Text(tr('Retry'),
                             style: GoogleFonts.poppins(
                               color: AppColors.darkBg,
                               fontWeight: FontWeight.w700)),

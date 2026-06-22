@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
 import 'core/services/app_settings_service.dart';
+import 'core/services/language_service.dart';
 import 'features/splash/splash_screen.dart';
 
 void main() {
@@ -86,26 +87,31 @@ class _TunnelAppState extends State<TunnelApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final themeController = context.watch<ThemeController>();
-    return MaterialApp(
-      title: 'Tunnl',
-      debugShowCheckedModeBanner: false,
-      themeMode: themeController.themeMode,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      home: const SplashScreen(),
-      builder: (context, child) {
-        // Wrap with a no-overflow MediaQuery clamp so big-fonts users don't
-        // explode our hand-tuned layouts.
-        final mq = MediaQuery.of(context);
-        final clamped = mq.textScaler.clamp(
-          minScaleFactor: 0.85,
-          maxScaleFactor: 1.15,
-        );
-        return MediaQuery(
-          data: mq.copyWith(textScaler: clamped),
-          child: child ?? const SizedBox.shrink(),
-        );
-      },
+    // Rebuild the whole app when the user switches language (English ⇄ Hindi)
+    // from Profile, so static UI strings update instantly without a restart.
+    return ListenableBuilder(
+      listenable: LanguageService.instance,
+      builder: (context, _) => MaterialApp(
+        title: 'Tunnl',
+        debugShowCheckedModeBanner: false,
+        themeMode: themeController.themeMode,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        home: const SplashScreen(),
+        builder: (context, child) {
+          // Wrap with a no-overflow MediaQuery clamp so big-fonts users don't
+          // explode our hand-tuned layouts.
+          final mq = MediaQuery.of(context);
+          final clamped = mq.textScaler.clamp(
+            minScaleFactor: 0.85,
+            maxScaleFactor: 1.15,
+          );
+          return MediaQuery(
+            data: mq.copyWith(textScaler: clamped),
+            child: child ?? const SizedBox.shrink(),
+          );
+        },
+      ),
     );
   }
 }

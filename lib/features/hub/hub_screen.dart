@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/app_settings_service.dart';
+import '../../core/services/app_strings.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/content_service.dart';
@@ -48,6 +49,13 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
 
   List<BannerModel> _apiBanners     = [];
   bool              _bannersLoading = true;
+
+  // Admin-renamable card title: uses the app_settings override when set,
+  // else the (translated) built-in default.
+  String _label(String key, String fallback) {
+    final v = AppSettingsService.instance.get(key, '').trim();
+    return v.isEmpty ? fallback : v;
+  }
 
   @override
   void initState() {
@@ -225,8 +233,8 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
                       child: Column(
                         children: [
                           _HubCard(
-                            title:       'Test Your Tunnelity',
-                            subtitle:    'Take a quick 10-question speed test',
+                            title:       _label('label_hub_tunnlity', tr('Test Your Tunnelity')),
+                            subtitle:    tr('Take a quick 10-question speed test'),
                             borderColor: AppColors.neonCyan,
                             iconBgColor: AppColors.neonCyan,
                             icon:        Icons.bolt_rounded,
@@ -242,8 +250,8 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
                           const SizedBox(height: 12),
                           _isPremium
                               ? _HubCard(
-                                  title:       'Your Dashboard',
-                                  subtitle:    'Premium unlocked — explore everything',
+                                  title:       _label('label_hub_dashboard', tr('Your Dashboard')),
+                                  subtitle:    tr('Premium unlocked — explore everything'),
                                   borderColor: AppColors.neonCyan,
                                   iconBgColor: AppColors.neonCyan,
                                   icon:        Icons.dashboard_rounded,
@@ -256,8 +264,8 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
                                   ).then((_) { if (mounted) _loadAll(); }),
                                 )
                               : _HubCard(
-                                  title:       'Ticket to Tunnl',
-                                  subtitle:    'Unlock full access & advanced features',
+                                  title:       _label('label_hub_ticket', tr('Ticket to Tunnl')),
+                                  subtitle:    tr('Unlock full access & advanced features'),
                                   borderColor: AppColors.orange,
                                   iconBgColor: AppColors.orange,
                                   icon:        Icons.workspace_premium_rounded,
@@ -269,8 +277,8 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
                                 ),
                           const SizedBox(height: 12),
                           _HubCard(
-                            title:       '500 Free Practice MCQs',
-                            subtitle:    'Practice unlimited questions for free',
+                            title:       _label('label_hub_practice', tr('500 Free Practice MCQs')),
+                            subtitle:    tr('Practice unlimited questions for free'),
                             borderColor: const Color(0xFF7C3AED),
                             iconBgColor: const Color(0xFF4A1A8A),
                             icon:        Icons.quiz_rounded,
@@ -589,31 +597,31 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
             Divider(color: AppColors.textMuted.withValues(alpha: 0.15)),
             const SizedBox(height: 8),
 
-            _drawerTile(Icons.home_rounded, 'Home',
+            _drawerTile(Icons.home_rounded, tr('Home'),
               () => Navigator.pop(context)),
-            _drawerTile(Icons.person_rounded, 'Profile', () {
+            _drawerTile(Icons.person_rounded, tr('Profile'), () {
               Navigator.pop(context);
               Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => const ProfileScreen()));
             }),
-            _drawerTile(Icons.dashboard_rounded, 'Dashboard', () {
+            _drawerTile(Icons.dashboard_rounded, tr('Dashboard'), () {
               Navigator.pop(context);
               Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => const DashboardScreen()));
             }),
-            _drawerTile(Icons.play_circle_rounded, 'Shorts', () {
+            _drawerTile(Icons.play_circle_rounded, tr('Shorts'), () {
               Navigator.pop(context);
               Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => const ShortsScreen()));
             }),
-            _drawerTile(Icons.bar_chart_rounded, 'Leaderboard', () {
+            _drawerTile(Icons.bar_chart_rounded, tr('Leaderboard'), () {
               Navigator.pop(context);
               Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => const SolveEarnLeaderboardScreen()));
             }),
             if (!_isPremium)
               _drawerTile(
-                Icons.workspace_premium_rounded, 'Upgrade to Premium',
+                Icons.workspace_premium_rounded, tr('Upgrade to Premium'),
                 () {
                   Navigator.pop(context);
                   Navigator.of(context).push(MaterialPageRoute(
@@ -629,7 +637,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
 
             if (_isLoggedIn)
               _drawerTile(
-                Icons.logout_rounded, 'Logout',
+                Icons.logout_rounded, tr('Logout'),
                 () async {
                   Navigator.pop(context);
                   await AuthService.logout();
@@ -643,7 +651,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
               )
             else
               _drawerTile(
-                Icons.login_rounded, 'Login',
+                Icons.login_rounded, tr('Login'),
                 () {
                   Navigator.pop(context);
                   Navigator.of(context).push(MaterialPageRoute(
@@ -688,7 +696,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
           Container(width: 30, height: 1,
             color: AppColors.neonCyan.withValues(alpha: 0.3)),
           const SizedBox(width: 10),
-          Text('Enter the Tunnel. Master Speed Math.',
+          Text(tr('Enter the Tunnel. Master Speed Math.'),
             style: GoogleFonts.poppins(
               fontSize: 11, color: AppColors.textMuted, letterSpacing: 0.5)),
           const SizedBox(width: 10),

@@ -22,6 +22,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Dashboard / Hub section name overrides (shown in the app)
             'label_tricks', 'label_mcq', 'label_pyq',
             'label_shorts', 'label_daily', 'label_solve_earn',
+            // Hub (home) screen card name overrides
+            'label_hub_tunnlity', 'label_hub_ticket',
+            'label_hub_dashboard', 'label_hub_practice',
             // Razorpay
             'razorpay_enabled', 'razorpay_key_id', 'razorpay_key_secret',
             // OTP / SMS
@@ -373,6 +376,38 @@ foreach ($settingsRaw as $row) {
         'label_solve_earn'  => ['Solve & Earn',           'SOLVE & EARN'],
       ];
       foreach ($labelDefs as $key => $def):
+    ?>
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-title"><?= htmlspecialchars($def[0]) ?></div>
+        <div class="setting-desc">Default: <?= htmlspecialchars($def[1]) ?></div>
+      </div>
+      <div class="setting-control">
+        <input type="text" name="<?= $key ?>" class="form-input"
+          value="<?= htmlspecialchars($s[$key] ?? '') ?>"
+          placeholder="<?= htmlspecialchars($def[1]) ?>">
+      </div>
+    </div>
+    <?php endforeach; ?>
+  </div>
+
+  <div class="card mb-24">
+    <div class="card-header">
+      <div class="card-title-text">
+        <i class="fas fa-house" style="color:var(--cyan)"></i> Home (Hub) Screen Names
+      </div>
+    </div>
+    <p class="text-muted" style="margin:0 0 8px;font-size:12px">
+      Rename the big cards on the app's home/hub screen. Leave blank to use the default name.
+    </p>
+    <?php
+      $hubLabelDefs = [
+        'label_hub_tunnlity'  => ['Test Your Tunnlity card', 'Test Your Tunnelity'],
+        'label_hub_ticket'    => ['Premium upgrade card',    'Ticket to Tunnl'],
+        'label_hub_dashboard' => ['Premium dashboard card',  'Your Dashboard'],
+        'label_hub_practice'  => ['Free practice card',      '500 Free Practice MCQs'],
+      ];
+      foreach ($hubLabelDefs as $key => $def):
     ?>
     <div class="setting-row">
       <div class="setting-info">

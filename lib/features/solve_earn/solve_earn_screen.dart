@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/user_service.dart';
+import '../../core/services/app_strings.dart';
+import '../../core/models/question_model.dart';
 import '../question/question_screen.dart';
 import 'solve_earn_leaderboard_screen.dart';
 
@@ -31,8 +33,10 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
   bool _isLoading = true;
   Map<String, dynamic>? _challenge;
   List<Map<String, dynamic>> _leaderboard = [];
+  List<QuestionModel> _challengeQuestions = [];
 
   bool get _hasChallenge => _challenge != null;
+  // True when the user has played TODAY's day (1 attempt allowed per day).
   bool get _hasAttempted => _challenge?['is_attempted'] == true;
   Map<String, dynamic> get _myEntry =>
       (_challenge?['my_entry'] as Map?)?.cast<String, dynamic>() ?? {};
@@ -42,6 +46,19 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
   double get _prizeAmount =>
       (_challenge?['prize_amount'] as num?)?.toDouble() ?? 0.0;
   int get _totalParticipants => _leaderboard.length;
+
+  // ── 7-day challenge progress ──────────────────────
+  int get _currentDay => (_challenge?['current_day'] as num?)?.toInt() ?? 1;
+  int get _totalDays => (_challenge?['total_days'] as num?)?.toInt() ?? 1;
+  int get _perDay => (_challenge?['per_day'] as num?)?.toInt() ?? 10;
+  int get _myTotalCorrect =>
+      (_challenge?['my_total_correct'] as num?)?.toInt() ?? 0;
+  int get _myDaysPlayed =>
+      (_challenge?['my_days_played'] as num?)?.toInt() ?? 0;
+  bool get _isSevenDay => _totalDays > 1;
+  // Number of questions to play in TODAY's attempt.
+  int get _todaysCount =>
+      _challengeQuestions.isNotEmpty ? _challengeQuestions.length : _perDay;
 
   // Time remaining computed from end_date
   Duration get _timeLeft {
@@ -98,6 +115,7 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
     final ok = res['success'] == true || res['status'] == true;
     final challenge = res['challenge'];
     final lb = res['leaderboard'];
+    final qs = res['questions'];
 
     setState(() {
       _challenge = (ok && challenge is Map)
@@ -107,6 +125,12 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
           ? lb
               .whereType<Map>()
               .map((e) => e.cast<String, dynamic>())
+              .toList()
+          : [];
+      _challengeQuestions = (qs is List)
+          ? qs
+              .whereType<Map>()
+              .map((e) => QuestionModel.fromJson(e.cast<String, dynamic>()))
               .toList()
           : [];
       _isLoading = false;
@@ -148,6 +172,10 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
                                       const SizedBox(height: 10),
                                       _buildHeroBanner(),
                                       const SizedBox(height: 16),
+                                      if (_isSevenDay) ...[
+                                        _buildDayProgress(),
+                                        const SizedBox(height: 16),
+                                      ],
                                       _buildTimerCard(),
                                       const SizedBox(height: 16),
                                       _buildPrizeCard(),
@@ -188,7 +216,7 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
               color: AppColors.textMuted, size: 64),
           const SizedBox(height: 16),
           Center(
-            child: Text('No active challenge',
+            child: Text(tr('No active challenge'),
                 style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -196,7 +224,7 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
           ),
           const SizedBox(height: 6),
           Center(
-            child: Text('Admin will launch the next weekly challenge soon!',
+            child: Text(tr('Admin will launch the next weekly challenge soon!'),
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                     fontSize: 13, color: AppColors.textSecondary)),
@@ -225,7 +253,7 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'SOLVE & EARN',
+                tr('SOLVE & EARN'),
                 style: GoogleFonts.orbitron(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -234,7 +262,7 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
                 ),
               ),
               Text(
-                'Solve. Compete. Win Rewards!',
+                tr('Solve. Compete. Win Rewards!'),
                 style: GoogleFonts.poppins(
                   fontSize: 11,
                   color: AppColors.textSecondary,
@@ -372,6 +400,84 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  // ── 7-DAY PROGRESS ────────────────────────────────
+  Widget _buildDayProgress() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.darkCard,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: AppColors.yellow.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.calendar_month_rounded,
+                  color: AppColors.yellow, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                '${trPick('Day', 'दिन')} $_currentDay / $_totalDays',
+                style: GoogleFonts.orbitron(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.yellow,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${trPick('Played', 'खेले')}: $_myDaysPlayed/$_totalDays',
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // 7 little day pills
+          Row(
+            children: List.generate(_totalDays, (i) {
+              final day = i + 1;
+              final played = day <= _myDaysPlayed;
+              final isToday = day == _currentDay;
+              return Expanded(
+                child: Container(
+                  margin: EdgeInsets.only(right: i == _totalDays - 1 ? 0 : 6),
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: played
+                        ? AppColors.yellow
+                        : (isToday
+                            ? AppColors.yellow.withValues(alpha: 0.4)
+                            : AppColors.textMuted.withValues(alpha: 0.2)),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            trPick(
+              'Each day has $_perDay questions. Your 7-day total ($_myTotalCorrect correct so far) decides the rank — accuracy first, then time.',
+              'हर दिन $_perDay सवाल हैं। आपके 7 दिन का कुल ($_myTotalCorrect सही अब तक) रैंक तय करता है — पहले सटीकता, फिर समय।',
+            ),
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              color: AppColors.textSecondary,
+              height: 1.5,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -574,13 +680,31 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
 
   // ── RULES ─────────────────────────────────────────
   Widget _buildRules() {
-    final rules = [
-      'Each question carries equal marks',
-      'Faster completion = Higher rank (tie-breaker)',
-      'Only ONE attempt allowed per challenge',
-      'Results announced after the challenge ends',
-      'Admin will contact winners for reward delivery',
-    ];
+    final rules = _isSevenDay
+        ? [
+            trPick('Runs for $_totalDays days — $_perDay questions each day',
+                '$_totalDays दिन चलता है — हर दिन $_perDay सवाल'),
+            trPick('One attempt per day — come back daily',
+                'हर दिन एक मौक़ा — रोज़ वापस आएँ'),
+            trPick('Your $_totalDays-day total decides the rank',
+                'आपका $_totalDays दिन का कुल रैंक तय करता है'),
+            trPick('Higher accuracy ranks first, then faster time',
+                'अधिक सटीकता पहले, फिर तेज़ समय'),
+            trPick('Admin announces & contacts winners for rewards',
+                'एडमिन विजेता घोषित कर इनाम के लिए संपर्क करेगा'),
+          ]
+        : [
+            trPick('Each question carries equal marks',
+                'हर सवाल के बराबर अंक हैं'),
+            trPick('Faster completion = Higher rank (tie-breaker)',
+                'तेज़ पूरा करना = ऊँची रैंक (टाई-ब्रेकर)'),
+            trPick('Only ONE attempt allowed per challenge',
+                'प्रति चैलेंज सिर्फ़ एक मौक़ा'),
+            trPick('Results announced after the challenge ends',
+                'चैलेंज खत्म होने पर नतीजे घोषित'),
+            trPick('Admin will contact winners for reward delivery',
+                'एडमिन इनाम के लिए विजेताओं से संपर्क करेगा'),
+          ];
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -601,7 +725,7 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
                   color: AppColors.neonCyan, size: 16),
               const SizedBox(width: 6),
               Text(
-                'RULES',
+                tr('RULES'),
                 style: GoogleFonts.poppins(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
@@ -659,17 +783,27 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
   // ── ACTION BUTTONS ────────────────────────────────
   Widget _buildActionButtons() {
     final ended = _timeLeft == Duration.zero;
-    final disabled = _hasAttempted || ended || _totalQuestions <= 0;
+    final hasQuestionsToday = _challengeQuestions.isNotEmpty;
+    final allDaysDone = _isSevenDay && _myDaysPlayed >= _totalDays;
+    final disabled =
+        _hasAttempted || ended || allDaysDone || !hasQuestionsToday;
 
     String label;
-    if (_hasAttempted) {
-      label = 'ALREADY ATTEMPTED';
+    if (allDaysDone) {
+      label = trPick('CHALLENGE COMPLETE', 'चैलेंज पूरा');
+    } else if (_hasAttempted) {
+      // Attempted today; if more days remain, invite them back tomorrow.
+      label = _isSevenDay
+          ? trPick('COME BACK TOMORROW', 'कल फिर आएँ')
+          : trPick('ALREADY ATTEMPTED', 'पहले ही दिया जा चुका');
     } else if (ended) {
-      label = 'CHALLENGE CLOSED';
-    } else if (_totalQuestions <= 0) {
-      label = 'NO QUESTIONS YET';
+      label = tr('CHALLENGE CLOSED');
+    } else if (!hasQuestionsToday) {
+      label = tr('NO QUESTIONS YET');
+    } else if (_isSevenDay) {
+      label = '${trPick('START DAY', 'दिन शुरू करें')} $_currentDay';
     } else {
-      label = 'START CHALLENGE';
+      label = tr('START CHALLENGE');
     }
 
     return Column(
@@ -683,8 +817,9 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
                       builder: (_) => QuestionScreen(
                         mode: 'solve_earn',
                         category: 'mcq',
-                        setNumber: 1,
-                        totalQuestions: _totalQuestions,
+                        setNumber: _currentDay,
+                        totalQuestions: _todaysCount,
+                        presetQuestions: _challengeQuestions,
                         challengeId:
                             (_challenge?['id'] as num?)?.toInt() ?? 0,
                       ),
@@ -760,7 +895,7 @@ class _SolveEarnScreenState extends State<SolveEarnScreen>
                     color: AppColors.neonCyan, size: 18),
                 const SizedBox(width: 8),
                 Text(
-                  'VIEW LEADERBOARD',
+                  tr('VIEW LEADERBOARD'),
                   style: GoogleFonts.poppins(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,

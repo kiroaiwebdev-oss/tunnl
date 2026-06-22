@@ -67,8 +67,9 @@ if ($method === 'GET') {
             $qs = $pdo->prepare("
                 SELECT q.id, q.question_text, q.option_a, q.option_b,
                        q.option_c, q.option_d, q.difficulty,
+                       q.correct_option, q.explanation, q.time_limit,
                        q.question_text_hi, q.option_a_hi, q.option_b_hi,
-                       q.option_c_hi, q.option_d_hi
+                       q.option_c_hi, q.option_d_hi, q.explanation_hi
                 FROM challenge_questions cq
                 JOIN questions q ON cq.question_id = q.id
                 WHERE cq.challenge_id = ? AND cq.order_num BETWEEN ? AND ?
@@ -79,8 +80,9 @@ if ($method === 'GET') {
             $qs = $pdo->prepare("
                 SELECT q.id, q.question_text, q.option_a, q.option_b,
                        q.option_c, q.option_d, q.difficulty,
+                       q.correct_option, q.explanation, q.time_limit,
                        q.question_text_hi, q.option_a_hi, q.option_b_hi,
-                       q.option_c_hi, q.option_d_hi
+                       q.option_c_hi, q.option_d_hi, q.explanation_hi
                 FROM challenge_questions cq
                 JOIN questions q ON cq.question_id = q.id
                 WHERE cq.challenge_id = ?
@@ -146,11 +148,15 @@ if ($method === 'GET') {
             'id'        => intval($q['id']),
             'question'  => $q['question_text'],
             'options'   => ['a'=>$q['option_a'],'b'=>$q['option_b'],'c'=>$q['option_c'],'d'=>$q['option_d']],
+            'correct'   => strtolower((string)($q['correct_option'] ?? 'a')),
+            'explanation'=> $q['explanation'] ?? '',
+            'time_limit'=> intval($q['time_limit'] ?? 30),
             'question_hi'=> $q['question_text_hi'] ?? '',
             'options_hi'=> [
                 'a'=>$q['option_a_hi'] ?? '', 'b'=>$q['option_b_hi'] ?? '',
                 'c'=>$q['option_c_hi'] ?? '', 'd'=>$q['option_d_hi'] ?? '',
             ],
+            'explanation_hi'=> $q['explanation_hi'] ?? '',
             'difficulty'=> $q['difficulty'],
         ], $questions),
         'leaderboard' => array_map(fn($r) => [
