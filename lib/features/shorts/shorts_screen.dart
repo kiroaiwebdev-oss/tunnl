@@ -24,7 +24,7 @@ class _ShortsScreenState extends State<ShortsScreen>
   late AnimationController _entryCtrl;
   late Animation<double> _fadeAnim;
 
-  final List<String> _filters = ['ALL', 'YOUTUBE', 'INSTAGRAM', 'FACEBOOK'];
+  final List<String> _filters = ['ALL', 'YOUTUBE', 'INSTAGRAM', 'FACEBOOK', 'LOCAL'];
 
   List<ShortModel> _allShorts = [];
   bool _isLoading = true;
@@ -39,6 +39,8 @@ class _ShortsScreenState extends State<ShortsScreen>
     switch (platform) {
       case 'INSTAGRAM':
         return Icons.camera_alt_rounded;
+      case 'LOCAL':
+        return Icons.video_file_rounded;
       case 'FACEBOOK':
         return Icons.facebook;
       case 'TELEGRAM':
