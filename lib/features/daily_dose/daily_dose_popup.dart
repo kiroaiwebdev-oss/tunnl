@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/content_service.dart';
+import '../../core/services/app_strings.dart';
 import '../../core/models/daily_dose_model.dart';
 
 class DailyDosePopup {
@@ -201,7 +202,7 @@ class _DailyDoseSheetState extends State<_DailyDoseSheet>
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('DAILY DOSE',
+                Text(tr('DAILY DOSE'),
                     style: GoogleFonts.orbitron(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -295,7 +296,7 @@ class _DailyDoseSheetState extends State<_DailyDoseSheet>
             const Icon(Icons.check_circle_rounded,
                 color: AppColors.success, size: 16),
             const SizedBox(width: 6),
-            Text('Example',
+            Text(tr('Example'),
                 style: GoogleFonts.poppins(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -328,7 +329,7 @@ class _DailyDoseSheetState extends State<_DailyDoseSheet>
             const Icon(Icons.lightbulb_rounded,
                 color: AppColors.yellow, size: 16),
             const SizedBox(width: 6),
-            Text('Pro Tip',
+            Text(tr('Pro Tip'),
                 style: GoogleFonts.poppins(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -361,7 +362,7 @@ class _DailyDoseSheetState extends State<_DailyDoseSheet>
             const Icon(Icons.play_circle_rounded,
                 color: Color(0xFFFF0000), size: 20),
             const SizedBox(width: 8),
-            Text('WATCH VIDEO',
+            Text(tr('WATCH VIDEO'),
                 style: GoogleFonts.poppins(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -394,7 +395,7 @@ class _DailyDoseSheetState extends State<_DailyDoseSheet>
           ],
         ),
         child: Center(
-          child: Text('GOT IT ✓',
+          child: Text(tr('GOT IT ✓'),
               style: GoogleFonts.poppins(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,

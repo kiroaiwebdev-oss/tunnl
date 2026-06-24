@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/auth_service.dart';
+import '../../core/services/app_strings.dart';
 import '../otp/otp_screen.dart';
 
 // Agar alag SignupScreen hai to uncomment karo:
@@ -79,15 +80,15 @@ class _LoginScreenState extends State<LoginScreen>
     final phone = _phoneCtrl.text.trim();
 
     if (phone.isEmpty) {
-      setState(() { _hasError = true; _errorText = 'Please enter your mobile number'; });
+      setState(() { _hasError = true; _errorText = tr('Please enter your mobile number'); });
       return;
     }
     if (phone.length != 10) {
-      setState(() { _hasError = true; _errorText = 'Enter valid 10-digit mobile number'; });
+      setState(() { _hasError = true; _errorText = tr('Enter valid 10-digit mobile number'); });
       return;
     }
     if (!RegExp(r'^[6-9]\d{9}$').hasMatch(phone)) {
-      setState(() { _hasError = true; _errorText = 'Enter valid Indian mobile number'; });
+      setState(() { _hasError = true; _errorText = tr('Enter valid Indian mobile number'); });
       return;
     }
 
@@ -122,14 +123,14 @@ class _LoginScreenState extends State<LoginScreen>
       } else {
         setState(() {
           _hasError  = true;
-          _errorText = res['message'] ?? 'Failed to send OTP. Try again.';
+          _errorText = res['message'] ?? tr('Failed to send OTP. Try again.');
         });
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _hasError  = true;
-        _errorText = 'Network error. Check your connection.';
+        _errorText = tr('Network error. Check your connection.');
       });
       debugPrint('SendOTP Error: $e');
     } finally {
@@ -357,7 +358,7 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         const SizedBox(height: 8),
         Text(
-          'SPEED MATH CALCULATION',
+          tr('SPEED MATH CALCULATION'),
           style: GoogleFonts.poppins(
             fontSize: 11,
             fontWeight: FontWeight.w400,
@@ -421,15 +422,15 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildFeatureIcons() {
-    return const Row(
+    return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         _FeatureIcon(icon: Icons.bolt_rounded,
-          label1: 'FAST', label2: 'CALCULATION'),
+          label1: tr('FAST'), label2: tr('CALCULATION')),
         _FeatureIcon(icon: Icons.bar_chart_rounded,
-          label1: 'ACCURATE', label2: 'RESULTS'),
+          label1: tr('ACCURATE'), label2: tr('RESULTS')),
         _FeatureIcon(icon: Icons.emoji_events_rounded,
-          label1: 'IMPROVE', label2: 'TUNNELITY'),
+          label1: tr('IMPROVE'), label2: tr('TUNNELITY')),
       ],
     );
   }
@@ -485,7 +486,7 @@ class _LoginScreenState extends State<LoginScreen>
                 fontWeight: FontWeight.w500,
               ),
               decoration: InputDecoration(
-                hintText: 'What is your number?',
+                hintText: tr('What is your number?'),
                 hintStyle: GoogleFonts.poppins(
                   fontSize: 14,
                   color: AppColors.textMuted,
@@ -543,7 +544,7 @@ class _LoginScreenState extends State<LoginScreen>
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('SEND OTP',
+                  Text(tr('SEND OTP'),
                     style: GoogleFonts.poppins(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -563,13 +564,13 @@ class _LoginScreenState extends State<LoginScreen>
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text('New to Tunnl?  ',
+        Text(tr('New to Tunnl?') + '  ',
           style: GoogleFonts.poppins(
             fontSize: 13, color: AppColors.textSecondary,
           )),
         GestureDetector(
           onTap: _onCreateAccount,  // ✅ Fix: ab navigate/snackbar dikhayega
-          child: Text('Create Account',
+          child: Text(tr('Create Account'),
             style: GoogleFonts.poppins(
               fontSize: 13,
               fontWeight: FontWeight.w600,

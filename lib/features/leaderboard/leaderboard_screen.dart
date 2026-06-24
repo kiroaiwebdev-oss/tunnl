@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/app_strings.dart';
 import '../../core/services/user_service.dart';
 
 class LeaderboardScreen extends StatefulWidget {
@@ -170,7 +171,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                 color: AppColors.neonCyan, size: 20),
           ),
           const SizedBox(width: 12),
-          Text('LEADERBOARD',
+          Text(tr('LEADERBOARD'),
               style: GoogleFonts.orbitron(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -203,7 +204,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
   }
 
   Widget _buildTabSelector() {
-    final tabs = ['WEEKLY', 'MONTHLY', 'ALL TIME'];
+    final tabs = [tr('WEEKLY'), tr('MONTHLY'), tr('ALL TIME')];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
@@ -258,14 +259,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
           const Icon(Icons.emoji_events_outlined,
               color: AppColors.textMuted, size: 56),
           const SizedBox(height: 12),
-          Text('No rankings yet',
+          Text(tr('No rankings yet'),
               style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: Colors.white)),
           const SizedBox(height: 6),
           Text(
-            'Solve some quizzes to climb the board!',
+            tr('Solve some quizzes to climb the board!'),
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
                 fontSize: 12, color: AppColors.textSecondary),
@@ -433,7 +434,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
             decoration: BoxDecoration(
                 color: AppColors.neonCyan,
                 borderRadius: BorderRadius.circular(8)),
-            child: Text('YOU',
+            child: Text(tr('YOU'),
                 style: GoogleFonts.poppins(
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
@@ -450,12 +451,12 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name.isEmpty ? 'You' : name,
+                Text(name.isEmpty ? tr('You') : name,
                     style: GoogleFonts.poppins(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: Colors.white)),
-                Text('Total XP earned',
+                Text(tr('Total XP earned'),
                     style: GoogleFonts.poppins(
                         fontSize: 11, color: AppColors.textSecondary)),
               ],
@@ -574,7 +575,7 @@ class _RankItem extends StatelessWidget {
                         decoration: BoxDecoration(
                             color: AppColors.neonCyan,
                             borderRadius: BorderRadius.circular(6)),
-                        child: Text('YOU',
+                        child: Text(tr('YOU'),
                             style: GoogleFonts.poppins(
                                 fontSize: 8,
                                 fontWeight: FontWeight.w700,

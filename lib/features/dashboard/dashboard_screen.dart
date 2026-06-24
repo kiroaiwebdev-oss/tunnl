@@ -5,6 +5,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/content_service.dart';
 import '../../core/services/user_service.dart';
+import '../../core/services/app_strings.dart';
 import '../../core/services/app_settings_service.dart';
 import '../../core/models/banner_model.dart';
 import '../hub/hub_screen.dart';
@@ -60,7 +61,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   final List<Map<String, dynamic>> _coreItems = [
     {
       'title':       _label('label_tricks', 'TUNNL TRICKS'),
-      'subtitle':    'Learn powerful strategies & tricks',
+      'subtitle':    tr('Learn powerful strategies & tricks'),
       'icon':        Icons.layers_rounded,
       'image':       'assets/images/b1.jpg',
       'iconBg':      const Color(0xFF0D2233),
@@ -70,7 +71,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     },
     {
       'title':       _label('label_mcq', '5000 SPEED MATH\nMCQS'),
-      'subtitle':    'Practice unlimited MCQs',
+      'subtitle':    tr('Practice unlimited MCQs'),
       'icon':        Icons.quiz_rounded,
       'image':       'assets/images/b2.jpg',
       'iconBg':      const Color(0xFF1A1040),
@@ -80,7 +81,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     },
     {
       'title':       _label('label_pyq', '5000+ PREVIOUS YEAR\nQUESTIONS'),
-      'subtitle':    'Complete PYQ access',
+      'subtitle':    tr('Complete PYQ access'),
       'icon':        Icons.history_edu_rounded,
       'image':       'assets/images/b3.jpg',
       'iconBg':      const Color(0xFF1A1040),
@@ -90,7 +91,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     },
     {
       'title':       _label('label_shorts', 'SHORTS'),
-      'subtitle':    'Watch quick math tips',
+      'subtitle':    tr('Watch quick math tips'),
       'icon':        Icons.play_circle_rounded,
       'image':       'assets/images/b6.jpg',
       'iconBg':      const Color(0xFF2A1515),
@@ -100,7 +101,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     },
     {
       'title':       _label('label_daily', 'DAILY PRACTICE\nMCQS'),
-      'subtitle':    'Daily challenge sets',
+      'subtitle':    tr('Daily challenge sets'),
       'icon':        Icons.calendar_today_rounded,
       'image':       'assets/images/b4.jpg',
       'iconBg':      const Color(0xFF0D2233),
@@ -110,7 +111,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     },
     {
       'title':       _label('label_solve_earn', 'SOLVE & EARN'),
-      'subtitle':    'Earn rewards by solving quizzes',
+      'subtitle':    tr('Earn rewards by solving quizzes'),
       'icon':        Icons.card_giftcard_rounded,
       'image':       'assets/images/b5.jpg',
       'iconBg':      const Color(0xFF1A1A00),
@@ -243,12 +244,12 @@ class _DashboardScreenState extends State<DashboardScreen>
       case 4:
         Navigator.of(context).push(MaterialPageRoute(
           builder: (_) => SetsScreen(
-            title: 'Daily Practice MCQs',
+            title: tr('Daily Practice MCQs'),
             category: 'daily',
             questionsPerSet: 20,
             totalSets: _isPremium ? 30 : 1,
             showLeaderboard: false,
-            subtitle: _isPremium ? 'All daily sets' : "Today's set — Free",
+            subtitle: _isPremium ? tr('All daily sets') : tr("Today's set — Free"),
           ),
         ));
         break;
@@ -337,11 +338,11 @@ class _DashboardScreenState extends State<DashboardScreen>
   // ── USER GREETING ─────────────────────────────────
   Widget _buildUserGreeting() {
     final hour = DateTime.now().hour;
-    final greeting = hour < 12 ? 'Good Morning' :
-                     hour < 17 ? 'Good Afternoon' : 'Good Evening';
+    final greeting = hour < 12 ? tr('Good Morning') :
+                     hour < 17 ? tr('Good Afternoon') : tr('Good Evening');
     final firstName = _userName.isNotEmpty
         ? _userName.split(' ').first
-        : 'Mathletes';
+        : tr('Mathletes');
 
     return Row(
       children: [
@@ -651,7 +652,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                         color: AppColors.orange, size: 14),
                       const SizedBox(width: 6),
                       Text(
-                        'Premium Member',
+                        tr('Premium Member'),
                         style: GoogleFonts.poppins(
                           fontSize: 11, fontWeight: FontWeight.w600,
                           color: AppColors.orange,
@@ -667,29 +668,29 @@ class _DashboardScreenState extends State<DashboardScreen>
             Divider(color: AppColors.textMuted.withValues(alpha: 0.15)),
             const SizedBox(height: 8),
 
-            _drawerTile(Icons.home_rounded, 'Home', () {
+            _drawerTile(Icons.home_rounded, tr('Home'), () {
               Navigator.pop(context);
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (_) => const HubScreen()),
                 (route) => false,
               );
             }),
-            _drawerTile(Icons.play_circle_rounded, 'Shorts', () {
+            _drawerTile(Icons.play_circle_rounded, tr('Shorts'), () {
               Navigator.pop(context);
               Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const ShortsScreen()));
             }),
-            _drawerTile(Icons.bar_chart_rounded, 'Leaderboard', () {
+            _drawerTile(Icons.bar_chart_rounded, tr('Leaderboard'), () {
               Navigator.pop(context);
               Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const SolveEarnLeaderboardScreen()));
             }),
-            _drawerTile(Icons.history_rounded, 'History', () {
+            _drawerTile(Icons.history_rounded, tr('History'), () {
               Navigator.pop(context);
               Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const HistoryScreen()));
             }),
-            _drawerTile(Icons.person_rounded, 'Profile', () {
+            _drawerTile(Icons.person_rounded, tr('Profile'), () {
               Navigator.pop(context);
               Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const ProfileScreen()));
@@ -698,7 +699,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             if (!_isPremium)
               _drawerTile(
                 Icons.workspace_premium_rounded,
-                'Upgrade to Premium',
+                tr('Upgrade to Premium'),
                 () { Navigator.pop(context); _goToPremium(); },
                 color: AppColors.orange,
               ),
@@ -707,7 +708,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
             Divider(color: AppColors.textMuted.withValues(alpha: 0.15)),
             _drawerTile(
-              Icons.logout_rounded, 'Logout',
+              Icons.logout_rounded, tr('Logout'),
               () { Navigator.pop(context); _logout(); },
               color: AppColors.error,
             ),
@@ -751,9 +752,9 @@ class _DashboardScreenState extends State<DashboardScreen>
           fontSize: 28, fontWeight: FontWeight.w700, color: Colors.white,
         ),
         children: [
-          const TextSpan(text: 'What to '),
+          TextSpan(text: tr('What to ')),
           TextSpan(
-            text: 'Explore?',
+            text: tr('Explore?'),
             style: GoogleFonts.poppins(
               fontSize: 28, fontWeight: FontWeight.w700,
               color: AppColors.neonCyan,
@@ -777,7 +778,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         ),
         const SizedBox(height: 14),
         Text(
-          'Dive into the high-dimensional logic of the\nmathematical void. Select a node to begin.',
+          tr('Dive into the high-dimensional logic of the\nmathematical void. Select a node to begin.'),
           style: GoogleFonts.poppins(
             fontSize: 13, color: AppColors.textSecondary, height: 1.5,
           ),
@@ -788,10 +789,10 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   Widget _buildBottomNav() {
     final tabs = [
-      {'icon': Icons.menu_book_rounded, 'label': 'LEARN'},
-      {'icon': Icons.calculate_rounded, 'label': 'PRACTICE'},
-      {'icon': Icons.bar_chart_rounded, 'label': 'RANK'},
-      {'icon': Icons.person_rounded,    'label': 'PROFILE'},
+      {'icon': Icons.menu_book_rounded, 'label': tr('LEARN')},
+      {'icon': Icons.calculate_rounded, 'label': tr('PRACTICE')},
+      {'icon': Icons.bar_chart_rounded, 'label': tr('RANK')},
+      {'icon': Icons.person_rounded,    'label': tr('PROFILE')},
     ];
 
     return Container(

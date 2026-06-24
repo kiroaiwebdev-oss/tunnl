@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/auth_service.dart';
+import '../../core/services/app_strings.dart';
 import '../../core/network/api_client.dart';
 import '../../core/network/api_endpoints.dart';
 import '../hub/hub_screen.dart';
@@ -103,11 +104,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
           (route) => false,
         );
       } else {
-        _showError(res['message'] ?? 'Failed to save. Try again.');
+        _showError(res['message'] ?? tr('Failed to save. Try again.'));
       }
     } catch (e) {
       if (!mounted) return;
-      _showError('Network error. Check your connection.');
+      _showError(tr('Network error. Check your connection.'));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -171,7 +172,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
 
                       Center(
                         child: Text(
-                          'Setup Your Profile',
+                          tr('Setup Your Profile'),
                           style: GoogleFonts.poppins(
                             fontSize: 24, fontWeight: FontWeight.w700,
                             color: Colors.white,
@@ -181,7 +182,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
                       const SizedBox(height: 8),
                       Center(
                         child: Text(
-                          'Help us personalise your Tunnl experience',
+                          tr('Help us personalise your Tunnl experience'),
                           textAlign: TextAlign.center,
                           style: GoogleFonts.poppins(
                             fontSize: 13, color: AppColors.textSecondary,
@@ -193,7 +194,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
 
                       // ── Name Input ──────────────────────────
                       Text(
-                        'Your Name',
+                        tr('Your Name'),
                         style: GoogleFonts.poppins(
                           fontSize: 13, fontWeight: FontWeight.w600,
                           color: AppColors.textSecondary, letterSpacing: 1,
@@ -226,7 +227,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
                             fontWeight: FontWeight.w500,
                           ),
                           decoration: InputDecoration(
-                            hintText: 'Enter your full name',
+                            hintText: tr('Enter your full name'),
                             hintStyle: GoogleFonts.poppins(
                               fontSize: 14, color: AppColors.textMuted,
                             ),
@@ -249,7 +250,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
                               color: AppColors.error, size: 13),
                             const SizedBox(width: 5),
                             Text(
-                              'Please enter your name',
+                              tr('Please enter your name'),
                               style: GoogleFonts.poppins(
                                 fontSize: 12, color: AppColors.error,
                               ),
@@ -262,7 +263,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
 
                       // ── Class/Standard Dropdown ─────────────
                       Text(
-                        'Your Class / Exam',
+                        tr('Your Class / Exam'),
                         style: GoogleFonts.poppins(
                           fontSize: 13, fontWeight: FontWeight.w600,
                           color: AppColors.textSecondary, letterSpacing: 1,
@@ -325,7 +326,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
                               color: AppColors.error, size: 13),
                             const SizedBox(width: 5),
                             Text(
-                              'Please select your class/exam',
+                              tr('Please select your class/exam'),
                               style: GoogleFonts.poppins(
                                 fontSize: 12, color: AppColors.error,
                               ),
@@ -381,7 +382,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
-                                      'START MY JOURNEY',
+                                      tr('START MY JOURNEY'),
                                       style: GoogleFonts.poppins(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w700,
@@ -402,7 +403,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen>
                       // Profile completion is mandatory for new users — no skip.
                       Center(
                         child: Text(
-                          'Complete your profile to continue',
+                          tr('Complete your profile to continue'),
                           style: GoogleFonts.poppins(
                             fontSize: 12,
                             color: AppColors.textMuted,

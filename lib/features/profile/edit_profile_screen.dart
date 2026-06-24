@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/auth_service.dart';
+import '../../core/services/app_strings.dart';
 import '../../core/services/user_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -96,21 +97,21 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           borderRadius: BorderRadius.circular(20),
           side: BorderSide(color: AppColors.error.withValues(alpha: 0.3)),
         ),
-        title: Text('Discard changes?',
+        title: Text(tr('Discard changes?'),
             style: GoogleFonts.poppins(
                 color: Colors.white, fontWeight: FontWeight.w700)),
-        content: Text('Your edits will be lost. Are you sure?',
+        content: Text(tr('Your edits will be lost. Are you sure?'),
             style: GoogleFonts.poppins(
                 color: AppColors.textSecondary, fontSize: 13)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Keep Editing',
+            child: Text(tr('Keep Editing'),
                 style: GoogleFonts.poppins(color: AppColors.neonCyan)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Discard',
+            child: Text(tr('Discard'),
                 style: GoogleFonts.poppins(color: AppColors.error)),
           ),
         ],
@@ -174,11 +175,11 @@ class _EditProfileScreenState extends State<EditProfileScreen>
         await AuthService.setCachedStandard(_selectedStandard!);
       }
       if (!mounted) return;
-      _toast('Profile updated!');
+      _toast(tr('Profile updated!'));
       navigator.pop(true);
     } else {
       setState(() => _isLoading = false);
-      _toast('Failed to update. Try again.', isError: true);
+      _toast(tr('Failed to update. Try again.'), isError: true);
     }
   }
 
@@ -219,15 +220,15 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                               const SizedBox(height: 12),
                               _buildAvatar(initial),
                               const SizedBox(height: 30),
-                              _buildSectionLabel('YOUR NAME'),
+                              _buildSectionLabel(tr('YOUR NAME')),
                               const SizedBox(height: 8),
                               _buildNameField(),
                               const SizedBox(height: 24),
-                              _buildSectionLabel('PHONE'),
+                              _buildSectionLabel(tr('PHONE')),
                               const SizedBox(height: 8),
                               _buildPhoneField(),
                               const SizedBox(height: 24),
-                              _buildSectionLabel('CLASS / EXAM'),
+                              _buildSectionLabel(tr('CLASS / EXAM')),
                               const SizedBox(height: 8),
                               _buildStandardGrid(),
                               const SizedBox(height: 30),
@@ -262,7 +263,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                 color: AppColors.neonCyan, size: 20),
           ),
           const SizedBox(width: 12),
-          Text('EDIT PROFILE',
+          Text(tr('EDIT PROFILE'),
               style: GoogleFonts.orbitron(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -342,12 +343,12 @@ class _EditProfileScreenState extends State<EditProfileScreen>
         setState(() {}); // refresh save-bar enabled state
       },
       decoration: InputDecoration(
-        hintText: 'Enter your name',
+        hintText: tr('Enter your name'),
         hintStyle: GoogleFonts.poppins(color: AppColors.textMuted),
         prefixIcon: const Icon(Icons.person_rounded,
             color: AppColors.neonCyan, size: 20),
         counterText: '',
-        errorText: _hasNameError ? 'Name cannot be empty' : null,
+        errorText: _hasNameError ? tr('Name cannot be empty') : null,
         errorStyle: GoogleFonts.poppins(color: AppColors.error, fontSize: 11),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -391,7 +392,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              widget.phone.isEmpty ? '— not set —' : widget.phone,
+              widget.phone.isEmpty ? tr('— not set —') : widget.phone,
               style: GoogleFonts.poppins(
                   color: Colors.white,
                   fontSize: 15,
@@ -401,7 +402,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
           GestureDetector(
             onTap: () {
               Clipboard.setData(ClipboardData(text: widget.phone));
-              _toast('Phone copied');
+              _toast(tr('Phone copied'));
             },
             child: Container(
               padding:
@@ -417,7 +418,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                   const Icon(Icons.lock_rounded,
                       color: AppColors.textMuted, size: 11),
                   const SizedBox(width: 4),
-                  Text('VERIFIED',
+                  Text(tr('VERIFIED'),
                       style: GoogleFonts.poppins(
                           fontSize: 9,
                           color: AppColors.textSecondary,
@@ -524,7 +525,7 @@ class _EditProfileScreenState extends State<EditProfileScreen>
                     ),
                   )
                 : Text(
-                    _hasChanges ? 'SAVE CHANGES' : 'NO CHANGES TO SAVE',
+                    _hasChanges ? tr('SAVE CHANGES') : tr('NO CHANGES TO SAVE'),
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,

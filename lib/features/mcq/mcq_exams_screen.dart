@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/content_service.dart';
+import '../../core/services/app_strings.dart';
 import '../premium/premium_screen.dart';
 import '../sets/sets_screen.dart';
 
@@ -206,13 +207,13 @@ class _McqExamsScreenState extends State<McqExamsScreen>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('5000 SPEED MCQS',
+              Text(tr('5000 SPEED MCQS'),
                   style: GoogleFonts.orbitron(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: AppColors.neonCyan,
                       letterSpacing: 2)),
-              Text('Pick an exam to start practising',
+              Text(tr('Pick an exam to start practising'),
                   style: GoogleFonts.poppins(
                       fontSize: 11, color: AppColors.textSecondary)),
             ],
@@ -296,7 +297,7 @@ class _McqExamsScreenState extends State<McqExamsScreen>
                       color: AppColors.neonCyan, size: 22),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text('All Speed MCQs',
+                    child: Text(tr('All Speed MCQs'),
                         style: GoogleFonts.poppins(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -317,13 +318,13 @@ class _McqExamsScreenState extends State<McqExamsScreen>
                   const Icon(Icons.bolt_rounded,
                       color: AppColors.textMuted, size: 48),
                   const SizedBox(height: 12),
-                  Text('No exams added yet',
+                  Text(tr('No exams added yet'),
                       style: GoogleFonts.poppins(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                           color: Colors.white)),
                   const SizedBox(height: 6),
-                  Text('Use the "All Speed MCQs" button above for now.',
+                  Text(tr('Use the "All Speed MCQs" button above for now.'),
                       textAlign: TextAlign.center,
                       style: GoogleFonts.poppins(
                           fontSize: 12, color: AppColors.textSecondary)),
@@ -451,7 +452,7 @@ class _ExamSquare extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              '$setCount set${setCount == 1 ? '' : 's'}',
+              '$setCount ${setCount == 1 ? tr('set') : tr('sets')}',
               style: GoogleFonts.poppins(
                 fontSize: 10,
                 color: AppColors.textSecondary,

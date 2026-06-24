@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/app_settings_service.dart';
+import '../../core/services/app_strings.dart';
 import '../../core/services/content_service.dart';
 import '../../core/services/payment_service.dart';
 import '../../core/services/auth_service.dart';
@@ -35,24 +36,24 @@ class _PremiumScreenState extends State<PremiumScreen>
   final List<Map<String, dynamic>> _guestBenefits = [
     {
       'icon': Icons.quiz_rounded,
-      'title': '500 Free MCQs',
-      'subtitle': '10 sets × 50 questions',
+      'title': tr('500 Free MCQs'),
+      'subtitle': tr('10 sets × 50 questions'),
       'color': AppColors.neonCyan,
       'iconBg': const Color(0xFF0D2233),
       'iconColor': AppColors.neonCyan,
     },
     {
       'icon': Icons.bolt_rounded,
-      'title': 'Test Your Tunnelity',
-      'subtitle': '10 question speed test',
+      'title': tr('Test Your Tunnelity'),
+      'subtitle': tr('10 question speed test'),
       'color': AppColors.neonCyan,
       'iconBg': const Color(0xFF0D2233),
       'iconColor': AppColors.neonCyan,
     },
     {
       'icon': Icons.wb_sunny_rounded,
-      'title': 'Daily Dose',
-      'subtitle': '1 question daily pop-up',
+      'title': tr('Daily Dose'),
+      'subtitle': tr('1 question daily pop-up'),
       'color': AppColors.neonCyan,
       'iconBg': const Color(0xFF0D2233),
       'iconColor': AppColors.neonCyan,
@@ -62,8 +63,8 @@ class _PremiumScreenState extends State<PremiumScreen>
   final List<Map<String, dynamic>> _premiumBenefits = [
     {
       'icon': Icons.layers_rounded,
-      'title': 'Tunnl Tricks',
-      'subtitle': 'Powerful strategies & shortcuts',
+      'title': tr('Tunnl Tricks'),
+      'subtitle': tr('Powerful strategies & shortcuts'),
       'color': AppColors.yellow,
       'image': 'assets/images/b1.jpg',
       'iconBg': const Color(0xFF0D2233),
@@ -71,8 +72,8 @@ class _PremiumScreenState extends State<PremiumScreen>
     },
     {
       'icon': Icons.quiz_rounded,
-      'title': '5000 Speed Math MCQs',
-      'subtitle': 'Unlimited practice questions',
+      'title': tr('5000 Speed Math MCQs'),
+      'subtitle': tr('Unlimited practice questions'),
       'color': AppColors.yellow,
       'image': 'assets/images/b2.jpg',
       'iconBg': const Color(0xFF1A1040),
@@ -80,8 +81,8 @@ class _PremiumScreenState extends State<PremiumScreen>
     },
     {
       'icon': Icons.functions_rounded,
-      'title': '500 Simplification Questions',
-      'subtitle': 'Master simplification tricks',
+      'title': tr('500 Simplification Questions'),
+      'subtitle': tr('Master simplification tricks'),
       'color': AppColors.yellow,
       'image': 'assets/images/b7.jpg',
       'iconBg': const Color(0xFF0D2233),
@@ -89,8 +90,8 @@ class _PremiumScreenState extends State<PremiumScreen>
     },
     {
       'icon': Icons.play_circle_rounded,
-      'title': 'Shorts',
-      'subtitle': 'Quick math tip videos',
+      'title': tr('Shorts'),
+      'subtitle': tr('Quick math tip videos'),
       'color': AppColors.yellow,
       'image': 'assets/images/b6.jpg',
       'iconBg': const Color(0xFF2A1515),
@@ -98,8 +99,8 @@ class _PremiumScreenState extends State<PremiumScreen>
     },
     {
       'icon': Icons.calendar_today_rounded,
-      'title': 'Daily Practice Sets',
-      'subtitle': "Today's set in dashboard",
+      'title': tr('Daily Practice Sets'),
+      'subtitle': tr("Today's set in dashboard"),
       'color': AppColors.yellow,
       'image': 'assets/images/b4.jpg',
       'iconBg': const Color(0xFF0D2233),
@@ -107,8 +108,8 @@ class _PremiumScreenState extends State<PremiumScreen>
     },
     {
       'icon': Icons.history_edu_rounded,
-      'title': 'Previous Year Questions',
-      'subtitle': 'Complete PYQ access',
+      'title': tr('Previous Year Questions'),
+      'subtitle': tr('Complete PYQ access'),
       'color': AppColors.yellow,
       'image': 'assets/images/b3.jpg',
       'iconBg': const Color(0xFF1A1040),
@@ -116,8 +117,8 @@ class _PremiumScreenState extends State<PremiumScreen>
     },
     {
       'icon': Icons.card_giftcard_rounded,
-      'title': 'Solve & Earn',
-      'subtitle': 'Earn rewards by solving',
+      'title': tr('Solve & Earn'),
+      'subtitle': tr('Earn rewards by solving'),
       'color': AppColors.yellow,
       'image': 'assets/images/b5.jpg',
       'iconBg': const Color(0xFF1A1A00),
@@ -125,8 +126,8 @@ class _PremiumScreenState extends State<PremiumScreen>
     },
     {
       'icon': Icons.bar_chart_rounded,
-      'title': 'Leaderboard Access',
-      'subtitle': 'Compete with 12,000+ students',
+      'title': tr('Leaderboard Access'),
+      'subtitle': tr('Compete with 12,000+ students'),
       'color': AppColors.yellow,
       'iconBg': const Color(0xFF1A1A00),
       'iconColor': AppColors.yellow,
@@ -225,7 +226,7 @@ class _PremiumScreenState extends State<PremiumScreen>
     if (code.isEmpty) {
       setState(() {
         _couponError = true;
-        _couponMsg = 'Enter a coupon code first.';
+        _couponMsg = tr('Enter a coupon code first.');
       });
       return;
     }
@@ -359,7 +360,7 @@ class _PremiumScreenState extends State<PremiumScreen>
             ),
             const SizedBox(height: 20),
             Text(
-              'Payment Successful!',
+              tr('Payment Successful!'),
               style: GoogleFonts.poppins(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -368,7 +369,7 @@ class _PremiumScreenState extends State<PremiumScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              'Welcome to Tunnl Premium!\nAll features unlocked 🎉',
+              tr('Welcome to Tunnl Premium!\nAll features unlocked 🎉'),
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 13,
@@ -408,7 +409,7 @@ class _PremiumScreenState extends State<PremiumScreen>
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Valid: $expiry',
+                    '${tr('Valid:')} $expiry',
                     style: GoogleFonts.poppins(
                       fontSize: 11,
                       color: AppColors.textSecondary,
@@ -441,7 +442,7 @@ class _PremiumScreenState extends State<PremiumScreen>
                 ),
                 child: Center(
                   child: Text(
-                    'EXPLORE DASHBOARD',
+                    tr('EXPLORE DASHBOARD'),
                     style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
@@ -483,8 +484,8 @@ class _PremiumScreenState extends State<PremiumScreen>
                           const SizedBox(height: 24),
 
                           _buildSectionHeader(
-                            label: 'AS A GUEST',
-                            sublabel: 'Free forever',
+                            label: tr('AS A GUEST'),
+                            sublabel: tr('Free forever'),
                             color: AppColors.neonCyan,
                             icon: Icons.person_outline_rounded,
                           ),
@@ -497,8 +498,8 @@ class _PremiumScreenState extends State<PremiumScreen>
                           const SizedBox(height: 20),
 
                           _buildSectionHeader(
-                            label: 'TICKET TO TUNNL',
-                            sublabel: 'Premium — ₹$_priceRupees one time',
+                            label: tr('TICKET TO TUNNL'),
+                            sublabel: '${tr('Premium —')} ₹$_priceRupees ${tr('one time')}',
                             color: AppColors.yellow,
                             icon: Icons.workspace_premium_rounded,
                           ),
@@ -543,7 +544,7 @@ class _PremiumScreenState extends State<PremiumScreen>
           ),
           const SizedBox(width: 12),
           Text(
-            'TICKET TO TUNNL',
+            tr('TICKET TO TUNNL'),
             style: GoogleFonts.orbitron(
               fontSize: 15,
               fontWeight: FontWeight.w700,
@@ -618,7 +619,7 @@ class _PremiumScreenState extends State<PremiumScreen>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'UNLOCK FULL ACCESS',
+                  tr('UNLOCK FULL ACCESS'),
                   style: GoogleFonts.orbitron(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
@@ -628,7 +629,7 @@ class _PremiumScreenState extends State<PremiumScreen>
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'One-time payment — Lifetime access',
+                  tr('One-time payment — Lifetime access'),
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     color: AppColors.textSecondary,
@@ -641,19 +642,19 @@ class _PremiumScreenState extends State<PremiumScreen>
                   children: [
                     _PriceChip(
                       label: '₹$_priceRupees',
-                      sublabel: 'ONE TIME',
+                      sublabel: tr('ONE TIME'),
                       color: AppColors.yellow,
                     ),
                     const SizedBox(width: 12),
-                    const _PriceChip(
+                    _PriceChip(
                       label: '∞',
-                      sublabel: 'LIFETIME',
+                      sublabel: tr('LIFETIME'),
                       color: AppColors.neonCyan,
                     ),
                     const SizedBox(width: 12),
-                    const _PriceChip(
+                    _PriceChip(
                       label: '8+',
-                      sublabel: 'FEATURES',
+                      sublabel: tr('FEATURES'),
                       color: AppColors.success,
                     ),
                   ],
@@ -735,7 +736,7 @@ class _PremiumScreenState extends State<PremiumScreen>
             ),
           ),
           child: Text(
-            'UPGRADE',
+            tr('UPGRADE'),
             style: GoogleFonts.poppins(
               fontSize: 10,
               fontWeight: FontWeight.w700,
@@ -774,7 +775,7 @@ class _PremiumScreenState extends State<PremiumScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Tunnel Premium',
+                tr('Tunnel Premium'),
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -783,7 +784,7 @@ class _PremiumScreenState extends State<PremiumScreen>
               ),
               const SizedBox(height: 3),
               Text(
-                'One-time • Lifetime access',
+                tr('One-time • Lifetime access'),
                 style: GoogleFonts.poppins(
                   fontSize: 12,
                   color: AppColors.textSecondary,
@@ -812,7 +813,7 @@ class _PremiumScreenState extends State<PremiumScreen>
                 ),
               ),
               Text(
-                _couponApplied && _discount > 0 ? 'after discount' : 'only',
+                _couponApplied && _discount > 0 ? tr('after discount') : tr('only'),
                 style: GoogleFonts.poppins(
                   fontSize: 11,
                   color: AppColors.textSecondary,
@@ -847,7 +848,7 @@ class _PremiumScreenState extends State<PremiumScreen>
                   color: AppColors.neonCyan, size: 16),
               const SizedBox(width: 8),
               Text(
-                'Have a coupon?',
+                tr('Have a coupon?'),
                 style: GoogleFonts.poppins(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -872,7 +873,7 @@ class _PremiumScreenState extends State<PremiumScreen>
                   ),
                   decoration: InputDecoration(
                     isDense: true,
-                    hintText: 'ENTER CODE',
+                    hintText: tr('ENTER CODE'),
                     hintStyle: GoogleFonts.poppins(
                       fontSize: 13,
                       color: AppColors.textMuted,
@@ -927,7 +928,7 @@ class _PremiumScreenState extends State<PremiumScreen>
                           ),
                         )
                       : Text(
-                          _couponApplied ? 'REMOVE' : 'APPLY',
+                          _couponApplied ? tr('REMOVE') : tr('APPLY'),
                           style: GoogleFonts.poppins(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -1014,7 +1015,7 @@ class _PremiumScreenState extends State<PremiumScreen>
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    'PAY ₹$_payablePrice & UNLOCK NOW',
+                    '${tr('PAY')} ₹$_payablePrice ${tr('& UNLOCK NOW')}',
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -1039,7 +1040,7 @@ class _PremiumScreenState extends State<PremiumScreen>
         ),
         const SizedBox(width: 5),
         Text(
-          'Secured by Razorpay  •  One-time payment',
+          tr('Secured by Razorpay  •  One-time payment'),
           style: GoogleFonts.poppins(
             fontSize: 11,
             color: AppColors.textMuted,

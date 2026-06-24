@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/app_settings_service.dart';
+import '../../core/services/app_strings.dart';
 import '../../core/services/content_service.dart';
 import '../../core/models/set_model.dart';
 import '../question/question_screen.dart';
@@ -135,7 +136,7 @@ class _TestListScreenState extends State<TestListScreen>
                                         : i + 1,
                                     title: s.title.isNotEmpty
                                         ? s.title
-                                        : 'Test ${i + 1}',
+                                        : '${tr('Test')} ${i + 1}',
                                     questionCount: s.totalQuestions,
                                     isLocked: isLocked,
                                     isPremiumLocked: premiumBlocked,
@@ -206,7 +207,7 @@ class _TestListScreenState extends State<TestListScreen>
                 color: AppColors.neonCyan, size: 20),
           ),
           const SizedBox(width: 12),
-          Text('PRACTICE TESTS',
+          Text(tr('PRACTICE TESTS'),
               style: GoogleFonts.orbitron(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -223,7 +224,7 @@ class _TestListScreenState extends State<TestListScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Practice Tests',
+          Text(tr('Practice Tests'),
               style: GoogleFonts.poppins(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
@@ -231,8 +232,8 @@ class _TestListScreenState extends State<TestListScreen>
           const SizedBox(height: 4),
           Text(
             _isLoading
-                ? 'Loading sets…'
-                : '${_sets.length} sets • ${_sets.isNotEmpty ? _sets.first.totalQuestions : 0} questions each',
+                ? tr('Loading sets…')
+                : '${_sets.length} ${tr('sets')} • ${_sets.isNotEmpty ? _sets.first.totalQuestions : 0} ${tr('questions each')}',
             style: GoogleFonts.poppins(
                 fontSize: 13, color: AppColors.textSecondary),
           ),
@@ -249,17 +250,17 @@ class _TestListScreenState extends State<TestListScreen>
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _SummaryItem(
-                    label: 'TOTAL SETS',
+                    label: tr('TOTAL SETS'),
                     value: '${_sets.length}',
                     color: Colors.white),
                 _divider(),
                 _SummaryItem(
-                    label: 'COMPLETED',
+                    label: tr('COMPLETED'),
                     value: '$_completedCount',
                     color: AppColors.success),
                 _divider(),
                 _SummaryItem(
-                    label: 'QUESTIONS',
+                    label: tr('QUESTIONS'),
                     value: '$_totalQuestions',
                     color: AppColors.neonCyan),
               ],
@@ -284,13 +285,13 @@ class _TestListScreenState extends State<TestListScreen>
             const Icon(Icons.inbox_rounded,
                 color: AppColors.textMuted, size: 56),
             const SizedBox(height: 16),
-            Text('No tests available',
+            Text(tr('No tests available'),
                 style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: Colors.white)),
             const SizedBox(height: 8),
-            Text('Admin will publish practice sets soon.',
+            Text(tr('Admin will publish practice sets soon.'),
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                     fontSize: 13, color: AppColors.textSecondary)),
@@ -302,7 +303,7 @@ class _TestListScreenState extends State<TestListScreen>
                     borderRadius: BorderRadius.circular(12)),
               ),
               icon: const Icon(Icons.refresh_rounded, color: AppColors.darkBg),
-              label: Text('Retry',
+              label: Text(tr('Retry'),
                   style: GoogleFonts.poppins(
                       color: AppColors.darkBg,
                       fontWeight: FontWeight.w700)),
@@ -323,16 +324,16 @@ class _TestListScreenState extends State<TestListScreen>
             borderRadius: BorderRadius.circular(20),
             side:
                 BorderSide(color: AppColors.orange.withValues(alpha: 0.4), width: 1)),
-        title: Text('🔒 Set Locked',
+        title: Text('🔒 ${tr('Set Locked')}',
             style: GoogleFonts.poppins(
                 color: Colors.white, fontWeight: FontWeight.w700)),
-        content: Text('Complete previous sets to unlock this one.',
+        content: Text(tr('Complete previous sets to unlock this one.'),
             style: GoogleFonts.poppins(
                 color: AppColors.textSecondary, fontSize: 13)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('OK',
+              child: Text(tr('OK'),
                   style: GoogleFonts.poppins(color: AppColors.neonCyan))),
         ],
       ),
@@ -424,12 +425,12 @@ class _TestSetCard extends StatelessWidget {
                               ? AppColors.textMuted
                               : Colors.white)),
                   const SizedBox(height: 3),
-                  Text('$questionCount Questions  •  Speed Math',
+                  Text('$questionCount ${tr('Questions')}  •  ${tr('Speed Math')}',
                       style: GoogleFonts.poppins(
                           fontSize: 12, color: AppColors.textSecondary)),
                   if (isPremiumLocked) ...[
                     const SizedBox(height: 6),
-                    Text('Upgrade to unlock — ₹${AppSettingsService.instance.getInt('premium_price', 50)} only',
+                    Text('${tr('Upgrade to unlock —')} ₹${AppSettingsService.instance.getInt('premium_price', 50)} ${tr('only')}',
                         style: GoogleFonts.poppins(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,

@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/result_service.dart';
 import '../../core/services/auth_service.dart';
+import '../../core/services/app_strings.dart';
 import '../../core/services/content_service.dart';
 import '../question/question_screen.dart';
 import '../leaderboard/leaderboard_screen.dart';
@@ -84,15 +85,15 @@ class _ResultScreenState extends State<ResultScreen>
 
   // Same premium benefits shown on the Premium ("Ticket to Tunnl") screen,
   // kept in sync so the result-screen upsell lists the real features.
-  static const List<String> _premiumBenefits = [
-    'Tunnl Tricks — strategies & shortcuts',
-    '5000 Speed Math MCQs',
-    '500 Simplification Questions',
-    'Shorts — quick math tip videos',
-    'Daily Practice Sets',
-    'Previous Year Questions',
-    'Solve & Earn rewards',
-    'Leaderboard Access',
+  List<String> get _premiumBenefits => [
+    tr('Tunnl Tricks — strategies & shortcuts'),
+    tr('5000 Speed Math MCQs'),
+    tr('500 Simplification Questions'),
+    tr('Shorts — quick math tip videos'),
+    tr('Daily Practice Sets'),
+    tr('Previous Year Questions'),
+    tr('Solve & Earn rewards'),
+    tr('Leaderboard Access'),
   ];
 
   @override
@@ -128,10 +129,10 @@ class _ResultScreenState extends State<ResultScreen>
             : AppColors.error;
 
     _performanceMsg = _accuracyPct >= 80
-        ? 'Excellent! You are in the top tier 🔥'
+        ? tr('Excellent! You are in the top tier 🔥')
         : _accuracyPct >= 60
-            ? 'Good effort! Keep pushing!'
-            : 'Keep practicing to improve!';
+            ? tr('Good effort! Keep pushing!')
+            : tr('Keep practicing to improve!');
   }
 
   // ─────────────────────────────────────────────────
@@ -349,14 +350,14 @@ class _ResultScreenState extends State<ResultScreen>
       child: Row(
         children: [
           _TabChip(
-            label: 'RESULT',
+            label: tr('RESULT'),
             icon: Icons.bar_chart_rounded,
             active: _activeTab == 0,
             onTap: () => setState(() => _activeTab = 0),
           ),
           const SizedBox(width: 10),
           _TabChip(
-            label: 'REVIEW (${widget.summary.length})',
+            label: '${tr('REVIEW')} (${widget.summary.length})',
             icon: Icons.rate_review_rounded,
             active: _activeTab == 1,
             onTap: () => setState(() => _activeTab = 1),
@@ -406,13 +407,13 @@ class _ResultScreenState extends State<ResultScreen>
           shaderCallback: (b) => const LinearGradient(
             colors: [AppColors.neonCyan, Color(0xFF0091EA)],
           ).createShader(b),
-          child: Text('RESULTS',
+          child: Text(tr('RESULTS'),
             style: GoogleFonts.orbitron(
               fontSize: 42, fontWeight: FontWeight.w700,
               color: Colors.white, letterSpacing: 6)),
         ),
         const SizedBox(height: 6),
-        Text('SET ${widget.setNumber.toString().padLeft(2, '0')} • ${widget.category.toUpperCase()}',
+        Text('${tr('SET')} ${widget.setNumber.toString().padLeft(2, '0')} • ${widget.category.toUpperCase()}',
           style: GoogleFonts.poppins(
             fontSize: 11, fontWeight: FontWeight.w500,
             color: AppColors.textSecondary, letterSpacing: 2.5)),
@@ -435,7 +436,7 @@ class _ResultScreenState extends State<ResultScreen>
             opacity: _statsFadeAnims[0],
             child: _StatItem(
               icon: Icons.star_rounded,
-              label: 'SCORE',
+              label: tr('SCORE'),
               valueWidget: AnimatedBuilder(
                 animation: _scoreAnim,
                 builder: (_, __) => Text(
@@ -452,7 +453,7 @@ class _ResultScreenState extends State<ResultScreen>
             opacity: _statsFadeAnims[1],
             child: _StatItem(
               icon: Icons.track_changes_rounded,
-              label: 'ACCURACY',
+              label: tr('ACCURACY'),
               valueWidget: Text(
                 '${_accuracyPct.toStringAsFixed(0)}%',
                 style: GoogleFonts.orbitron(
@@ -466,7 +467,7 @@ class _ResultScreenState extends State<ResultScreen>
             opacity: _statsFadeAnims[2],
             child: _StatItem(
               icon: Icons.timer_rounded,
-              label: 'AVG SPEED',
+              label: tr('AVG SPEED'),
               valueWidget: Text(
                 '${widget.avgSpeedSeconds.toStringAsFixed(1)}s',
                 style: GoogleFonts.orbitron(
@@ -485,21 +486,21 @@ class _ResultScreenState extends State<ResultScreen>
       children: [
         _BreakdownChip(
           value: widget.correct,
-          label: 'Correct',
+          label: tr('Correct'),
           color: AppColors.success,
           icon: Icons.check_circle_rounded,
         ),
         const SizedBox(width: 10),
         _BreakdownChip(
           value: widget.wrong,
-          label: 'Wrong',
+          label: tr('Wrong'),
           color: AppColors.error,
           icon: Icons.cancel_rounded,
         ),
         const SizedBox(width: 10),
         _BreakdownChip(
           value: widget.skipped,
-          label: 'Skipped',
+          label: tr('Skipped'),
           color: AppColors.textMuted,
           icon: Icons.remove_circle_rounded,
         ),
@@ -546,7 +547,7 @@ class _ResultScreenState extends State<ResultScreen>
                     fontSize: 13, fontWeight: FontWeight.w700,
                     color: Colors.white)),
                 const SizedBox(height: 3),
-                Text('${widget.totalQuestions - widget.correct} more correct → reach Top 20!',
+                Text('${widget.totalQuestions - widget.correct} ${tr('more correct → reach Top 20!')}',
                   style: GoogleFonts.poppins(
                     fontSize: 11, color: AppColors.textSecondary)),
               ],
@@ -598,20 +599,20 @@ class _ResultScreenState extends State<ResultScreen>
               const Icon(Icons.leaderboard_rounded,
                   color: AppColors.yellow, size: 20),
               const SizedBox(width: 8),
-              Text('Your Ranking',
+              Text(tr('Your Ranking'),
                   style: GoogleFonts.poppins(
                       fontSize: 15, fontWeight: FontWeight.w700,
                       color: Colors.white)),
               const Spacer(),
               if (_setRank != null)
-                Text('#$_setRank of $_setTotal',
+                Text('#$_setRank ${tr('of')} $_setTotal',
                     style: GoogleFonts.orbitron(
                         fontSize: 14, fontWeight: FontWeight.w700,
                         color: AppColors.yellow)),
             ],
           ),
           const SizedBox(height: 4),
-          Text('$_setTotal student${_setTotal == 1 ? '' : 's'} attempted this set',
+          Text('$_setTotal ${_setTotal == 1 ? tr('student') : tr('students')} ${tr('attempted this set')}',
               style: GoogleFonts.poppins(
                   fontSize: 11, color: AppColors.textSecondary)),
           const SizedBox(height: 14),
@@ -632,7 +633,7 @@ class _ResultScreenState extends State<ResultScreen>
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(isMe ? '$name (You)' : name,
+                    child: Text(isMe ? '$name (${tr('You')})' : name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.poppins(
@@ -641,7 +642,7 @@ class _ResultScreenState extends State<ResultScreen>
                                 isMe ? FontWeight.w700 : FontWeight.w500,
                             color: isMe ? AppColors.yellow : Colors.white)),
                   ),
-                  Text('$score pts • ${acc.toStringAsFixed(0)}%',
+                  Text('$score ${tr('pts')} • ${acc.toStringAsFixed(0)}%',
                       style: GoogleFonts.poppins(
                           fontSize: 11, color: AppColors.textSecondary)),
                 ],
@@ -676,7 +677,7 @@ class _ResultScreenState extends State<ResultScreen>
             color: AppColors.neonCyan.withValues(alpha: 0.35),
             blurRadius: 20, spreadRadius: 2, offset: const Offset(0, 4))],
         ),
-        child: Center(child: Text('RETRY TEST',
+        child: Center(child: Text(tr('RETRY TEST'),
           style: GoogleFonts.poppins(
             fontSize: 14, fontWeight: FontWeight.w700,
             color: AppColors.darkBg, letterSpacing: 2))),
@@ -696,7 +697,7 @@ class _ResultScreenState extends State<ResultScreen>
           borderRadius: BorderRadius.circular(30),
           border: Border.all(color: AppColors.textMuted.withValues(alpha: 0.3)),
         ),
-        child: Center(child: Text('DASHBOARD',
+        child: Center(child: Text(tr('DASHBOARD'),
           style: GoogleFonts.poppins(
             fontSize: 14, fontWeight: FontWeight.w700,
             color: Colors.white, letterSpacing: 2))),
@@ -723,7 +724,7 @@ class _ResultScreenState extends State<ResultScreen>
             const Icon(Icons.emoji_events_rounded,
               color: Colors.white, size: 20),
             const SizedBox(width: 10),
-            Text('LEADERBOARD',
+            Text(tr('LEADERBOARD'),
               style: GoogleFonts.poppins(
                 fontSize: 14, fontWeight: FontWeight.w700,
                 color: Colors.white, letterSpacing: 2)),
@@ -747,7 +748,7 @@ class _ResultScreenState extends State<ResultScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Unlock Premium\nContent',
+              Text(tr('Unlock Premium\nContent'),
                 style: GoogleFonts.poppins(
                   fontSize: 18, fontWeight: FontWeight.w700,
                   color: Colors.white, height: 1.3)),
@@ -759,7 +760,7 @@ class _ResultScreenState extends State<ResultScreen>
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: AppColors.neonCyan.withValues(alpha: 0.3))),
-                child: Text('ELITE\nACCESS',
+                child: Text(tr('ELITE\nACCESS'),
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
                     fontSize: 9, fontWeight: FontWeight.w700,
@@ -786,7 +787,7 @@ class _ResultScreenState extends State<ResultScreen>
                   blurRadius: 20, spreadRadius: 2,
                   offset: const Offset(0, 4))],
               ),
-              child: Center(child: Text('UNLOCK NOW',
+              child: Center(child: Text(tr('UNLOCK NOW'),
                 style: GoogleFonts.poppins(
                   fontSize: 14, fontWeight: FontWeight.w700,
                   color: Colors.white, letterSpacing: 2))),
@@ -803,7 +804,7 @@ class _ResultScreenState extends State<ResultScreen>
   Widget _buildReviewTab() {
     if (widget.summary.isEmpty) {
       return Center(
-        child: Text('No review data available.',
+        child: Text(tr('No review data available.'),
           style: GoogleFonts.poppins(
             fontSize: 13, color: AppColors.textSecondary)),
       );
@@ -951,7 +952,7 @@ class _ResultScreenState extends State<ResultScreen>
                           const Icon(Icons.lightbulb_rounded,
                             color: AppColors.neonCyan, size: 14),
                           const SizedBox(width: 6),
-                          Text('Solution',
+                          Text(tr('Solution'),
                             style: GoogleFonts.poppins(
                               fontSize: 11, fontWeight: FontWeight.w700,
                               color: AppColors.neonCyan)),
@@ -976,8 +977,8 @@ class _ResultScreenState extends State<ResultScreen>
                     const SizedBox(width: 4),
                     Text(
                       skipped
-                          ? 'Timed out'
-                          : 'Answered in ${item['timeTaken']}s',
+                          ? tr('Timed out')
+                          : '${tr('Answered in')} ${item['timeTaken']}s',
                       style: GoogleFonts.poppins(
                         fontSize: 11, color: AppColors.textMuted)),
                   ],

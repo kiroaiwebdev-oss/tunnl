@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/app_strings.dart';
 import '../../core/services/history_service.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -110,10 +111,10 @@ class _HistoryScreenState extends State<HistoryScreen>
           _isLoading = false;
         });
       } else {
-        _setError(res['message'] ?? 'Failed to load history');
+        _setError(res['message'] ?? tr('Failed to load history'));
       }
     } catch (e) {
-      _setError('Network error. Check your connection.');
+      _setError(tr('Network error. Check your connection.'));
     }
   }
 
@@ -193,7 +194,7 @@ class _HistoryScreenState extends State<HistoryScreen>
               color: AppColors.neonCyan, size: 20),
           ),
           const SizedBox(width: 12),
-          Text('HISTORY',
+          Text(tr('HISTORY'),
             style: GoogleFonts.orbitron(
               fontSize: 15, fontWeight: FontWeight.w700,
               color: AppColors.neonCyan, letterSpacing: 2)),
@@ -224,9 +225,9 @@ class _HistoryScreenState extends State<HistoryScreen>
               // Future: sort by date/score
             },
             itemBuilder: (_) => [
-              _menuItem('Latest First',  Icons.arrow_downward_rounded),
-              _menuItem('Highest Score', Icons.star_rounded),
-              _menuItem('Lowest Score',  Icons.star_border_rounded),
+              _menuItem(tr('Latest First'),  Icons.arrow_downward_rounded),
+              _menuItem(tr('Highest Score'), Icons.star_rounded),
+              _menuItem(tr('Lowest Score'),  Icons.star_border_rounded),
             ],
           ),
         ],
@@ -265,7 +266,7 @@ class _HistoryScreenState extends State<HistoryScreen>
           style:        GoogleFonts.poppins(
             fontSize: 13, color: Colors.white),
           decoration: InputDecoration(
-            hintText:      'Search exam, category...',
+            hintText:      tr('Search exam, category...'),
             hintStyle:     GoogleFonts.poppins(
               fontSize: 13, color: AppColors.textMuted),
             prefixIcon:    const Icon(Icons.search_rounded,
@@ -302,7 +303,7 @@ class _HistoryScreenState extends State<HistoryScreen>
               const Icon(Icons.wifi_off_rounded,
                 color: AppColors.textMuted, size: 56),
               const SizedBox(height: 16),
-              Text('Failed to Load',
+              Text(tr('Failed to Load'),
                 style: GoogleFonts.poppins(
                   fontSize: 16, fontWeight: FontWeight.w700,
                   color: Colors.white)),
@@ -319,7 +320,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                     borderRadius: BorderRadius.circular(12))),
                 icon: const Icon(Icons.refresh_rounded,
                   color: AppColors.darkBg),
-                label: Text('Retry',
+                label: Text(tr('Retry'),
                   style: GoogleFonts.poppins(
                     color: AppColors.darkBg,
                     fontWeight: FontWeight.w700)),
@@ -363,7 +364,7 @@ class _HistoryScreenState extends State<HistoryScreen>
                       if (!_hasMore && _history.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          child: Text('All caught up!',
+                          child: Text(tr('All caught up!'),
                             style: GoogleFonts.poppins(
                               fontSize: 12, color: AppColors.textMuted)),
                         ),
@@ -381,11 +382,11 @@ class _HistoryScreenState extends State<HistoryScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('History',
+        Text(tr('History'),
           style: GoogleFonts.poppins(
             fontSize: 28, fontWeight: FontWeight.w800,
             color: Colors.white)),
-        Text('Track your performance over time',
+        Text(tr('Track your performance over time'),
           style: GoogleFonts.poppins(
             fontSize: 13, color: AppColors.textSecondary)),
       ],
@@ -398,15 +399,15 @@ class _HistoryScreenState extends State<HistoryScreen>
       children: [
         Row(children: [
           Expanded(child: _StatCard(
-            label: 'TOTAL TESTS',
+            label: tr('TOTAL TESTS'),
             value: '$_totalTests',
-            sub: 'attempts',
+            sub: tr('attempts'),
             subColor: AppColors.neonCyan,
             highlighted: true,
           )),
           const SizedBox(width: 12),
           Expanded(child: _StatCard(
-            label: 'AVERAGE SCORE',
+            label: tr('AVERAGE SCORE'),
             value: _avgScore.toStringAsFixed(1),
             sub: '/10',
             subColor: AppColors.textMuted,
@@ -415,15 +416,15 @@ class _HistoryScreenState extends State<HistoryScreen>
         const SizedBox(height: 12),
         Row(children: [
           Expanded(child: _StatCard(
-            label: 'BEST SCORE',
+            label: tr('BEST SCORE'),
             value: '$_bestScore',
-            sub: _bestScore == 10 ? 'Perfect!' : '/10',
+            sub: _bestScore == 10 ? tr('Perfect!') : '/10',
             subColor: _bestScore == 10
                 ? AppColors.success : AppColors.textMuted,
           )),
           const SizedBox(width: 12),
           Expanded(child: _StatCard(
-            label: 'AVG SPEED',
+            label: tr('AVG SPEED'),
             value: _avgSpeed.toStringAsFixed(1),
             sub: 's/q',
             subColor: AppColors.textMuted,
@@ -552,17 +553,17 @@ class _HistoryScreenState extends State<HistoryScreen>
           // Stats row
           Row(children: [
             _MiniStat(
-              label: 'SCORE',
+              label: tr('SCORE'),
               value: '$correct/$total',
               color: scoreColor,
             ),
             _MiniStat(
-              label: 'ACCURACY',
+              label: tr('ACCURACY'),
               value: '${acc.toStringAsFixed(0)}%',
               color: Colors.white,
             ),
             _MiniStat(
-              label: 'AVG TIME',
+              label: tr('AVG TIME'),
               value: '${speed.toStringAsFixed(1)}s',
               color: Colors.white,
             ),
@@ -597,8 +598,8 @@ class _HistoryScreenState extends State<HistoryScreen>
             const SizedBox(height: 12),
             Text(
               _searchQuery.isNotEmpty
-                  ? 'No results for "$_searchQuery"'
-                  : 'No history yet!\nStart solving to see results here.',
+                  ? '${tr('No results for')} "$_searchQuery"'
+                  : tr('No history yet!\nStart solving to see results here.'),
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 color: AppColors.textMuted, fontSize: 13, height: 1.5)),

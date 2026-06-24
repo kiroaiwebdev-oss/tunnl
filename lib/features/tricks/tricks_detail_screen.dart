@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/app_strings.dart';
 import '../../core/widgets/in_app_video_player.dart';
 
 class TricksDetailScreen extends StatefulWidget {
@@ -103,13 +104,13 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
             const Icon(Icons.menu_book_rounded,
                 color: AppColors.textMuted, size: 48),
             const SizedBox(height: 12),
-            Text('No content yet',
+            Text(tr('No content yet'),
                 style: GoogleFonts.poppins(
                     color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w700)),
             const SizedBox(height: 6),
-            Text('Admin will publish this trick soon.',
+            Text(tr('Admin will publish this trick soon.'),
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                     color: AppColors.textSecondary, fontSize: 13)),
@@ -142,7 +143,7 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'CHAPTER ${widget.data['chapter'] ?? ''}',
+                  'CHAPTER ${widget.data['chapter'] ?? ''}'.replaceFirst('CHAPTER', tr('CHAPTER')),
                   style: GoogleFonts.poppins(
                     fontSize: 10,
                     color: AppColors.neonCyan,
@@ -229,7 +230,7 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
                       ),
                       const SizedBox(width: 5),
                       Text(
-                        'ARTICLE',
+                        tr('ARTICLE'),
                         style: GoogleFonts.poppins(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -268,7 +269,7 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
                       ),
                       const SizedBox(width: 5),
                       Text(
-                        'VIDEO',
+                        tr('VIDEO'),
                         style: GoogleFonts.poppins(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
@@ -385,13 +386,13 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
                   const Icon(Icons.videocam_off_rounded,
                       color: AppColors.textMuted, size: 40),
                   const SizedBox(height: 10),
-                  Text('No playable video set',
+                  Text(tr('No playable video set'),
                       style: GoogleFonts.poppins(
                           color: Colors.white,
                           fontSize: 14,
                           fontWeight: FontWeight.w600)),
                   const SizedBox(height: 4),
-                  Text('Admin can add a YouTube link or upload a video.',
+                  Text(tr('Admin can add a YouTube link or upload a video.'),
                       textAlign: TextAlign.center,
                       style: GoogleFonts.poppins(
                           color: AppColors.textSecondary, fontSize: 12)),
@@ -444,7 +445,7 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'Duration: $_videoDuration',
+                        '${tr('Duration:')} $_videoDuration',
                         style: GoogleFonts.poppins(
                           fontSize: 11,
                           color: AppColors.textMuted,

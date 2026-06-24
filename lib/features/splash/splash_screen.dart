@@ -8,6 +8,7 @@ import '../../core/network/api_client.dart';
 import '../../core/network/api_endpoints.dart';
 import '../../core/services/app_settings_service.dart';
 import '../../core/services/language_service.dart';
+import '../../core/services/app_strings.dart';
 import '../hub/hub_screen.dart';
 import '../auth/login_screen.dart';
 import '../auth/profile_setup_screen.dart';
@@ -263,17 +264,17 @@ class _SplashScreenState extends State<SplashScreen>
             color: AppColors.neonCyan.withValues(alpha: 0.3),
           ),
         ),
-        title: const Text(
-          'Update Required',
-          style: TextStyle(
+        title: Text(
+          tr('Update Required'),
+          style: const TextStyle(
             color: Colors.white,
             fontFamily: 'Orbitron',
             fontSize: 16,
           ),
         ),
-        content: const Text(
-          'A new version of Tunnl is available. Please update to continue.',
-          style: TextStyle(
+        content: Text(
+          tr('A new version of Tunnl is available. Please update to continue.'),
+          style: const TextStyle(
             color: AppColors.textSecondary,
             fontFamily: 'Poppins',
             fontSize: 13,
@@ -285,9 +286,9 @@ class _SplashScreenState extends State<SplashScreen>
               // TODO: Open Play Store URL
               // launchUrl(Uri.parse('https://play.google.com/store/apps/details?id=...'));
             },
-            child: const Text(
-              'UPDATE NOW',
-              style: TextStyle(
+            child: Text(
+              tr('UPDATE NOW'),
+              style: const TextStyle(
                 color: AppColors.neonCyan,
                 fontFamily: 'Poppins',
                 fontWeight: FontWeight.w600,
@@ -491,9 +492,9 @@ class _SplashScreenState extends State<SplashScreen>
   Widget _buildSubtitle() {
     return FadeTransition(
       opacity: _fadeAnim,
-      child: const Text(
-        'New Way to Math',
-        style: TextStyle(
+      child: Text(
+        tr('New Way to Math'),
+        style: const TextStyle(
           fontFamily: 'Poppins',
           fontSize: 15,
           fontWeight: FontWeight.w300,
@@ -590,21 +591,21 @@ class _MaintenanceScreen extends StatelessWidget {
       backgroundColor: AppColors.darkBg,
       body: Container(
         decoration: const BoxDecoration(gradient: AppColors.splashBg),
-        child: const Center(
+        child: Center(
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 40),
+            padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
+                const Icon(
                   Icons.construction_rounded,
                   color: AppColors.neonCyan,
                   size: 64,
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
                 Text(
-                  'Under Maintenance',
-                  style: TextStyle(
+                  tr('Under Maintenance'),
+                  style: const TextStyle(
                     fontFamily: 'Orbitron',
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
@@ -612,11 +613,11 @@ class _MaintenanceScreen extends StatelessWidget {
                     letterSpacing: 2,
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
-                  'We are improving Tunnl for you.\nPlease check back shortly.',
+                  tr('We are improving Tunnl for you.\nPlease check back shortly.'),
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Poppins',
                     fontSize: 13,
                     color: AppColors.textSecondary,

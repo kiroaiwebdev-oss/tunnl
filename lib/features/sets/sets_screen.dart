@@ -9,6 +9,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/content_service.dart';
+import '../../core/services/app_strings.dart';
 import '../../core/models/set_model.dart';
 import '../question/question_screen.dart';
 import '../premium/premium_screen.dart';
@@ -98,7 +99,7 @@ class _SetsScreenState extends State<SetsScreen>
         _isLoading = false;
         _hasError = sets.isEmpty;
         if (sets.isEmpty) {
-          _errorMsg = 'No sets available yet. Admin will add them soon.';
+          _errorMsg = tr('No sets available yet. Admin will add them soon.');
         }
       });
     } catch (e) {
@@ -106,7 +107,7 @@ class _SetsScreenState extends State<SetsScreen>
       setState(() {
         _isLoading = false;
         _hasError = true;
-        _errorMsg = 'Could not load sets. Please retry.';
+        _errorMsg = tr('Could not load sets. Please retry.');
       });
     }
   }
@@ -226,8 +227,8 @@ class _SetsScreenState extends State<SetsScreen>
             ),
             child: Text(
               _isLoading
-                  ? '— / — Done'
-                  : '$_completedCount/${_sets.length} Done',
+                  ? '— / — ${tr('Done')}'
+                  : '$_completedCount/${_sets.length} ${tr('Done')}',
               style: GoogleFonts.poppins(
                 fontSize: 11,
                 color: AppColors.neonCyan,
@@ -274,7 +275,7 @@ class _SetsScreenState extends State<SetsScreen>
                 const SizedBox(height: 4),
                 Text(
                   widget.subtitle ??
-                      '$total Sets • ${widget.questionsPerSet} Questions each',
+                      '$total ${tr('Sets')} • ${widget.questionsPerSet} ${tr('Questions each')}',
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     color: AppColors.textSecondary,
@@ -293,7 +294,7 @@ class _SetsScreenState extends State<SetsScreen>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '$_completedCount of $total sets completed',
+                  '$_completedCount ${tr('of')} $total ${tr('sets completed')}',
                   style: GoogleFonts.poppins(
                     fontSize: 10,
                     color: AppColors.textSecondary,
@@ -346,7 +347,7 @@ class _SetsScreenState extends State<SetsScreen>
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
-                content: Text('Complete previous sets first!',
+                content: Text(tr('Complete previous sets first!'),
                     style: GoogleFonts.poppins(
                         color: Colors.white, fontSize: 13)),
               ));
@@ -423,7 +424,7 @@ class _SetsScreenState extends State<SetsScreen>
             const Icon(Icons.inbox_rounded,
                 color: AppColors.textMuted, size: 56),
             const SizedBox(height: 16),
-            Text('Nothing here yet',
+            Text(tr('Nothing here yet'),
                 style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -441,7 +442,7 @@ class _SetsScreenState extends State<SetsScreen>
                     borderRadius: BorderRadius.circular(12)),
               ),
               icon: const Icon(Icons.refresh_rounded, color: AppColors.darkBg),
-              label: Text('Retry',
+              label: Text(tr('Retry'),
                   style: GoogleFonts.poppins(
                       color: AppColors.darkBg,
                       fontWeight: FontWeight.w700)),
@@ -610,7 +611,7 @@ class _SetCardState extends State<_SetCard>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'SET ${widget.setNumber.toString().padLeft(2, '0')}',
+                      '${tr('SET')} ${widget.setNumber.toString().padLeft(2, '0')}',
                       style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,

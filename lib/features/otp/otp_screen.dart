@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/auth_service.dart';
+import '../../core/services/app_strings.dart';
 import '../hub/hub_screen.dart';
 import '../auth/profile_setup_screen.dart';
 class OtpScreen extends StatefulWidget {
@@ -104,7 +105,7 @@ Future<void> _verifyOtp() async {
   final otp = _otpValue;
 
   if (otp.length < 6) {
-    setState(() { _hasError = true; _errorText = 'Please enter complete 6-digit OTP'; });
+    setState(() { _hasError = true; _errorText = tr('Please enter complete 6-digit OTP'); });
     return;
   }
 
@@ -143,7 +144,7 @@ Future<void> _verifyOtp() async {
       _focusNodes[0].requestFocus();
       setState(() {
         _hasError  = true;
-        _errorText = res['message'] ?? 'Invalid OTP. Please try again.';
+        _errorText = res['message'] ?? tr('Invalid OTP. Please try again.');
         _isLoading = false;
       });
     }
@@ -152,7 +153,7 @@ Future<void> _verifyOtp() async {
     debugPrint('VerifyOTP Error: $e');
     setState(() {
       _hasError  = true;
-      _errorText = 'Network error. Check your connection.';
+      _errorText = tr('Network error. Check your connection.');
       _isLoading = false;
     });
   }
@@ -180,7 +181,7 @@ Future<void> _verifyOtp() async {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'OTP resent successfully!',
+              tr('OTP resent successfully!'),
               style: GoogleFonts.poppins(fontSize: 13),
             ),
             backgroundColor: const Color(0xFF0D2233),
@@ -197,14 +198,14 @@ Future<void> _verifyOtp() async {
       } else {
         setState(() {
           _hasError  = true;
-          _errorText = res['message'] ?? 'Failed to resend OTP.';
+          _errorText = res['message'] ?? tr('Failed to resend OTP.');
         });
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _hasError  = true;
-        _errorText = 'Network error. Try again.';
+        _errorText = tr('Network error. Try again.');
       });
     }
   }
@@ -373,7 +374,7 @@ Future<void> _verifyOtp() async {
     return Column(
       children: [
         Text(
-          _isVerified ? 'Verified!' : 'Verification',
+          _isVerified ? tr('Verified!') : tr('Verification'),
           style: GoogleFonts.poppins(
             fontSize: 28,
             fontWeight: FontWeight.w700,
@@ -383,8 +384,8 @@ Future<void> _verifyOtp() async {
         const SizedBox(height: 10),
         Text(
           _isVerified
-              ? 'Welcome to Tunnl!'
-              : 'Enter the code sent to your mobile\nnumber',
+              ? tr('Welcome to Tunnl!')
+              : tr('Enter the code sent to your mobile\nnumber'),
           textAlign: TextAlign.center,
           style: GoogleFonts.poppins(
             fontSize: 14,
@@ -493,7 +494,7 @@ Future<void> _verifyOtp() async {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          "Didn't receive OTP? ",
+          tr("Didn't receive OTP?") + ' ',
           style: GoogleFonts.poppins(
             fontSize: 13, color: AppColors.textSecondary,
           ),
@@ -501,7 +502,7 @@ Future<void> _verifyOtp() async {
         GestureDetector(
           onTap: _resendOtp,
           child: Text(
-            _canResend ? 'Resend' : 'Resend in ${_resendSeconds}s',
+            _canResend ? tr('Resend') : '${tr('Resend in')} ${_resendSeconds}s',
             style: GoogleFonts.poppins(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -560,7 +561,7 @@ Future<void> _verifyOtp() async {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    _isVerified ? 'VERIFIED ✓' : 'VERIFY OTP',
+                    _isVerified ? '${tr('VERIFIED')} ✓' : tr('VERIFY OTP'),
                     style: GoogleFonts.poppins(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -584,7 +585,7 @@ Future<void> _verifyOtp() async {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          'Wrong number? ',
+          tr('Wrong number?') + ' ',
           style: GoogleFonts.poppins(
             fontSize: 13, color: AppColors.textSecondary,
           ),
@@ -592,7 +593,7 @@ Future<void> _verifyOtp() async {
         GestureDetector(
           onTap: () => Navigator.of(context).pop(),
           child: Text(
-            'Edit',
+            tr('Edit'),
             style: GoogleFonts.poppins(
               fontSize: 13,
               fontWeight: FontWeight.w600,

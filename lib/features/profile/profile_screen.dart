@@ -11,6 +11,7 @@ import '../../core/services/auth_service.dart';
 import '../../core/services/user_service.dart';
 import '../../core/services/content_service.dart';
 import '../../core/services/language_service.dart';
+import '../../core/services/app_strings.dart';
 import '../hub/hub_screen.dart';
 import '../history/history_screen.dart';
 import '../premium/premium_screen.dart';
@@ -230,19 +231,19 @@ Future<void> _loadFromApi() async {
                 ),
               ),
               const SizedBox(height: 20),
-              Text('Notification Settings',
+              Text(tr('Notification Settings'),
                 style: GoogleFonts.poppins(
                   fontSize: 16, fontWeight: FontWeight.w700,
                   color: Colors.white)),
               const SizedBox(height: 6),
-              Text('Manage your alerts & reminders',
+              Text(tr('Manage your alerts & reminders'),
                 style: GoogleFonts.poppins(
                   fontSize: 12, color: AppColors.textSecondary)),
               const SizedBox(height: 20),
 
               _NotifTile(
-                title: 'Daily Practice Reminder',
-                subtitle: 'Remind me to practice every day',
+                title: tr('Daily Practice Reminder'),
+                subtitle: tr('Remind me to practice every day'),
                 icon: Icons.today_rounded,
                 color: AppColors.neonCyan,
                 value: _notifDaily,
@@ -255,8 +256,8 @@ Future<void> _loadFromApi() async {
               ),
 
               _NotifTile(
-                title: 'Weekly Challenge Alert',
-                subtitle: 'Notify when new challenge starts',
+                title: tr('Weekly Challenge Alert'),
+                subtitle: tr('Notify when new challenge starts'),
                 icon: Icons.emoji_events_rounded,
                 color: AppColors.yellow,
                 value: _notifChallenge,
@@ -269,8 +270,8 @@ Future<void> _loadFromApi() async {
               ),
 
               _NotifTile(
-                title: 'Result Announcements',
-                subtitle: 'Solve & Earn winner results',
+                title: tr('Result Announcements'),
+                subtitle: tr('Solve & Earn winner results'),
                 icon: Icons.campaign_rounded,
                 color: AppColors.orange,
                 value: _notifResults,
@@ -308,7 +309,7 @@ Future<void> _loadFromApi() async {
                 borderRadius: BorderRadius.circular(10)),
             )),
             const SizedBox(height: 20),
-            Text('Help & Support',
+            Text(tr('Help & Support'),
               style: GoogleFonts.poppins(
                 fontSize: 16, fontWeight: FontWeight.w700,
                 color: Colors.white)),
@@ -317,7 +318,7 @@ Future<void> _loadFromApi() async {
             _SupportTile(
               icon: Icons.email_rounded,
               color: AppColors.neonCyan,
-              title: 'Email Us',
+              title: tr('Email Us'),
               subtitle: 'support@tunnel.app',
               onTap: () async {
                 Navigator.pop(context);
@@ -333,8 +334,8 @@ Future<void> _loadFromApi() async {
             _SupportTile(
               icon: Icons.chat_bubble_rounded,
               color: AppColors.success,
-              title: 'WhatsApp Support',
-              subtitle: 'Chat with us on WhatsApp',
+              title: tr('WhatsApp Support'),
+              subtitle: tr('Chat with us on WhatsApp'),
               onTap: () async {
                 Navigator.pop(context);
                 // Replace with your WhatsApp number
@@ -348,8 +349,8 @@ Future<void> _loadFromApi() async {
             _SupportTile(
               icon: Icons.bug_report_rounded,
               color: AppColors.orange,
-              title: 'Report a Technical Error',
-              subtitle: 'Tell us about a technical issue',
+              title: tr('Report a Technical Error'),
+              subtitle: tr('Tell us about a technical issue'),
               onTap: () {
                 Navigator.pop(context);
                 _showReportError();
@@ -381,11 +382,11 @@ Future<void> _loadFromApi() async {
                 borderRadius: BorderRadius.circular(10)),
             )),
             const SizedBox(height: 18),
-            Text('App Language',
+            Text(tr('App Language'),
               style: GoogleFonts.poppins(
                 fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
             const SizedBox(height: 4),
-            Text('Switch the whole app. Questions show in this language by default.',
+            Text(tr('Switch the whole app. Questions show in this language by default.'),
               style: GoogleFonts.poppins(
                 fontSize: 12, color: AppColors.textSecondary)),
             const SizedBox(height: 16),
@@ -405,7 +406,17 @@ Future<void> _loadFromApi() async {
         await LanguageService.instance.setHindi(hi);
         if (!mounted) return;
         Navigator.pop(context);
-        setState(() {});
+        // Rebuild the whole app in the new language so every already-open
+        // screen updates immediately (not just newly-pushed ones).
+        Navigator.of(context).pushAndRemoveUntil(
+          PageRouteBuilder(
+            pageBuilder: (_, __, ___) => const HubScreen(),
+            transitionsBuilder: (_, anim, __, child) =>
+                FadeTransition(opacity: anim, child: child),
+            transitionDuration: const Duration(milliseconds: 400),
+          ),
+          (route) => false,
+        );
         _showSnack(hi ? 'भाषा हिंदी कर दी गई' : 'Language set to English');
       },
       child: Container(
@@ -448,13 +459,13 @@ Future<void> _loadFromApi() async {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
             side: BorderSide(color: AppColors.orange.withValues(alpha: 0.4))),
-          title: Text('Report a Technical Error',
+          title: Text(tr('Report a Technical Error'),
             style: GoogleFonts.poppins(
               color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Describe the problem you faced. Our team will look into it.',
+              Text(tr('Describe the problem you faced. Our team will look into it.'),
                 style: GoogleFonts.poppins(
                   color: AppColors.textSecondary, fontSize: 12)),
               const SizedBox(height: 12),
@@ -464,7 +475,7 @@ Future<void> _loadFromApi() async {
                 maxLength: 500,
                 style: GoogleFonts.poppins(color: Colors.white, fontSize: 13),
                 decoration: InputDecoration(
-                  hintText: 'e.g. App crashes when opening Previous Year...',
+                  hintText: tr('e.g. App crashes when opening Previous Year...'),
                   hintStyle: GoogleFonts.poppins(
                     color: AppColors.textMuted, fontSize: 12),
                   filled: true,
@@ -479,7 +490,7 @@ Future<void> _loadFromApi() async {
           actions: [
             TextButton(
               onPressed: submitting ? null : () => Navigator.pop(ctx),
-              child: Text('Cancel',
+              child: Text(tr('Cancel'),
                 style: GoogleFonts.poppins(color: AppColors.textMuted)),
             ),
             TextButton(
@@ -488,7 +499,7 @@ Future<void> _loadFromApi() async {
                   : () async {
                       final msg = controller.text.trim();
                       if (msg.isEmpty) {
-                        _showSnack('Please describe the issue.');
+                        _showSnack(tr('Please describe the issue.'));
                         return;
                       }
                       setLocal(() => submitting = true);
@@ -497,10 +508,10 @@ Future<void> _loadFromApi() async {
                       if (!mounted) return;
                       Navigator.pop(ctx);
                       _showSnack(ok
-                          ? 'Thank you! Your report was submitted.'
-                          : 'Could not submit. Please try again.');
+                          ? tr('Thank you! Your report was submitted.')
+                          : tr('Could not submit. Please try again.'));
                     },
-              child: Text(submitting ? 'Sending...' : 'Submit',
+              child: Text(submitting ? tr('Sending...') : tr('Submit'),
                 style: GoogleFonts.poppins(
                   color: AppColors.orange, fontWeight: FontWeight.w700)),
             ),
@@ -519,21 +530,21 @@ Future<void> _loadFromApi() async {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: BorderSide(color: AppColors.error.withValues(alpha: 0.4))),
-        title: Text('Logout?',
+        title: Text(tr('Logout?'),
           style: GoogleFonts.poppins(
             color: Colors.white, fontWeight: FontWeight.w700)),
-        content: Text('Are you sure you want to logout?',
+        content: Text(tr('Are you sure you want to logout?'),
           style: GoogleFonts.poppins(
             color: AppColors.textSecondary, fontSize: 13)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel',
+            child: Text(tr('Cancel'),
               style: GoogleFonts.poppins(color: AppColors.neonCyan)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Logout',
+            child: Text(tr('Logout'),
               style: GoogleFonts.poppins(color: AppColors.error)),
           ),
         ],
@@ -625,7 +636,7 @@ Future<void> _loadFromApi() async {
               color: AppColors.neonCyan, size: 20),
           ),
           const SizedBox(width: 12),
-          Text('PROFILE',
+          Text(tr('PROFILE'),
             style: GoogleFonts.orbitron(
               fontSize: 16, fontWeight: FontWeight.w700,
               color: AppColors.neonCyan, letterSpacing: 2)),
@@ -732,7 +743,7 @@ Future<void> _loadFromApi() async {
                       Row(
                         children: [
                           Flexible(
-                            child: Text(_name.isNotEmpty ? _name : 'Loading...',
+                            child: Text(_name.isNotEmpty ? _name : tr('Loading...'),
                               style: GoogleFonts.poppins(
                                 fontSize: 18, fontWeight: FontWeight.w700,
                                 color: Colors.white),
@@ -774,7 +785,7 @@ Future<void> _loadFromApi() async {
                             const Icon(Icons.calendar_today_rounded,
                               size: 12, color: AppColors.textSecondary),
                             const SizedBox(width: 4),
-                            Text('Member since $_memberSince',
+                            Text('${tr('Member since')} $_memberSince',
                               style: GoogleFonts.poppins(
                                 fontSize: 11,
                                 color: AppColors.textSecondary)),
@@ -793,25 +804,25 @@ Future<void> _loadFromApi() async {
   Widget _buildStatsRow() {
     final stats = [
       {
-        'label': 'RANK',
+        'label': tr('RANK'),
         'value': _rank > 0 ? '#$_rank' : '—',
         'icon': Icons.emoji_events_rounded,
         'color': AppColors.yellow,
       },
       {
-        'label': 'XP',
+        'label': tr('XP'),
         'value': '$_totalXP',
         'icon': Icons.bolt_rounded,
         'color': AppColors.neonCyan,
       },
       {
-        'label': 'STREAK',
+        'label': tr('STREAK'),
         'value': '$_currentStreak🔥',
         'icon': Icons.local_fire_department_rounded,
         'color': AppColors.orange,
       },
       {
-        'label': 'ACCURACY',
+        'label': tr('ACCURACY'),
         'value': '${_accuracy.toInt()}%',
         'icon': Icons.track_changes_rounded,
         'color': AppColors.success,
@@ -871,7 +882,7 @@ Future<void> _loadFromApi() async {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('PERFORMANCE',
+          Text(tr('PERFORMANCE'),
             style: GoogleFonts.poppins(
               fontSize: 11, fontWeight: FontWeight.w700,
               color: AppColors.textSecondary, letterSpacing: 2)),
@@ -879,14 +890,14 @@ Future<void> _loadFromApi() async {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _PerfItem(label: 'Attempted',
+              _PerfItem(label: tr('Attempted'),
                 value: '$_totalAttempted', color: AppColors.neonCyan),
               _VertDivider(),
-              _PerfItem(label: 'Correct',
+              _PerfItem(label: tr('Correct'),
                 value: '$_correctAnswers', color: AppColors.success),
               _VertDivider(),
               _PerfItem(
-                label: 'Wrong',
+                label: tr('Wrong'),
                 value: '$_wrongAnswers',
                 color: AppColors.error),
             ],
@@ -906,7 +917,7 @@ Future<void> _loadFromApi() async {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Accuracy',
+              Text(tr('Accuracy'),
                 style: GoogleFonts.poppins(
                   fontSize: 11, color: AppColors.textSecondary)),
               Text('${_accuracy.toInt()}%',
@@ -972,14 +983,14 @@ Future<void> _loadFromApi() async {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _isPremium ? 'TUNNL PREMIUM' : 'Unlock Premium',
+                    _isPremium ? tr('TUNNL PREMIUM') : tr('Unlock Premium'),
                     style: GoogleFonts.poppins(
                       fontSize: 14, fontWeight: FontWeight.w700,
                       color: _isPremium ? AppColors.yellow : Colors.white)),
                   Text(
                     _isPremium
-                        ? 'Full access — Lifetime'
-                        : 'Get complete access @ ₹${AppSettingsService.instance.getInt('premium_price', 50)}',
+                        ? tr('Full access — Lifetime')
+                        : '${tr('Get complete access @')} ₹${AppSettingsService.instance.getInt('premium_price', 50)}',
                     style: GoogleFonts.poppins(
                       fontSize: 12, color: AppColors.textSecondary)),
                 ],
@@ -1009,7 +1020,7 @@ Future<void> _loadFromApi() async {
                   border: Border.all(
                     color: AppColors.success.withValues(alpha: 0.3)),
                 ),
-                child: Text('ACTIVE',
+                child: Text(tr('ACTIVE'),
                   style: GoogleFonts.poppins(
                     fontSize: 10, fontWeight: FontWeight.w700,
                     color: AppColors.success, letterSpacing: 1)),
@@ -1025,44 +1036,44 @@ Future<void> _loadFromApi() async {
     final items = [
       {
         'icon': Icons.history_rounded,
-        'label': 'Test History',
-        'subtitle': 'View all past tests',
+        'label': tr('Test History'),
+        'subtitle': tr('View all past tests'),
         'color': AppColors.neonCyan,
         'onTap': () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const HistoryScreen())),
       },
       {
         'icon': Icons.notifications_rounded,
-        'label': 'Notifications',
-        'subtitle': 'Manage alerts & reminders',
+        'label': tr('Notifications'),
+        'subtitle': tr('Manage alerts & reminders'),
         'color': AppColors.orange,
         'onTap': _showNotificationSettings,
       },
       {
         'icon': Icons.language_rounded,
-        'label': 'Language',
+        'label': tr('Language'),
         'subtitle': LanguageService.instance.isHindi ? 'हिंदी (Hindi)' : 'English',
         'color': AppColors.neonCyan,
         'onTap': _showLanguagePicker,
       },
       {
         'icon': Icons.bug_report_rounded,
-        'label': 'Report a Technical Error',
-        'subtitle': 'Tell us about a technical issue',
+        'label': tr('Report a Technical Error'),
+        'subtitle': tr('Tell us about a technical issue'),
         'color': AppColors.orange,
         'onTap': _showReportError,
       },
       {
         'icon': Icons.help_rounded,
-        'label': 'Help & Support',
-        'subtitle': 'Get help from our team',
+        'label': tr('Help & Support'),
+        'subtitle': tr('Get help from our team'),
         'color': AppColors.textSecondary,
         'onTap': _showHelpSupport,
       },
       {
         'icon': Icons.info_rounded,
-        'label': 'App Version',
-        'subtitle': '${AppConstants.appVersion} — Latest',
+        'label': tr('App Version'),
+        'subtitle': '${AppConstants.appVersion} — ${tr('Latest')}',
         'color': AppColors.textSecondary,
         'onTap': null,
       },
@@ -1138,7 +1149,7 @@ Future<void> _loadFromApi() async {
           children: [
             const Icon(Icons.logout_rounded, color: AppColors.error, size: 18),
             const SizedBox(width: 8),
-            Text('LOGOUT',
+            Text(tr('LOGOUT'),
               style: GoogleFonts.poppins(
                 fontSize: 14, fontWeight: FontWeight.w700,
                 color: AppColors.error, letterSpacing: 2)),

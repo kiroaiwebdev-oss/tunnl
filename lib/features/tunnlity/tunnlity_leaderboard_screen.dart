@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/app_strings.dart';
 import '../../core/services/content_service.dart';
 
 class TunnlityLeaderboardScreen extends StatefulWidget {
@@ -95,7 +96,7 @@ class _TunnlityLeaderboardScreenState
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('TUNNELITY LEADERBOARD',
+              Text(tr('TUNNELITY LEADERBOARD'),
                   style: GoogleFonts.orbitron(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -103,8 +104,8 @@ class _TunnlityLeaderboardScreenState
                       letterSpacing: 2)),
               Text(
                   _myRank != null
-                      ? 'Your rank: #$_myRank'
-                      : 'Top speed-test scorers',
+                      ? '${tr('Your rank:')} #$_myRank'
+                      : tr('Top speed-test scorers'),
                   style: GoogleFonts.poppins(
                       fontSize: 11, color: AppColors.textSecondary)),
             ],
@@ -123,7 +124,7 @@ class _TunnlityLeaderboardScreenState
             color: AppColors.textMuted, size: 56),
         const SizedBox(height: 16),
         Center(
-          child: Text('No scores yet',
+          child: Text(tr('No scores yet'),
               style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -131,7 +132,7 @@ class _TunnlityLeaderboardScreenState
         ),
         const SizedBox(height: 6),
         Center(
-          child: Text('Be the first — take the Tunnelity test!',
+          child: Text(tr('Be the first — take the Tunnelity test!'),
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                   fontSize: 13, color: AppColors.textSecondary)),
@@ -179,15 +180,15 @@ class _TunnlityLeaderboardScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(isMe ? '$name (You)' : name,
+                Text(isMe ? '$name (${tr('You')})' : name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: Colors.white)),
-                Text('$attempts attempt${attempts == 1 ? '' : 's'} • '
-                    '${acc.toStringAsFixed(0)}% accuracy',
+                Text('$attempts ${attempts == 1 ? tr('attempt') : tr('attempts')} • '
+                    '${acc.toStringAsFixed(0)}% ${tr('accuracy')}',
                     style: GoogleFonts.poppins(
                         fontSize: 11, color: AppColors.textSecondary)),
               ],
@@ -201,7 +202,7 @@ class _TunnlityLeaderboardScreenState
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: AppColors.neonCyan)),
-              Text('pts',
+              Text(tr('pts'),
                   style: GoogleFonts.poppins(
                       fontSize: 9, color: AppColors.textSecondary)),
             ],

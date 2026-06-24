@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/app_settings_service.dart';
+import '../../core/services/app_strings.dart';
 import '../../core/services/content_service.dart';
 import '../premium/premium_screen.dart';
 import '../sets/sets_screen.dart';
@@ -240,13 +241,13 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('PREVIOUS YEAR',
+              Text(tr('PREVIOUS YEAR'),
                   style: GoogleFonts.orbitron(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: AppColors.yellow,
                       letterSpacing: 2)),
-              Text('Select exam to start practising',
+              Text(tr('Select exam to start practising'),
                   style: GoogleFonts.poppins(
                       fontSize: 11, color: AppColors.textSecondary)),
             ],
@@ -318,7 +319,7 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Free exams open. Premium ones need ₹${AppSettingsService.instance.getInt('premium_price', 50)} upgrade.',
+                '${tr('Free exams open. Premium ones need')} ₹${AppSettingsService.instance.getInt('premium_price', 50)} ${tr('upgrade.')}',
                 style: GoogleFonts.poppins(
                     fontSize: 12, color: AppColors.textSecondary),
               ),
@@ -356,13 +357,13 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
               const Icon(Icons.history_edu_rounded,
                   color: AppColors.textMuted, size: 56),
               const SizedBox(height: 16),
-              Text('No exams yet',
+              Text(tr('No exams yet'),
                   style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                       color: Colors.white)),
               const SizedBox(height: 6),
-              Text('Admin will publish previous-year papers soon.',
+              Text(tr('Admin will publish previous-year papers soon.'),
                   textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
                       fontSize: 13, color: AppColors.textSecondary)),
@@ -375,7 +376,7 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
                 ),
                 icon: const Icon(Icons.refresh_rounded,
                     color: AppColors.darkBg),
-                label: Text('Retry',
+                label: Text(tr('Retry'),
                     style: GoogleFonts.poppins(
                         color: AppColors.darkBg,
                         fontWeight: FontWeight.w700)),
@@ -420,7 +421,7 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
             icon: icon,
             iconUrl: (exam['icon_url'] ?? '').toString(),
             color: color,
-            subtitle: '$setCount set${setCount == 1 ? '' : 's'}',
+            subtitle: '$setCount ${setCount == 1 ? tr('set') : tr('sets')}',
             locked: locked,
             onTap: () => _openExam(exam),
           );

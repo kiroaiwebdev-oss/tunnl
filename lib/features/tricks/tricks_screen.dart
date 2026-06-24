@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/app_settings_service.dart';
+import '../../core/services/app_strings.dart';
 import '../../core/services/content_service.dart';
 import '../../core/models/trick_model.dart';
 import '../premium/premium_screen.dart';
@@ -218,15 +219,15 @@ class _TricksScreenState extends State<TricksScreen>
                       fontSize: 12, color: AppColors.textSecondary),
                   children: [
                     TextSpan(
-                      text: '$_freeCount tricks free ',
+                      text: '$_freeCount ${tr('tricks free')} ',
                       style: GoogleFonts.poppins(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: Colors.white),
                     ),
-                    const TextSpan(text: '— Upgrade for '),
+                    TextSpan(text: '— ${tr('Upgrade for')} '),
                     TextSpan(
-                      text: '$_premiumCount premium tricks',
+                      text: '$_premiumCount ${tr('premium tricks')}',
                       style: GoogleFonts.poppins(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -268,13 +269,13 @@ class _TricksScreenState extends State<TricksScreen>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('TUNNL TRICKS',
+              Text(tr('TUNNL TRICKS'),
                   style: GoogleFonts.orbitron(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: AppColors.neonCyan,
                       letterSpacing: 2)),
-              Text('Tips & Tricks to master Math',
+              Text(tr('Tips & Tricks to master Math'),
                   style: GoogleFonts.poppins(
                       fontSize: 11, color: AppColors.textSecondary)),
             ],
@@ -289,8 +290,8 @@ class _TricksScreenState extends State<TricksScreen>
                     color: AppColors.neonCyan.withValues(alpha: 0.2), width: 1)),
             child: Text(
               widget.isPremium
-                  ? '${_allTricks.length} Tricks'
-                  : '$_freeCount Free',
+                  ? '${_allTricks.length} ${tr('Tricks')}'
+                  : '$_freeCount ${tr('Free')}',
               style: GoogleFonts.poppins(
                   fontSize: 11,
                   color: widget.isPremium
@@ -354,13 +355,13 @@ class _TricksScreenState extends State<TricksScreen>
             const Icon(Icons.layers_clear_rounded,
                 color: AppColors.textMuted, size: 48),
             const SizedBox(height: 12),
-            Text('No tricks yet',
+            Text(tr('No tricks yet'),
                 style: GoogleFonts.poppins(
                     color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w700)),
             const SizedBox(height: 6),
-            Text('Admin will publish them soon.',
+            Text(tr('Admin will publish them soon.'),
                 style: GoogleFonts.poppins(
                     color: AppColors.textSecondary, fontSize: 13)),
             const SizedBox(height: 16),
@@ -371,7 +372,7 @@ class _TricksScreenState extends State<TricksScreen>
                     borderRadius: BorderRadius.circular(12)),
               ),
               icon: const Icon(Icons.refresh_rounded, color: AppColors.darkBg),
-              label: Text('Retry',
+              label: Text(tr('Retry'),
                   style: GoogleFonts.poppins(
                       color: AppColors.darkBg,
                       fontWeight: FontWeight.w700)),
@@ -483,7 +484,7 @@ class _TrickCard extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     isLocked
-                        ? 'Upgrade to Premium — ₹${AppSettingsService.instance.getInt('premium_price', 50)} only'
+                        ? '${tr('Upgrade to Premium —')} ₹${AppSettingsService.instance.getInt('premium_price', 50)} ${tr('only')}'
                         : trick.subtitle,
                     style: GoogleFonts.poppins(
                       fontSize: 11,

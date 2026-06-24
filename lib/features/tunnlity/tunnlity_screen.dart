@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/app_strings.dart';
 import '../question/question_screen.dart';
 import 'tunnlity_leaderboard_screen.dart';
 
@@ -86,25 +87,25 @@ class _TunnlityScreenState extends State<TunnlityScreen> {
                 borderRadius: BorderRadius.circular(10)),
             ),
             const SizedBox(height: 18),
-            Text('Your Tunnelity Score',
+            Text(tr('Your Tunnelity Score'),
               style: GoogleFonts.poppins(
                 fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white)),
             const SizedBox(height: 18),
             Row(
               children: [
                 Expanded(child: _scoreBox(
-                  'LAST SCORE', '${_lastScore.toStringAsFixed(1)}/10',
-                  '${_lastAccuracy.toStringAsFixed(0)}% accuracy',
+                  tr('LAST SCORE'), '${_lastScore.toStringAsFixed(1)}/10',
+                  '${_lastAccuracy.toStringAsFixed(0)}% ${tr('accuracy')}',
                   AppColors.neonCyan)),
                 const SizedBox(width: 12),
                 Expanded(child: _scoreBox(
-                  'PERSONAL BEST', '${_bestScore.toStringAsFixed(1)}/10',
-                  '${_bestAccuracy.toStringAsFixed(0)}% accuracy',
+                  tr('PERSONAL BEST'), '${_bestScore.toStringAsFixed(1)}/10',
+                  '${_bestAccuracy.toStringAsFixed(0)}% ${tr('accuracy')}',
                   AppColors.yellow)),
               ],
             ),
             const SizedBox(height: 14),
-            Text('Last attempt: $_lastCorrect / $_lastTotal correct',
+            Text('${tr('Last attempt:')} $_lastCorrect / $_lastTotal ${tr('correct')}',
               style: GoogleFonts.poppins(
                 fontSize: 12, color: AppColors.textSecondary)),
           ],
@@ -189,11 +190,11 @@ class _TunnlityScreenState extends State<TunnlityScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('TEST YOUR TUNNELITY',
+              Text(tr('TEST YOUR TUNNELITY'),
                 style: GoogleFonts.orbitron(
                   fontSize: 14, fontWeight: FontWeight.w700,
                   color: AppColors.neonCyan, letterSpacing: 2)),
-              Text('A quick 10-question speed test',
+              Text(tr('A quick 10-question speed test'),
                 style: GoogleFonts.poppins(
                   fontSize: 11, color: AppColors.textSecondary)),
             ],
@@ -222,13 +223,12 @@ class _TunnlityScreenState extends State<TunnlityScreen> {
                 color: AppColors.neonCyan, size: 34),
           ),
           const SizedBox(height: 14),
-          Text('How fast can you solve?',
+          Text(tr('How fast can you solve?'),
             style: GoogleFonts.poppins(
               fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
           const SizedBox(height: 6),
           Text(
-            '10 timed questions. Answer quickly and accurately to boost your '
-            'Tunnelity score. Beat your personal best!',
+            tr('10 timed questions. Answer quickly and accurately to boost your Tunnelity score. Beat your personal best!'),
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 12, color: AppColors.textSecondary, height: 1.5)),
@@ -254,13 +254,13 @@ class _TunnlityScreenState extends State<TunnlityScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Your Personal Best',
+                Text(tr('Your Personal Best'),
                   style: GoogleFonts.poppins(
                     fontSize: 13, fontWeight: FontWeight.w700,
                     color: Colors.white)),
                 const SizedBox(height: 2),
-                Text('$_attempts attempt${_attempts == 1 ? '' : 's'} • '
-                    '${_bestAccuracy.toStringAsFixed(0)}% best accuracy',
+                Text('$_attempts ${_attempts == 1 ? tr('attempt') : tr('attempts')} • '
+                    '${_bestAccuracy.toStringAsFixed(0)}% ${tr('best accuracy')}',
                   style: GoogleFonts.poppins(
                     fontSize: 11, color: AppColors.textSecondary)),
               ],
@@ -291,7 +291,7 @@ class _TunnlityScreenState extends State<TunnlityScreen> {
                 blurRadius: 18, offset: const Offset(0, 4))],
             ),
             child: Center(
-              child: Text(_attempts > 0 ? 'REATTEMPT' : 'START TEST',
+              child: Text(_attempts > 0 ? tr('REATTEMPT') : tr('START TEST'),
                 style: GoogleFonts.poppins(
                   fontSize: 14, fontWeight: FontWeight.w700,
                   color: AppColors.darkBg, letterSpacing: 2)),
@@ -311,7 +311,7 @@ class _TunnlityScreenState extends State<TunnlityScreen> {
                     color: AppColors.neonCyan.withValues(alpha: 0.4)),
               ),
               child: Center(
-                child: Text('VIEW SCORE',
+                child: Text(tr('VIEW SCORE'),
                   style: GoogleFonts.poppins(
                     fontSize: 14, fontWeight: FontWeight.w700,
                     color: AppColors.neonCyan, letterSpacing: 2)),
@@ -337,7 +337,7 @@ class _TunnlityScreenState extends State<TunnlityScreen> {
                 const Icon(Icons.emoji_events_rounded,
                     color: AppColors.yellow, size: 20),
                 const SizedBox(width: 10),
-                Text('VIEW LEADERBOARD',
+                Text(tr('VIEW LEADERBOARD'),
                   style: GoogleFonts.poppins(
                     fontSize: 14, fontWeight: FontWeight.w700,
                     color: AppColors.yellow, letterSpacing: 2)),

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/services/app_strings.dart';
 import '../../core/services/content_service.dart';
 import '../../core/models/short_model.dart';
 import '../../core/widgets/in_app_video_player.dart';
@@ -125,7 +126,7 @@ class _ShortsScreenState extends State<ShortsScreen>
           backgroundColor: AppColors.darkCard,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          content: Text('Could not open link!',
+          content: Text(tr('Could not open link!'),
               style: GoogleFonts.poppins(color: Colors.white)),
         ),
       );
@@ -173,12 +174,12 @@ class _ShortsScreenState extends State<ShortsScreen>
             const SizedBox(height: 12),
             Text(
               _allShorts.isEmpty
-                  ? 'No shorts available yet!'
-                  : 'No ${_filters[_selectedFilter]} shorts.',
+                  ? tr('No shorts available yet!')
+                  : '${tr('No')} ${_filters[_selectedFilter]} ${tr('shorts.')}',
               style: GoogleFonts.poppins(
                   color: AppColors.textSecondary, fontSize: 14),
             ),
-            Text('Admin will add videos soon.',
+            Text(tr('Admin will add videos soon.'),
                 style: GoogleFonts.poppins(
                     color: AppColors.textMuted, fontSize: 12)),
           ],
@@ -219,13 +220,13 @@ class _ShortsScreenState extends State<ShortsScreen>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('SHORTS',
+              Text(tr('SHORTS'),
                   style: GoogleFonts.orbitron(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                       color: AppColors.neonCyan,
                       letterSpacing: 2)),
-              Text('Quick Math Tips & Tricks',
+              Text(tr('Quick Math Tips & Tricks'),
                   style: GoogleFonts.poppins(
                       fontSize: 11, color: AppColors.textSecondary)),
             ],
@@ -244,7 +245,7 @@ class _ShortsScreenState extends State<ShortsScreen>
                 const Icon(Icons.play_circle_rounded,
                     color: AppColors.neonCyan, size: 13),
                 const SizedBox(width: 4),
-                Text('${_allShorts.length} Videos',
+                Text('${_allShorts.length} ${tr('Videos')}',
                     style: GoogleFonts.poppins(
                         fontSize: 11,
                         color: AppColors.neonCyan,

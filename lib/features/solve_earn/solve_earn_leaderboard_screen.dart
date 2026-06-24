@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/user_service.dart';
 import '../../core/services/app_settings_service.dart';
+import '../../core/services/app_strings.dart';
 
 class SolveEarnLeaderboardScreen extends StatefulWidget {
   const SolveEarnLeaderboardScreen({super.key});
@@ -130,7 +131,7 @@ class _SolveEarnLeaderboardScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('WINNER ANNOUNCED',
+                Text(tr('WINNER ANNOUNCED'),
                     style: GoogleFonts.orbitron(
                         fontSize: 10, fontWeight: FontWeight.w700,
                         color: AppColors.yellow, letterSpacing: 1.5)),
@@ -220,13 +221,13 @@ class _SolveEarnLeaderboardScreenState
           const Icon(Icons.emoji_events_outlined,
               color: AppColors.textMuted, size: 56),
           const SizedBox(height: 12),
-          Text('No entries yet',
+          Text(tr('No entries yet'),
               style: GoogleFonts.poppins(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: Colors.white)),
           const SizedBox(height: 6),
-          Text('Be the first to attempt this challenge!',
+          Text(tr('Be the first to attempt this challenge!'),
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                   fontSize: 12, color: AppColors.textSecondary)),
@@ -251,7 +252,7 @@ class _SolveEarnLeaderboardScreenState
           ),
           const SizedBox(width: 12),
           Text(
-            'SOLVE & EARN',
+            tr('SOLVE & EARN'),
             style: GoogleFonts.orbitron(
               fontSize: 15,
               fontWeight: FontWeight.w700,
@@ -342,8 +343,8 @@ class _SolveEarnLeaderboardScreenState
                 const SizedBox(height: 3),
                 Text(
                   _prizeAmount > 0
-                      ? 'Prize pool ₹${_prizeAmount.toStringAsFixed(0)} — top performers win!'
-                      : 'Top performers win rewards!',
+                      ? '${tr('Prize pool')} ₹${_prizeAmount.toStringAsFixed(0)} — ${tr('top performers win!')}'
+                      : tr('Top performers win rewards!'),
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     color: AppColors.textSecondary,
@@ -363,7 +364,7 @@ class _SolveEarnLeaderboardScreenState
                 ),
               ),
               Text(
-                'DAYS\nLEFT',
+                tr('DAYS\nLEFT'),
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                   fontSize: 9,
@@ -530,7 +531,7 @@ class _SolveEarnLeaderboardScreenState
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              'YOU',
+              tr('YOU'),
               style: GoogleFonts.poppins(
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
@@ -544,7 +545,7 @@ class _SolveEarnLeaderboardScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Your attempt',
+                  tr('Your attempt'),
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
