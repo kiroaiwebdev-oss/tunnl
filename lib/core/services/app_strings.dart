@@ -459,4 +459,8 @@ const Map<String, String> _hi = {
       'गणित की दुनिया के गहरे तर्क में उतरें।\nशुरू करने के लिए एक विकल्प चुनें।',
   'LEARN': 'सीखें',
   'PRACTICE': 'अभ्यास',
+
+  // ── Set chooser (retest / view solution) ──
+  'Retest': 'फिर से टेस्ट',
+  'View Solution': 'हल देखें',
 };

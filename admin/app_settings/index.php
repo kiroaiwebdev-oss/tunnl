@@ -27,6 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'label_hub_dashboard', 'label_hub_practice',
             // Razorpay
             'razorpay_enabled', 'razorpay_key_id', 'razorpay_key_secret',
+            // Groq (AI auto-translation to Hindi)
+            'groq_api_key', 'groq_model',
             // OTP / SMS
             'sms_provider', 'sms_api_key', 'sms_sender_id',
             'otp_expiry_minutes', 'otp_message',
@@ -527,6 +529,47 @@ foreach ($settingsRaw as $row) {
       <i class="fas fa-info-circle" style="color:#3B82F6"></i>
       <strong style="color:#93C5FD">How it works:</strong> Saving these fills the keys instantly — app refreshes settings on resume,
       no rebuild needed. Use <code>rzp_test_*</code> keys to test, switch to <code>rzp_live_*</code> when going live.
+    </div>
+  </div>
+
+  <!-- ── Groq AI (Hindi auto-translation) ── -->
+  <div class="card mb-24">
+    <div class="card-header">
+      <div class="card-title-text">
+        <i class="fas fa-language" style="color:#F55036"></i> Groq AI — Hindi Auto-Translation
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-title">Groq API Key</div>
+        <div class="setting-desc">Server-side only — never sent to app. Get a free key at <code>console.groq.com</code>. When set, any question without Hindi is auto-translated &amp; cached the first time it is opened.</div>
+      </div>
+      <div class="setting-control">
+        <input type="password" name="groq_api_key" class="form-input"
+          value="<?= htmlspecialchars($s['groq_api_key'] ?? '') ?>"
+          placeholder="gsk_xxxxxxxxxxxxxxxx" style="width:280px;font-family:monospace"
+          autocomplete="new-password">
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-title">Groq Model</div>
+        <div class="setting-desc">Leave default unless you know what you're doing.</div>
+      </div>
+      <div class="setting-control">
+        <input type="text" name="groq_model" class="form-input"
+          value="<?= htmlspecialchars($s['groq_model'] ?? 'llama-3.3-70b-versatile') ?>"
+          placeholder="llama-3.3-70b-versatile" style="width:280px;font-family:monospace">
+      </div>
+    </div>
+
+    <div style="background:rgba(245,80,54,0.08);border:1px solid rgba(245,80,54,0.3);border-radius:12px;padding:12px 14px;margin-top:12px;font-size:12px;color:var(--muted);line-height:1.6">
+      <i class="fas fa-bolt" style="color:#F55036"></i>
+      <strong style="color:#FCA5A5">How it works:</strong> Numbers &amp; math symbols stay exactly the same — only the words are translated to Hindi.
+      The first time a question is opened it gets translated &amp; saved to the database, so it's instant afterwards.
+      Leave the key blank to disable auto-translation (questions then show whatever Hindi you typed manually).
     </div>
   </div>
 

@@ -91,6 +91,10 @@ if ($method === 'GET') {
             $qs->execute([$challenge['id']]);
         }
         $questions = $qs->fetchAll();
+        // Auto-translate missing Hindi (Groq) + cache, so the weekly challenge
+        // questions show real Hindi when the user toggles language.
+        require_once __DIR__ . '/_translate_lib.php';
+        tunnl_fill_hindi($pdo, $questions);
     }
 
     // Aggregate leaderboard (sum across all days) — accuracy then time.

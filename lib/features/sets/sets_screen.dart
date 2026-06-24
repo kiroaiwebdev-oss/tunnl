@@ -13,6 +13,7 @@ import '../../core/services/app_strings.dart';
 import '../../core/models/set_model.dart';
 import '../question/question_screen.dart';
 import '../premium/premium_screen.dart';
+import '../result/set_solution_screen.dart';
 
 class SetsScreen extends StatefulWidget {
   final String title;
@@ -139,6 +140,123 @@ class _SetsScreenState extends State<SetsScreen>
   Future<void> _markSetCompleted(int setId) async {
     setState(() => _completedSetIds.add(setId));
     await _saveCompletedToCache();
+  }
+
+  // Start (or retake) the test for a set.
+  Future<void> _startTest(SetModel s, int i) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => QuestionScreen(
+          mode: widget.showLeaderboard ? 'mcq' : 'simplification',
+          setId: s.id,
+          setNumber: s.setNumber > 0 ? s.setNumber : i + 1,
+          category: widget.category,
+          totalQuestions:
+              s.questionCount > 0 ? s.questionCount : widget.questionsPerSet,
+          onSetCompleted: () => _markSetCompleted(s.id),
+        ),
+      ),
+    );
+    if (mounted) setState(() {});
+  }
+
+  void _viewSolution(SetModel s, int i) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SetSolutionScreen(
+          setId: s.id,
+          title: s.title.isNotEmpty
+              ? s.title
+              : '${tr('SET')} ${(s.setNumber > 0 ? s.setNumber : i + 1).toString().padLeft(2, '0')}',
+          setNumber: s.setNumber > 0 ? s.setNumber : i + 1,
+        ),
+      ),
+    );
+  }
+
+  // For an already-attempted set: choose Retest or View Solution.
+  void _showSetChooser(SetModel s, int i) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.darkCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.textMuted.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                s.title.isNotEmpty
+                    ? s.title
+                    : '${tr('SET')} ${(s.setNumber > 0 ? s.setNumber : i + 1).toString().padLeft(2, '0')}',
+                style: GoogleFonts.poppins(
+                    fontSize: 15, fontWeight: FontWeight.w700,
+                    color: Colors.white),
+              ),
+              const SizedBox(height: 16),
+              _chooserButton(
+                icon: Icons.replay_rounded,
+                label: tr('Retest'),
+                color: AppColors.neonCyan,
+                filled: true,
+                onTap: () { Navigator.pop(ctx); _startTest(s, i); },
+              ),
+              const SizedBox(height: 12),
+              _chooserButton(
+                icon: Icons.lightbulb_rounded,
+                label: tr('View Solution'),
+                color: AppColors.yellow,
+                filled: false,
+                onTap: () { Navigator.pop(ctx); _viewSolution(s, i); },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _chooserButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required bool filled,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 54, width: double.infinity,
+        decoration: BoxDecoration(
+          color: filled ? color : color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: filled ? 1 : 0.4)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 20,
+                color: filled ? AppColors.darkBg : color),
+            const SizedBox(width: 10),
+            Text(label,
+                style: GoogleFonts.poppins(
+                    fontSize: 14, fontWeight: FontWeight.w700,
+                    color: filled ? AppColors.darkBg : color)),
+          ],
+        ),
+      ),
+    );
   }
 
   int get _completedCount {
@@ -354,22 +472,12 @@ class _SetsScreenState extends State<SetsScreen>
               return;
             }
 
-            await Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => QuestionScreen(
-                  mode: widget.showLeaderboard ? 'mcq' : 'simplification',
-                  setId: s.id,
-                  setNumber: s.setNumber > 0 ? s.setNumber : i + 1,
-                  category: widget.category,
-                  totalQuestions:
-                      s.questionCount > 0 ? s.questionCount : widget.questionsPerSet,
-                  onSetCompleted: () => _markSetCompleted(s.id),
-                ),
-              ),
-            );
-
-            // refresh state
-            if (mounted) setState(() {});
+            if (_completedSetIds.contains(s.id)) {
+              // Already attempted → let the user pick Retest or View Solution.
+              _showSetChooser(s, i);
+            } else {
+              await _startTest(s, i);
+            }
           },
         );
       },

@@ -36,6 +36,10 @@ $questions = $pdo->prepare("
 ");
 $questions->execute([$setId]);
 $questions = $questions->fetchAll();
+// Auto-translate any questions missing Hindi (via Groq) and cache into the DB,
+// so the in-quiz language toggle shows real Hindi for ANY set.
+require_once __DIR__ . '/_translate_lib.php';
+tunnl_fill_hindi($pdo, $questions);
 
 response([
     'success'   => true,

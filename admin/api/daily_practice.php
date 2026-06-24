@@ -29,7 +29,9 @@ $completed = $completed->fetch();
 $questions = $pdo->prepare("
     SELECT q.id, q.question_text, q.option_a, q.option_b,
            q.option_c, q.option_d, q.correct_option,
-           q.explanation, q.difficulty
+           q.explanation, q.difficulty,
+           q.question_text_hi, q.option_a_hi, q.option_b_hi,
+           q.option_c_hi, q.option_d_hi, q.explanation_hi
     FROM daily_practice_questions dpq
     JOIN questions q ON dpq.question_id = q.id
     WHERE dpq.practice_id = ?
@@ -37,6 +39,10 @@ $questions = $pdo->prepare("
 ");
 $questions->execute([$practice['id']]);
 $questions = $questions->fetchAll();
+
+// Auto-translate missing Hindi (via Groq) + cache into the DB.
+require_once __DIR__ . '/_translate_lib.php';
+tunnl_fill_hindi($pdo, $questions);
 
 response([
     'success'   => true,
@@ -62,6 +68,14 @@ response([
         ],
         'correct'    => $completed ? $q['correct_option'] : null, // reveal only after completion
         'explanation'=> $completed ? $q['explanation']    : null,
+        'question_hi'=> $q['question_text_hi'] ?? '',
+        'options_hi' => [
+            'a' => $q['option_a_hi'] ?? '',
+            'b' => $q['option_b_hi'] ?? '',
+            'c' => $q['option_c_hi'] ?? '',
+            'd' => $q['option_d_hi'] ?? '',
+        ],
+        'explanation_hi'=> $completed ? ($q['explanation_hi'] ?? '') : null,
         'difficulty' => $q['difficulty'],
     ], $questions),
 ]);

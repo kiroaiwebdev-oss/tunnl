@@ -12,6 +12,7 @@ import '../../core/services/app_strings.dart';
 import '../../core/services/content_service.dart';
 import '../../core/models/set_model.dart';
 import '../question/question_screen.dart';
+import '../result/set_solution_screen.dart';
 import '../premium/premium_screen.dart';
 
 class TestListScreen extends StatefulWidget {
@@ -88,6 +89,123 @@ class _TestListScreenState extends State<TestListScreen>
   int get _totalQuestions =>
       _sets.fold<int>(0, (sum, s) => sum + s.totalQuestions);
 
+  Future<void> _markComplete(int setId) async {
+    _completedIds.add(setId);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_completedKey, jsonEncode(_completedIds.toList()));
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _startTest(SetModel s, int i) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => QuestionScreen(
+          mode: 'free_mcq',
+          category: widget.category,
+          setId: s.id,
+          setNumber: s.setNumber > 0 ? s.setNumber : i + 1,
+          totalQuestions: s.totalQuestions > 0 ? s.totalQuestions : 50,
+          onSetCompleted: () => _markComplete(s.id),
+        ),
+      ),
+    );
+  }
+
+  void _viewSolution(SetModel s, int i) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SetSolutionScreen(
+          setId: s.id,
+          title: s.title.isNotEmpty
+              ? s.title
+              : '${tr('Test')} ${i + 1}',
+          setNumber: s.setNumber > 0 ? s.setNumber : i + 1,
+        ),
+      ),
+    );
+  }
+
+  void _showSetChooser(SetModel s, int i) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.darkCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.textMuted.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                s.title.isNotEmpty ? s.title : '${tr('Test')} ${i + 1}',
+                style: GoogleFonts.poppins(
+                    fontSize: 15, fontWeight: FontWeight.w700,
+                    color: Colors.white),
+              ),
+              const SizedBox(height: 16),
+              _chooserButton(
+                icon: Icons.replay_rounded,
+                label: tr('Retest'),
+                color: AppColors.neonCyan,
+                filled: true,
+                onTap: () { Navigator.pop(ctx); _startTest(s, i); },
+              ),
+              const SizedBox(height: 12),
+              _chooserButton(
+                icon: Icons.lightbulb_rounded,
+                label: tr('View Solution'),
+                color: AppColors.yellow,
+                filled: false,
+                onTap: () { Navigator.pop(ctx); _viewSolution(s, i); },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _chooserButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required bool filled,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 54, width: double.infinity,
+        decoration: BoxDecoration(
+          color: filled ? color : color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: filled ? 1 : 0.4)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 20, color: filled ? AppColors.darkBg : color),
+            const SizedBox(width: 10),
+            Text(label,
+                style: GoogleFonts.poppins(
+                    fontSize: 14, fontWeight: FontWeight.w700,
+                    color: filled ? AppColors.darkBg : color)),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -155,33 +273,11 @@ class _TestListScreenState extends State<TestListScreen>
                                         _showLockedDialog();
                                         return;
                                       }
-                                      await Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (_) => QuestionScreen(
-                                            mode: 'free_mcq',
-                                            category: widget.category,
-                                            setId: s.id,
-                                            setNumber: s.setNumber > 0
-                                                ? s.setNumber
-                                                : i + 1,
-                                            totalQuestions: s.totalQuestions > 0
-                                                ? s.totalQuestions
-                                                : 50,
-                                            onSetCompleted: () async {
-                                              _completedIds.add(s.id);
-                                              final prefs =
-                                                  await SharedPreferences
-                                                      .getInstance();
-                                              await prefs.setString(
-                                                _completedKey,
-                                                jsonEncode(
-                                                    _completedIds.toList()),
-                                              );
-                                              if (mounted) setState(() {});
-                                            },
-                                          ),
-                                        ),
-                                      );
+                                      if (_completedIds.contains(s.id)) {
+                                        _showSetChooser(s, i);
+                                      } else {
+                                        await _startTest(s, i);
+                                      }
                                     },
                                   );
                                 },

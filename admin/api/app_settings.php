@@ -13,6 +13,7 @@ $BLOCKED_KEYS = [
     'jwt_secret',
     'admin_password',
     'fast2sms_key',
+    'groq_api_key',   // server-side only (used by the translation library)
 ];
 
 // Substring filters — anything containing these will also be blocked
