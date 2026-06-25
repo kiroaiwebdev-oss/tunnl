@@ -120,6 +120,7 @@ class _PremiumScreenState extends State<PremiumScreen>
       'title': tr('Leaderboard Access'),
       'subtitle': tr('Compete with 12,000+ students'),
       'color': AppColors.yellow,
+      'image': 'assets/images/lead.png',
       'iconBg': const Color(0xFF1A1A00),
       'iconColor': AppColors.yellow,
     },

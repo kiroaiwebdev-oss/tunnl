@@ -109,21 +109,6 @@ class _SolveEarnLeaderboardScreenState
     return '$m:${s.toString().padLeft(2, '0')}';
   }
 
-  // Leaderboard banner image (admin asset: assets/images/lead.png).
-  Widget _buildLeadImage() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Image.asset(
-          'assets/images/lead.png',
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-        ),
-      ),
-    );
-  }
-
   // Admin-announced weekly winner banner (hidden when not set).
   Widget _buildWinnerBanner() {    final winner = AppSettingsService.instance.get('weekly_winner', '').trim();
     if (winner.isEmpty) return const SizedBox.shrink();
@@ -188,7 +173,6 @@ class _SolveEarnLeaderboardScreenState
                             child: Column(
                               children: [
                                 const SizedBox(height: 10),
-                                _buildLeadImage(),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 20),

@@ -125,7 +125,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
                               child: Column(
                                 children: [
                                   const SizedBox(height: 10),
-                                  _buildLeadImage(),
                                   _buildTabSelector(),
                                   const SizedBox(height: 20),
                                   if (_data.isEmpty)
@@ -156,22 +155,6 @@ class _LeaderboardScreenState extends State<LeaderboardScreen>
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  // Leaderboard banner image (admin asset: assets/images/lead.png).
-  // Falls back to nothing if the file isn't bundled yet.
-  Widget _buildLeadImage() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Image.asset(
-          'assets/images/lead.png',
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
         ),
       ),
     );
