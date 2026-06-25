@@ -1,6 +1,10 @@
 <?php
-$pageTitle = 'Add Short';
-require_once dirname(__DIR__) . '/includes/header.php';
+// Process the form BEFORE any HTML output so header('Location') can redirect
+// cleanly (a large 60MB upload otherwise flushes output → "headers already
+// sent" → blank content + no success message).
+require_once dirname(__DIR__) . '/config/auth_check.php';
+require_once dirname(__DIR__) . '/config/db.php';
+require_once dirname(__DIR__) . '/config/constants.php';
 
 $success = $error = '';
 
@@ -67,6 +71,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } catch (Exception $e) { $error = $e->getMessage(); }
 }
+
+$pageTitle = 'Add Short';
+require_once dirname(__DIR__) . '/includes/header.php';
 ?>
 
 <?php if ($success): ?>

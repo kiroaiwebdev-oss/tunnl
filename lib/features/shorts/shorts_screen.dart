@@ -60,6 +60,8 @@ class _ShortsScreenState extends State<ShortsScreen>
         return const Color(0xFF1877F2);
       case 'TELEGRAM':
         return const Color(0xFF0088CC);
+      case 'LOCAL':
+        return const Color(0xFF10B981);
       case 'YOUTUBE':
       default:
         return const Color(0xFFFF0000);
@@ -264,6 +266,7 @@ class _ShortsScreenState extends State<ShortsScreen>
       const Color(0xFFFF0000),
       const Color(0xFFE1306C),
       const Color(0xFF1877F2),
+      const Color(0xFF10B981), // LOCAL (green)
     ];
     return SizedBox(
       height: 40,

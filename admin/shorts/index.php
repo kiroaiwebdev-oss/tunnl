@@ -4,6 +4,13 @@ require_once dirname(__DIR__) . '/includes/header.php';
 
 $shorts = $pdo->query("SELECT * FROM shorts ORDER BY created_at DESC")->fetchAll();
 ?>
+<?php if (isset($_GET['added']) || isset($_GET['updated'])): ?>
+<div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);color:#6EE7B7;
+  padding:12px 16px;border-radius:12px;margin-bottom:20px;display:flex;align-items:center;gap:8px">
+  <i class="fas fa-check-circle"></i>
+  <?= isset($_GET['updated']) ? 'Short updated successfully!' : 'Short added successfully!' ?>
+</div>
+<?php endif; ?>
 
 <div class="flex-between mb-24">
   <div>

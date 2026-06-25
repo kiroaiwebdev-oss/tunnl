@@ -1,6 +1,7 @@
 <?php
-$pageTitle = 'Edit Short';
-require_once dirname(__DIR__) . '/includes/header.php';
+require_once dirname(__DIR__) . '/config/auth_check.php';
+require_once dirname(__DIR__) . '/config/db.php';
+require_once dirname(__DIR__) . '/config/constants.php';
 
 $id = intval($_GET['id'] ?? 0);
 if (!$id) { header('Location: ' . ADMIN_URL . '/shorts/index.php'); exit; }
@@ -63,12 +64,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             isset($_POST['is_active']) ? 1 : 0,
             $id
         ]);
-        $success = 'Short updated!';
-        $short = $pdo->prepare("SELECT * FROM shorts WHERE id=?");
-        $short->execute([$id]);
-        $short = $short->fetch();
+        header('Location: ' . ADMIN_URL . '/shorts/index.php?updated=1');
+        exit;
     } catch (Exception $e) { $error = $e->getMessage(); }
 }
+
+$pageTitle = 'Edit Short';
+require_once dirname(__DIR__) . '/includes/header.php';
 
 $curUrl      = !empty($short['youtube_url']) ? $short['youtube_url'] : ($short['url'] ?? '');
 $curPlatform = strtolower($short['platform'] ?? 'youtube');
