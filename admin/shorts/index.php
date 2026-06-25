@@ -15,7 +15,7 @@ $shorts = $pdo->query("SELECT * FROM shorts ORDER BY created_at DESC")->fetchAll
 <div class="flex-between mb-24">
   <div>
     <h2 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700">Shorts</h2>
-    <p class="text-muted"><?= count($shorts) ?> shorts total &middot; YouTube, Instagram &amp; Facebook</p>
+    <p class="text-muted"><?= count($shorts) ?> shorts total &middot; YouTube, Instagram, Facebook &amp; Local</p>
   </div>
   <a href="<?= ADMIN_URL ?>/shorts/add.php" class="btn btn-primary">
     <i class="fas fa-plus"></i> Add Short
@@ -32,10 +32,11 @@ $shorts = $pdo->query("SELECT * FROM shorts ORDER BY created_at DESC")->fetchAll
   <?php else: ?>
   <?php
   $platMeta = [
-    'youtube'   => ['#EF4444', 'fa-youtube',   'YouTube'],
-    'instagram' => ['#E1306C', 'fa-instagram', 'Instagram'],
-    'facebook'  => ['#1877F2', 'fa-facebook',  'Facebook'],
-    'telegram'  => ['#0088CC', 'fa-telegram',  'Telegram'],
+    'youtube'   => ['#EF4444', 'fab fa-youtube',     'YouTube'],
+    'instagram' => ['#E1306C', 'fab fa-instagram',   'Instagram'],
+    'facebook'  => ['#1877F2', 'fab fa-facebook',    'Facebook'],
+    'telegram'  => ['#0088CC', 'fab fa-telegram',    'Telegram'],
+    'local'     => ['#10B981', 'fas fa-folder-open', 'Local'],
   ];
   foreach ($shorts as $s):
     $sUrl = !empty($s['youtube_url']) ? $s['youtube_url'] : ($s['url'] ?? '');
@@ -46,6 +47,7 @@ $shorts = $pdo->query("SELECT * FROM shorts ORDER BY created_at DESC")->fetchAll
       if (strpos($lu, 'instagram') !== false)       $plat = 'instagram';
       elseif (strpos($lu, 'facebook') !== false || strpos($lu, 'fb.watch') !== false) $plat = 'facebook';
       elseif (strpos($lu, 't.me') !== false || strpos($lu, 'telegram') !== false)     $plat = 'telegram';
+      elseif (preg_match('/\.(mp4|webm|mov|m4v)(\?|$)/', $lu))                         $plat = 'local';
       else $plat = 'youtube';
     }
     [$pColor, $pIcon, $pLabel] = $platMeta[$plat] ?? $platMeta['youtube'];
@@ -86,7 +88,7 @@ $shorts = $pdo->query("SELECT * FROM shorts ORDER BY created_at DESC")->fetchAll
       <div style="position:absolute;top:8px;left:8px">
         <span style="background:<?= $pColor ?>;color:#fff;font-size:9px;font-weight:700;
           padding:3px 8px;border-radius:20px;display:inline-flex;align-items:center;gap:4px">
-          <i class="fab <?= $pIcon ?>"></i> <?= $pLabel ?>
+          <i class="<?= $pIcon ?>"></i> <?= $pLabel ?>
         </span>
       </div>
       <!-- Status badge -->
