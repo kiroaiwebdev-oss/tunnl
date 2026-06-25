@@ -463,4 +463,10 @@ const Map<String, String> _hi = {
   // ── Set chooser (retest / view solution) ──
   'Retest': 'फिर से टेस्ट',
   'View Solution': 'हल देखें',
+
+  // ── Premium content (reordered list) ──
+  'Tunnel Tricks': 'टनल ट्रिक्स',
+  '5000 Practice MCQs': '5000 अभ्यास MCQ',
+  '5000+ Previous Year MCQs': '5000+ पिछले वर्ष MCQ',
+  'Daily Practice Set': 'दैनिक अभ्यास सेट',
 };

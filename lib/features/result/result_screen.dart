@@ -84,15 +84,14 @@ class _ResultScreenState extends State<ResultScreen>
   int  _setTotal = 0;
 
   // Same premium benefits shown on the Premium ("Ticket to Tunnl") screen,
-  // kept in sync so the result-screen upsell lists the real features.
+  // kept in the same order so both screens match.
   List<String> get _premiumBenefits => [
-    tr('Tunnl Tricks — strategies & shortcuts'),
-    tr('5000 Speed Math MCQs'),
-    tr('500 Simplification Questions'),
-    tr('Shorts — quick math tip videos'),
-    tr('Daily Practice Sets'),
-    tr('Previous Year Questions'),
-    tr('Solve & Earn rewards'),
+    tr('Tunnel Tricks'),
+    tr('5000 Practice MCQs'),
+    tr('5000+ Previous Year MCQs'),
+    tr('Daily Practice Set'),
+    tr('Shorts'),
+    tr('Solve & Earn'),
     tr('Leaderboard Access'),
   ];
 
