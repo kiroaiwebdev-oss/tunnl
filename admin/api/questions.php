@@ -25,17 +25,78 @@ if ($set['is_premium'] && !$user['is_premium']) {
 $limit = intval($set['total_questions'] ?? 0);
 if ($limit <= 0) $limit = 10;
 
-$questions = $pdo->prepare("
-    SELECT id, question_text, option_a, option_b, option_c, option_d,
-           correct_option, explanation, difficulty, time_limit,
-           question_text_hi, option_a_hi, option_b_hi, option_c_hi, option_d_hi, explanation_hi
-    FROM questions
-    WHERE set_id = ? AND is_active = 1
-    ORDER BY " . (!empty($_GET['shuffle']) ? 'RAND()' : 'order_num ASC') . "
-    LIMIT $limit
-");
-$questions->execute([$setId]);
-$questions = $questions->fetchAll();
+$cols = "id, question_text, option_a, option_b, option_c, option_d,
+         correct_option, explanation, difficulty, time_limit,
+         question_text_hi, option_a_hi, option_b_hi, option_c_hi, option_d_hi, explanation_hi";
+
+if (!empty($_GET['shuffle'])) {
+    // ── Type-diverse random pick ──────────────────────────────────────────
+    // Pull every active question's id + type (category), then round-robin
+    // across types so the 10 shown are each a DIFFERENT type as far as
+    // possible. Only once all types are used does a type repeat (with a
+    // different question); actual question repeats happen only if the whole
+    // pool is smaller than the requested count.
+    $cand = $pdo->prepare(
+        "SELECT id, COALESCE(NULLIF(TRIM(category), ''), 'general') AS cat
+         FROM questions WHERE set_id = ? AND is_active = 1 ORDER BY RAND()"
+    );
+    $cand->execute([$setId]);
+    $rows = $cand->fetchAll();
+
+    $byCat = [];
+    foreach ($rows as $r) { $byCat[$r['cat']][] = (int)$r['id']; }
+    $cats = array_keys($byCat);
+    shuffle($cats);
+
+    $totalAvail = count($rows);
+    $target     = min($limit, $totalAvail);
+    $picked     = [];
+
+    while (count($picked) < $target) {
+        $progress = false;
+        foreach ($cats as $c) {
+            if (!empty($byCat[$c])) {
+                $picked[]  = array_shift($byCat[$c]);
+                $progress  = true;
+                if (count($picked) >= $target) break;
+            }
+        }
+        if (!$progress) break; // every type exhausted
+    }
+
+    // Pool smaller than requested count → allow question repeats to fill up.
+    if (!empty($picked) && count($picked) < $limit) {
+        $base = $picked;
+        $i = 0;
+        while (count($picked) < $limit) {
+            $picked[] = $base[$i % count($base)];
+            $i++;
+        }
+    }
+
+    if (empty($picked)) {
+        $questions = [];
+    } else {
+        $place = implode(',', array_fill(0, count($picked), '?'));
+        $full  = $pdo->prepare("SELECT $cols FROM questions WHERE id IN ($place)");
+        $full->execute($picked);
+        $map = [];
+        foreach ($full->fetchAll() as $row) { $map[(int)$row['id']] = $row; }
+        // Rebuild in the diverse picked order (repeats reuse the same row).
+        $questions = [];
+        foreach ($picked as $pid) {
+            if (isset($map[$pid])) $questions[] = $map[$pid];
+        }
+    }
+} else {
+    $stmt = $pdo->prepare(
+        "SELECT $cols FROM questions
+         WHERE set_id = ? AND is_active = 1
+         ORDER BY order_num ASC LIMIT $limit"
+    );
+    $stmt->execute([$setId]);
+    $questions = $stmt->fetchAll();
+}
 // Auto-translate any questions missing Hindi (via Groq) and cache into the DB,
 // so the in-quiz language toggle shows real Hindi for ANY set.
 require_once __DIR__ . '/_translate_lib.php';
