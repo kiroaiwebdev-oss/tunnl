@@ -44,14 +44,27 @@ class ShortModel {
 
   factory ShortModel.fromJson(Map<String, dynamic> j) {
     final url = (j['youtube_url'] ?? j['url'] ?? '').toString();
+    final lower = url.toLowerCase().split('?').first;
+
+    // A direct video file is ALWAYS a local upload — regardless of whatever
+    // platform label is stored (older rows may wrongly say "youtube").
+    final isDirectVideo = lower.endsWith('.mp4') ||
+        lower.endsWith('.webm') ||
+        lower.endsWith('.mov') ||
+        lower.endsWith('.m4v') ||
+        lower.endsWith('.m3u8');
+
     String platform = (j['platform'] ?? '').toString().toUpperCase();
-    if (platform.isEmpty) {
-      final lower = url.toLowerCase();
-      if (lower.contains('instagram')) {
+    if (isDirectVideo) {
+      platform = 'LOCAL';
+    } else if (platform.isEmpty || platform == 'LOCAL') {
+      // Empty (or mislabeled LOCAL on a non-file URL) → sniff from the URL.
+      final l = url.toLowerCase();
+      if (l.contains('instagram')) {
         platform = 'INSTAGRAM';
-      } else if (lower.contains('facebook') || lower.contains('fb.watch')) {
+      } else if (l.contains('facebook') || l.contains('fb.watch')) {
         platform = 'FACEBOOK';
-      } else if (lower.contains('t.me') || lower.contains('telegram')) {
+      } else if (l.contains('t.me') || l.contains('telegram')) {
         platform = 'TELEGRAM';
       } else {
         platform = 'YOUTUBE';

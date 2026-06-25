@@ -44,13 +44,17 @@ function ytId(string $url): ?string {
     return null;
 }
 
-// Detect the platform: prefer the stored column, fall back to URL sniffing.
+// Detect the platform: a direct video file is always "local"; otherwise prefer
+// the stored column, then fall back to URL sniffing.
 function detectPlatform(array $s, string $url): string {
+    $u = strtolower(strtok($url, '?'));
+    if (preg_match('/\.(mp4|webm|mov|m4v|m3u8)$/', $u)) {
+        return 'local';
+    }
     $p = strtolower(trim($s['platform'] ?? ''));
-    if (in_array($p, ['youtube', 'instagram', 'facebook', 'telegram', 'local'], true)) {
+    if (in_array($p, ['youtube', 'instagram', 'facebook', 'telegram'], true)) {
         return $p;
     }
-    $u = strtolower($url);
     if (strpos($u, 'instagram') !== false) return 'instagram';
     if (strpos($u, 'facebook') !== false || strpos($u, 'fb.watch') !== false) return 'facebook';
     if (strpos($u, 't.me') !== false || strpos($u, 'telegram') !== false) return 'telegram';
