@@ -114,7 +114,7 @@ class _QuestionScreenState extends State<QuestionScreen>
         }
         final setId = sets.first.id;
         final qs = await ContentService.getQuestions(setId, shuffle: true);
-        _applyQuestions(qs);
+        _applyQuestions(_maybeVariety(qs));
       } catch (e) {
         _showApiError('Failed to load. Check connection.');
       }
@@ -127,6 +127,90 @@ class _QuestionScreenState extends State<QuestionScreen>
     } catch (e) {
       _showApiError('Network error. Check your connection.');
     }
+  }
+
+  // ── Test Your Tunnlity: show one question of EACH type before repeating ──
+  // The speed test should cover as many *types* of question as possible. We
+  // classify each question by its operator + the digit-length of its operands
+  // (so 23x23 and 123x3 count as DIFFERENT types) and pick round-robin: one of
+  // every distinct type first, and only start repeating a type once all
+  // distinct types have already appeared.
+  List<QuestionModel> _maybeVariety(List<QuestionModel> qs) {
+    final isTunnlity =
+        widget.mode == 'tunnelity' || widget.category == 'tunnlity';
+    if (!isTunnlity || qs.isEmpty) return qs;
+    final count = widget.totalQuestions > 0 ? widget.totalQuestions : 10;
+    return _pickByTypeVariety(qs, count);
+  }
+
+  List<QuestionModel> _pickByTypeVariety(List<QuestionModel> all, int count) {
+    // Group questions by their type signature.
+    final Map<String, List<QuestionModel>> groups = {};
+    for (final q in all) {
+      groups.putIfAbsent(_typeSignature(q.questionText), () => []).add(q);
+    }
+    // Randomise both the order of the types and the questions inside each type
+    // so repeat attempts don't always show the same 10 questions.
+    final keys = groups.keys.toList()..shuffle();
+    for (final k in keys) {
+      groups[k]!.shuffle();
+    }
+
+    // Round-robin: round 0 takes one question of every distinct type (all
+    // unique). Only when every type has been used once do we move to round 1
+    // (the first repeats), and so on.
+    final result = <QuestionModel>[];
+    int round = 0;
+    while (result.length < count) {
+      bool added = false;
+      for (final k in keys) {
+        final list = groups[k]!;
+        if (round < list.length) {
+          result.add(list[round]);
+          added = true;
+          if (result.length >= count) break;
+        }
+      }
+      if (!added) break; // every question used — set is smaller than `count`
+      round++;
+    }
+    return result;
+  }
+
+  // Build a coarse "type" key from the question text: operator + the digit
+  // length of the first two numbers. e.g. "23 x 23" -> "mul_2x2",
+  // "123 x 3" -> "mul_1x3", "234 + 234" -> "add_3x3". Falls back to a
+  // digit-masked version of the text when no operator/operands are found.
+  String _typeSignature(String raw) {
+    final text = raw.toLowerCase();
+    final compact = text.replaceAll(' ', '');
+
+    String op = 'other';
+    if (RegExp(r'\d\s*[×*]\s*\d').hasMatch(text) ||
+        RegExp(r'\dx\d').hasMatch(compact)) {
+      op = 'mul';
+    } else if (RegExp(r'\d\s*[÷/]\s*\d').hasMatch(text)) {
+      op = 'div';
+    } else if (RegExp(r'\d\s*\+\s*\d').hasMatch(text)) {
+      op = 'add';
+    } else if (RegExp(r'\d\s*[-−]\s*\d').hasMatch(text)) {
+      op = 'sub';
+    }
+
+    final nums =
+        RegExp(r'\d+').allMatches(text).map((m) => m.group(0)!).toList();
+    if (op != 'other' && nums.length >= 2) {
+      final a = nums[0].length;
+      final b = nums[1].length;
+      // For commutative operators (x and +) treat NxM and MxN as the same type.
+      final digits = (op == 'mul' || op == 'add')
+          ? ([a, b]..sort()).join('x')
+          : '${a}x$b';
+      return '${op}_$digits';
+    }
+    // Fallback: collapse all numbers to '#' so structurally identical
+    // questions group together, different ones stay distinct.
+    return compact.replaceAll(RegExp(r'\d+'), '#');
   }
 
   void _applyQuestions(List<QuestionModel> qs) {
