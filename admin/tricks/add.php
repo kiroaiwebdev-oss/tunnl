@@ -4,6 +4,7 @@ require_once dirname(__DIR__) . '/config/auth_check.php';
 require_once dirname(__DIR__) . '/config/db.php';
 require_once dirname(__DIR__) . '/config/constants.php';
 require_once __DIR__ . '/_video_upload.php';
+require_once __DIR__ . '/_image_upload.php';
 
 $success = $error = '';
 
@@ -15,22 +16,25 @@ $existingCats = array_column($pdo->query(
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Local upload (if any) overrides the typed URL.
     $videoUrl = tunnl_trick_video_url($_POST['video_url'] ?? '', $error);
+    $imageUrl = tunnl_trick_image_url($_POST['image_url'] ?? '', $error);
     $hasVideo = ($videoUrl !== '') ? 1 : (isset($_POST['has_video']) ? 1 : 0);
     if ($error === '') {
       try {
         $pdo->prepare("
             INSERT INTO tricks
               (chapter_number, title, subtitle, category, difficulty,
+               image_url,
                has_video, video_url, video_duration,
                has_article, article_content, read_duration,
                is_new, is_premium, is_active)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,1)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)
         ")->execute([
             intval($_POST['chapter_number']),
             trim($_POST['title']),
             trim($_POST['subtitle'] ?? ''),
             strtoupper(trim($_POST['category'])),
             $_POST['difficulty'],
+            $imageUrl,
             $hasVideo,
             $videoUrl,
             intval($_POST['video_duration'] ?? 0),
@@ -67,6 +71,7 @@ renderTrickForm([
         'subtitle'       => $_POST['subtitle'] ?? '',
         'category'       => $_POST['category'] ?? '',
         'difficulty'     => $_POST['difficulty'] ?? 'Beginner',
+        'image_url'      => $_POST['image_url'] ?? '',
         'has_video'      => isset($_POST['has_video']) ? 1 : 0,
         'video_url'      => $_POST['video_url'] ?? '',
         'video_duration' => $_POST['video_duration'] ?? 5,

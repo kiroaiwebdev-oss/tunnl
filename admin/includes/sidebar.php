@@ -63,7 +63,12 @@ function isActive($dir) {
     </a>
     <a href="<?= ADMIN_URL ?>/tricks/index.php" class="nav-item <?= isActive('tricks') ?>">
       <i class="fas fa-bolt nav-icon"></i>
-      <span>Tunnel Tricks</span>
+      <span>Tunnl Tricks</span>
+    </a>
+    <a href="<?= ADMIN_URL ?>/sets/index.php?category=tricks" class="nav-item">
+      <i class="fas fa-lightbulb nav-icon"></i>
+      <span>Tricks Practice</span>
+      <span class="nav-badge">SETS</span>
     </a>
     <a href="<?= ADMIN_URL ?>/shorts/index.php" class="nav-item <?= isActive('shorts') ?>">
       <i class="fas fa-play-circle nav-icon"></i>

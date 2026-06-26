@@ -238,7 +238,45 @@ try {
         if ((int)$tp->fetchColumn() === 0) {
             $pdo->exec("ALTER TABLE `tricks` ADD COLUMN `is_premium` TINYINT DEFAULT 0");
         }
+        // image_url — lets admin attach an illustrative image to a trick that
+        // the app shows at the top of the article.
+        $ti = $pdo->prepare(
+            "SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'tricks' AND COLUMN_NAME = 'image_url'"
+        );
+        $ti->execute();
+        if ((int)$ti->fetchColumn() === 0) {
+            $pdo->exec("ALTER TABLE `tricks` ADD COLUMN `image_url` VARCHAR(255) DEFAULT ''");
+        }
     } catch (Throwable $e) { /* ignore */ }
+
+    // ── sets/questions: allow the 'tricks' practice category ──────────
+    // A dedicated set category for the "Tunnl Tricks" practice MCQs (the
+    // 50-question set users attempt after reading the trick chapters). We
+    // widen the category enum to include 'tricks' if it isn't already there.
+    foreach (['sets', 'questions'] as $catTable) {
+        try {
+            if (!$tableExists($catTable)) continue;
+            $ct = $pdo->prepare(
+                "SELECT COLUMN_TYPE FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = 'category'"
+            );
+            $ct->execute([$catTable]);
+            $colType = strtolower((string)$ct->fetchColumn());
+            // Only act on enum columns that don't yet contain 'tricks'.
+            if (strpos($colType, 'enum') === 0 && strpos($colType, "'tricks'") === false) {
+                if ($catTable === 'sets') {
+                    $pdo->exec("ALTER TABLE `sets` MODIFY COLUMN `category`
+                        ENUM('mcq','simplification','previous_year','tunnlity','tricks')
+                        NOT NULL DEFAULT 'mcq'");
+                } else {
+                    $pdo->exec("ALTER TABLE `questions` MODIFY COLUMN `category`
+                        ENUM('mcq','simplification','previous_year','daily_practice','tunnlity','tricks')
+                        NOT NULL");
+                }
+            }
+        } catch (Throwable $e) { /* ignore */ }
+    }
 } catch (Throwable $e) {
     // Never break the request. The calling page/API has its own fallback.
 }

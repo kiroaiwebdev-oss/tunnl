@@ -146,7 +146,7 @@ const Map<String, String> _hi = {
   'Unlock full access & advanced features': 'पूरी पहुँच और उन्नत सुविधाएँ अनलॉक करें',
   '500 Free Practice MCQs': '500 मुफ़्त अभ्यास MCQ',
   'Practice unlimited questions for free': 'मुफ़्त में असीमित सवाल हल करें',
-  'Enter the Tunnel. Master Speed Math.': 'टनल में आएँ। स्पीड मैथ में महारत पाएँ।',
+  'Enter the Tunnl. Master Speed Math.': 'टनल में आएँ। स्पीड मैथ में महारत पाएँ।',
 
   // ── Quiz / question screen ──
   'Quiz Terms & Conditions': 'क्विज़ नियम और शर्तें',
@@ -376,7 +376,7 @@ const Map<String, String> _hi = {
   'LIFETIME': 'आजीवन',
   'FEATURES': 'सुविधाएँ',
   'UPGRADE': 'अपग्रेड',
-  'Tunnel Premium': 'Tunnel प्रीमियम',
+  'Tunnl Premium': 'Tunnl प्रीमियम',
   'One-time • Lifetime access': 'एक बार • आजीवन पहुँच',
   'after discount': 'छूट के बाद',
   'Have a coupon?': 'कूपन है?',
@@ -464,6 +464,7 @@ const Map<String, String> _hi = {
   // ── Set chooser (retest / view solution) ──
   'Retest': 'फिर से टेस्ट',
   'Reattempt': 'फिर से दें',
+  'Practice — 50 MCQs': 'अभ्यास — 50 MCQ',
   'View Solution': 'हल देखें',
   'VIEW SOLUTION': 'हल देखें',
   'View Leaderboard': 'लीडरबोर्ड देखें',

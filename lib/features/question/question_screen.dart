@@ -21,6 +21,11 @@ class QuestionScreen extends StatefulWidget {
   final int challengeId;
   final VoidCallback? onSetCompleted;
 
+  /// Optional label shown above every question (e.g. the Previous-Year exam
+  /// name like "SSC 2023") so the user always knows which exam the questions
+  /// belong to. Empty = no badge.
+  final String headerLabel;
+
   /// Pre-loaded questions (e.g. the Weekly Challenge's assigned day questions).
   /// When provided & non-empty, the screen uses these directly instead of
   /// fetching from the API.
@@ -35,6 +40,7 @@ class QuestionScreen extends StatefulWidget {
     this.totalQuestions = 10,
     this.challengeId = 0,
     this.onSetCompleted,
+    this.headerLabel = '',
     this.presetQuestions,
   });
 
@@ -848,6 +854,33 @@ class _QuestionScreenState extends State<QuestionScreen>
           ),
           child: Column(
             children: [
+              if (widget.headerLabel.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: AppColors.yellow.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                        color: AppColors.yellow.withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.history_edu_rounded,
+                          color: AppColors.yellow, size: 13),
+                      const SizedBox(width: 6),
+                      Text(widget.headerLabel,
+                          style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.yellow,
+                              letterSpacing: 0.5)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

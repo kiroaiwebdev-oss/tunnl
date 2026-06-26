@@ -8,7 +8,7 @@ $page     = max(1, intval($_GET['page'] ?? 1));
 $perPage  = max(1, intval($_GET['per_page'] ?? 50));
 $offset   = ($page - 1) * $perPage;
 
-$validCats = ['mcq','simplification','previous_year','tunnlity'];
+$validCats = ['mcq','simplification','previous_year','tunnlity','tricks'];
 if (!in_array($category, $validCats, true)) error('Invalid category');
 
 $where  = ['s.category = ?'];

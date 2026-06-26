@@ -86,7 +86,7 @@ class _ResultScreenState extends State<ResultScreen>
   // Same premium benefits shown on the Premium ("Ticket to Tunnl") screen,
   // kept in the same order so both screens match.
   List<String> get _premiumBenefits => [
-    tr('Tunnel Tricks'),
+    tr('Tunnl Tricks'),
     tr('5000 Practice MCQs'),
     tr('5000+ Previous Year MCQs'),
     tr('Daily Practice Set'),

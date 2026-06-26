@@ -8,6 +8,7 @@ $labels = [
     'mcq'            => '5000 Speed Math MCQ (Practice Sets)',
     'tunnlity'       => 'Test Your Tunnlity',
     'previous_year'  => 'Previous Year',
+    'tricks'         => 'Tunnl Tricks Practice',
 ];
 $cat = $_GET['cat'] ?? '';
 if ($cat !== '' && !isset($labels[$cat])) $cat = '';
@@ -76,6 +77,7 @@ require_once dirname(__DIR__) . '/includes/header.php';
           <option value="mcq">5000 Speed Math MCQ (Practice Sets)</option>
           <option value="tunnlity">Test Your Tunnlity</option>
           <option value="previous_year">Previous Year</option>
+          <option value="tricks">Tunnl Tricks Practice</option>
         </select>
       <?php endif; ?>
     </div>

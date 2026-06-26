@@ -63,7 +63,7 @@ class _PremiumScreenState extends State<PremiumScreen>
   final List<Map<String, dynamic>> _premiumBenefits = [
     {
       'icon': Icons.layers_rounded,
-      'title': tr('Tunnel Tricks'),
+      'title': tr('Tunnl Tricks'),
       'subtitle': tr('Powerful strategies & shortcuts'),
       'color': AppColors.yellow,
       'image': 'assets/images/b1.jpg',
@@ -767,7 +767,7 @@ class _PremiumScreenState extends State<PremiumScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                tr('Tunnel Premium'),
+                tr('Tunnl Premium'),
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,

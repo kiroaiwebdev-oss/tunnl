@@ -696,7 +696,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
           Container(width: 30, height: 1,
             color: AppColors.neonCyan.withValues(alpha: 0.3)),
           const SizedBox(width: 10),
-          Text(tr('Enter the Tunnel. Master Speed Math.'),
+          Text(tr('Enter the Tunnl. Master Speed Math.'),
             style: GoogleFonts.poppins(
               fontSize: 11, color: AppColors.textMuted, letterSpacing: 0.5)),
           const SizedBox(width: 10),

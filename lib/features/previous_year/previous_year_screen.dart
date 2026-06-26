@@ -193,6 +193,7 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
           title: name,
           category: 'previous_year',
           examId: examId,
+          headerLabel: name,
           questionsPerSet: 10,
           totalSets: (exam['set_count'] as num?)?.toInt() ?? 10,
           showLeaderboard: true,

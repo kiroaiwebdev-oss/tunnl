@@ -29,6 +29,8 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
 
   String get _videoUrl => (widget.data['videoUrl'] ?? '').toString();
 
+  String get _imageUrl => (widget.data['imageUrl'] ?? '').toString();
+
   String get _videoDuration => (widget.data['duration'] ?? '').toString();
 
   @override
@@ -60,7 +62,8 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
   Widget build(BuildContext context) {
     final hasVideo = widget.data['hasVideo'] == true && _videoUrl.isNotEmpty;
     final hasArticle =
-        widget.data['hasArticle'] == true && _articleContent.trim().isNotEmpty;
+        (widget.data['hasArticle'] == true && _articleContent.trim().isNotEmpty)
+            || _imageUrl.isNotEmpty;
 
     return Scaffold(
       backgroundColor: AppColors.darkBg,
@@ -309,6 +312,30 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (_imageUrl.isNotEmpty) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.network(
+                _imageUrl,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                loadingBuilder: (c, child, progress) => progress == null
+                    ? child
+                    : Container(
+                        height: 160,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: AppColors.darkCard,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const CircularProgressIndicator(
+                            color: AppColors.neonCyan),
+                      ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
           if (duration.isNotEmpty)
             Row(
               children: [

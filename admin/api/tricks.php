@@ -49,6 +49,7 @@ function formatTrick(array $t): array {
         'subtitle'       => $t['subtitle'],
         'category'       => $t['category'],
         'difficulty'     => $t['difficulty'],
+        'image_url'      => $t['image_url'] ?? '',
         'is_new'         => (bool)$t['is_new'],
         'is_premium'     => !empty($t['is_premium']),
         'has_video'      => (bool)$t['has_video'],

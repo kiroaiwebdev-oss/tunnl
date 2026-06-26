@@ -10,6 +10,7 @@ import '../../core/services/app_strings.dart';
 import '../../core/services/content_service.dart';
 import '../../core/models/trick_model.dart';
 import '../premium/premium_screen.dart';
+import '../sets/sets_screen.dart';
 import 'tricks_detail_screen.dart';
 
 class TricksScreen extends StatefulWidget {
@@ -109,6 +110,7 @@ class _TricksScreenState extends State<TricksScreen>
         'hasVideo': t.hasVideo,
         'hasArticle': t.hasArticle,
         'videoUrl': t.videoUrl,
+        'imageUrl': t.imageUrl,
         'articleContent': t.articleContent,
         'duration': t.durationLabel,
         'difficulty': t.difficulty,
@@ -182,6 +184,7 @@ class _TricksScreenState extends State<TricksScreen>
                               ),
                             ),
                 ),
+                if (!_isLoading && _allTricks.isNotEmpty) _buildPracticeButton(),
               ],
             ),
           ),
@@ -250,6 +253,63 @@ class _TricksScreenState extends State<TricksScreen>
                       color: Colors.white)),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPracticeButton() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => const SetsScreen(
+                title: 'Tunnl Tricks Practice',
+                category: 'tricks',
+                subtitle: 'Apply the tricks — solve practice MCQs',
+                questionsPerSet: 50,
+                showLeaderboard: true,
+                headerLabel: 'Tunnl Tricks',
+              ),
+            ),
+          );
+        },
+        child: Container(
+          height: 56,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF00E5FF), Color(0xFF00ACC1)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.neonCyan.withValues(alpha: 0.35),
+                blurRadius: 18,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.quiz_rounded, color: AppColors.darkBg, size: 20),
+              const SizedBox(width: 10),
+              Text(
+                tr('Practice — 50 MCQs'),
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.darkBg,
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

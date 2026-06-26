@@ -8,6 +8,7 @@ $labels = [
     'simplification' => ['500 Simplification',  'fa-calculator',  'var(--success)'],
     'tunnlity'       => ['Test Your Tunnlity',  'fa-bolt',        'var(--cyan)'],
     'previous_year'  => ['Previous Year',       'fa-archive',     'var(--warning)'],
+    'tricks'         => ['Tunnl Tricks Practice','fa-lightbulb',  'var(--cyan)'],
 ];
 
 $cat = $_GET['cat'] ?? ($_GET['category'] ?? '');
@@ -84,6 +85,7 @@ if ($cat !== '') {
     'simplification' => ['Simplific.',  'var(--success)'],
     'tunnlity'       => ['Tunnlity',    'var(--cyan)'],
     'previous_year'  => ['Prev. Year',  'var(--warning)'],
+    'tricks'         => ['Tricks',      'var(--cyan)'],
   ];
   foreach ($filters as $val => [$label, $color]):
     $active = $val === $cat;
@@ -124,7 +126,7 @@ if ($cat !== '') {
           </span></td>
           <?php if ($cat === ''): ?>
           <td>
-            <?php $catColors = ['mcq'=>'badge-cyan','simplification'=>'badge-success','previous_year'=>'badge-warning','tunnlity'=>'badge-cyan']; ?>
+            <?php $catColors = ['mcq'=>'badge-cyan','simplification'=>'badge-success','previous_year'=>'badge-warning','tunnlity'=>'badge-cyan','tricks'=>'badge-cyan']; ?>
             <span class="badge <?= $catColors[$set['category']] ?? 'badge-cyan' ?>">
               <?= ucfirst(str_replace('_',' ',$set['category'])) ?>
             </span>

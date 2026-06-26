@@ -82,6 +82,18 @@ function renderTrickForm(array $cfg) {
       <label class="form-label">Subtitle</label>
       <input type="text" name="subtitle" class="form-input" value="<?= $h($t['subtitle']) ?>" placeholder="Short one-line description shown under the title">
     </div>
+    <?php $imgUrl = (string)($t['image_url'] ?? ''); ?>
+    <div class="form-group">
+      <label class="form-label"><i class="fas fa-image" style="color:var(--cyan)"></i> Trick Image <span style="color:var(--muted);font-weight:400">(shown at the top of the article in the app)</span></label>
+      <input type="file" name="image_file" accept="image/png,image/jpeg,image/webp,image/gif" class="form-input" onchange="previewTrickImage(this)">
+      <input type="url" name="image_url" class="form-input" style="margin-top:8px" value="<?= $h($imgUrl) ?>" placeholder="…or paste an image URL (https://…)">
+      <p style="font-size:11px;color:var(--muted);margin-top:4px">Uploading a file replaces the URL above. jpg / png / webp / gif, max 8MB.</p>
+      <div id="trickImagePreview" style="margin-top:10px">
+        <?php if ($imgUrl !== ''): ?>
+          <img src="<?= $h($imgUrl) ?>" alt="trick" style="max-width:220px;max-height:140px;border-radius:12px;border:1px solid var(--border)">
+        <?php endif; ?>
+      </div>
+    </div>
     <div style="display:flex;gap:24px;flex-wrap:wrap">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
         <input type="checkbox" name="is_new" style="accent-color:var(--success);width:16px;height:16px" <?= $t['is_new']?'checked':'' ?>>
@@ -257,6 +269,19 @@ function renderVideoPreview() {
 }
 
 document.addEventListener('DOMContentLoaded', function(){ renderPreview(); renderVideoPreview(); });
+
+// Live preview for the uploaded trick image.
+function previewTrickImage(input) {
+  const box = document.getElementById('trickImagePreview');
+  if (!box) return;
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    box.innerHTML = '<img src="' + e.target.result + '" alt="trick" style="max-width:220px;max-height:140px;border-radius:12px;border:1px solid var(--border)">';
+  };
+  reader.readAsDataURL(file);
+}
 </script>
 
 <?php } ?>

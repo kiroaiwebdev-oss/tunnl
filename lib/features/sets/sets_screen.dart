@@ -27,6 +27,10 @@ class SetsScreen extends StatefulWidget {
   final int? examId;
   final String? examName;
 
+  /// Optional label shown above every question in this set's quiz (e.g. the
+  /// Previous-Year exam name "SSC 2023").
+  final String? headerLabel;
+
   const SetsScreen({
     super.key,
     required this.title,
@@ -38,6 +42,7 @@ class SetsScreen extends StatefulWidget {
     this.showLeaderboard = true,
     this.examId,
     this.examName,
+    this.headerLabel,
   });
 
   @override
@@ -119,6 +124,7 @@ class _SetsScreenState extends State<SetsScreen>
     if (s == 'daily' || s == 'daily_practice') return 'mcq';
     if (s == 'pyq' || s == 'previous_year') return 'previous_year';
     if (s == 'simplification') return 'simplification';
+    if (s == 'tricks') return 'tricks';
     return 'mcq';
   }
 
@@ -152,6 +158,7 @@ class _SetsScreenState extends State<SetsScreen>
           setId: s.id,
           setNumber: s.setNumber > 0 ? s.setNumber : i + 1,
           category: widget.category,
+          headerLabel: widget.headerLabel ?? '',
           totalQuestions:
               s.questionCount > 0 ? s.questionCount : widget.questionsPerSet,
           onSetCompleted: () => _markSetCompleted(s.id),

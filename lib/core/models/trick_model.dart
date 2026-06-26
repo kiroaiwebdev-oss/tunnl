@@ -15,6 +15,7 @@ class TrickModel {
   final int readDurationMinutes;
   final bool isNew;
   final bool isPremium;
+  final String imageUrl;
 
   TrickModel({
     required this.id,
@@ -31,6 +32,7 @@ class TrickModel {
     required this.readDurationMinutes,
     required this.isNew,
     this.isPremium = false,
+    this.imageUrl = '',
   });
 
   String get durationLabel {
@@ -60,5 +62,6 @@ class TrickModel {
         readDurationMinutes: (j['read_duration'] as num?)?.toInt() ?? 0,
         isNew: j['is_new'] == 1 || j['is_new'] == true,
         isPremium: j['is_premium'] == 1 || j['is_premium'] == true,
+        imageUrl: (j['image_url'] ?? '').toString(),
       );
 }
