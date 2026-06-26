@@ -312,16 +312,15 @@ class _LoginScreenState extends State<LoginScreen>
                 ),
               ),
               Container(
-                width: 72, height: 72,
+                width: 84, height: 84,
                 decoration: BoxDecoration(
                   color: const Color(0xFF0D1A26),
-                  borderRadius: BorderRadius.circular(14),
+                  shape: BoxShape.circle,
                   border: Border.all(
                     color: AppColors.neonCyan.withValues(alpha: 0.3), width: 1,
                   ),
                 ),
                 clipBehavior: Clip.antiAlias,
-                padding: const EdgeInsets.all(4),
                 child: Image.asset(
                   'assets/images/tunnel_logo.png',
                   fit: BoxFit.cover,

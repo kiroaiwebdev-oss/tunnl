@@ -418,12 +418,12 @@ class _SplashScreenState extends State<SplashScreen>
                     ],
                   ),
                 ),
-                SizedBox(
-                  width: 68,
-                  height: 68,
+                ClipOval(
                   child: Image.asset(
                     'assets/images/tunnel_logo.png',
-                    fit: BoxFit.contain,
+                    width: 104,
+                    height: 104,
+                    fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => const Icon(
                       Icons.all_inclusive_rounded,
                       color: AppColors.neonCyan,

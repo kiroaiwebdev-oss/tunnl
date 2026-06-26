@@ -337,10 +337,10 @@ Future<void> _verifyOtp() async {
 
   Widget _buildLogoBox() {
     return Container(
-      width: 88, height: 88,
+      width: 96, height: 96,
       decoration: BoxDecoration(
         color: const Color(0xFF111827),
-        borderRadius: BorderRadius.circular(20),
+        shape: BoxShape.circle,
         border: Border.all(
           color: _isVerified
               ? AppColors.neonCyan.withValues(alpha: 0.6)
@@ -355,10 +355,9 @@ Future<void> _verifyOtp() async {
         ],
       ),
       clipBehavior: Clip.antiAlias,
-      padding: const EdgeInsets.all(8),
       child: _isVerified
           ? const Icon(Icons.check_circle_rounded,
-              color: AppColors.neonCyan, size: 36)
+              color: AppColors.neonCyan, size: 40)
           : Image.asset(
               'assets/images/tunnel_logo.png',
               fit: BoxFit.cover,
