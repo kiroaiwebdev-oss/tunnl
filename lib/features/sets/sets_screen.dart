@@ -14,6 +14,7 @@ import '../../core/models/set_model.dart';
 import '../question/question_screen.dart';
 import '../premium/premium_screen.dart';
 import '../result/set_solution_screen.dart';
+import '../result/set_leaderboard_screen.dart';
 
 class SetsScreen extends StatefulWidget {
   final String title;
@@ -174,7 +175,20 @@ class _SetsScreenState extends State<SetsScreen>
     );
   }
 
-  // For an already-attempted set: choose Retest or View Solution.
+  void _viewSetLeaderboard(SetModel s, int i) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SetLeaderboardScreen(
+          setId: s.id,
+          title: s.title.isNotEmpty
+              ? s.title
+              : '${tr('SET')} ${(s.setNumber > 0 ? s.setNumber : i + 1).toString().padLeft(2, '0')}',
+        ),
+      ),
+    );
+  }
+
+  // For an already-attempted set: choose Reattempt, View Solution or Leaderboard.
   void _showSetChooser(SetModel s, int i) {
     showModalBottomSheet(
       context: context,
@@ -207,7 +221,7 @@ class _SetsScreenState extends State<SetsScreen>
               const SizedBox(height: 16),
               _chooserButton(
                 icon: Icons.replay_rounded,
-                label: tr('Retest'),
+                label: tr('Reattempt'),
                 color: AppColors.neonCyan,
                 filled: true,
                 onTap: () { Navigator.pop(ctx); _startTest(s, i); },
@@ -220,6 +234,16 @@ class _SetsScreenState extends State<SetsScreen>
                 filled: false,
                 onTap: () { Navigator.pop(ctx); _viewSolution(s, i); },
               ),
+              if (widget.showLeaderboard) ...[
+                const SizedBox(height: 12),
+                _chooserButton(
+                  icon: Icons.emoji_events_rounded,
+                  label: tr('View Leaderboard'),
+                  color: AppColors.orange,
+                  filled: false,
+                  onTap: () { Navigator.pop(ctx); _viewSetLeaderboard(s, i); },
+                ),
+              ],
             ],
           ),
         ),

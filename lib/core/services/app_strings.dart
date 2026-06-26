@@ -463,7 +463,13 @@ const Map<String, String> _hi = {
 
   // ── Set chooser (retest / view solution) ──
   'Retest': 'फिर से टेस्ट',
+  'Reattempt': 'फिर से दें',
   'View Solution': 'हल देखें',
+  'VIEW SOLUTION': 'हल देखें',
+  'View Leaderboard': 'लीडरबोर्ड देखें',
+  'Set Leaderboard': 'सेट लीडरबोर्ड',
+  'Top scorers': 'शीर्ष स्कोरर',
+  'Be the first to top this set!': 'इस सेट में टॉप करने वाले पहले बनें!',
 
   // ── Premium content (reordered list) ──
   'Tunnel Tricks': 'टनल ट्रिक्स',

@@ -391,6 +391,8 @@ class _ResultScreenState extends State<ResultScreen>
           const SizedBox(height: 12),
           if (widget.mode != 'simplification') _buildLeaderboardButton(),
           if (widget.mode != 'simplification') const SizedBox(height: 12),
+          if (widget.summary.isNotEmpty) _buildSolutionButton(),
+          if (widget.summary.isNotEmpty) const SizedBox(height: 12),
           if (!_isPremium) _buildPremiumCard(),
           if (!_isPremium) const SizedBox(height: 30),
           if (_isPremium) const SizedBox(height: 20),
@@ -727,6 +729,32 @@ class _ResultScreenState extends State<ResultScreen>
               style: GoogleFonts.poppins(
                 fontSize: 14, fontWeight: FontWeight.w700,
                 color: Colors.white, letterSpacing: 2)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSolutionButton() {
+    return GestureDetector(
+      onTap: () => setState(() => _activeTab = 1),
+      child: Container(
+        height: 56, width: double.infinity,
+        decoration: BoxDecoration(
+          color: AppColors.yellow.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: AppColors.yellow.withValues(alpha: 0.5)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.lightbulb_rounded,
+              color: AppColors.yellow, size: 20),
+            const SizedBox(width: 10),
+            Text(tr('VIEW SOLUTION'),
+              style: GoogleFonts.poppins(
+                fontSize: 14, fontWeight: FontWeight.w700,
+                color: AppColors.yellow, letterSpacing: 2)),
           ],
         ),
       ),
