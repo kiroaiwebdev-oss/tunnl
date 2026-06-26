@@ -16,11 +16,18 @@ class InAppVideoPlayer extends StatefulWidget {
   final bool autoPlay;
   final BorderRadius? borderRadius;
 
+  /// Optional aspect ratio for the player FRAME. When null the player uses the
+  /// video's natural ratio (16:9 for YouTube). For a vertical "reel" viewer
+  /// pass e.g. 9/16 — the video itself is always letter-/pillar-boxed to fit
+  /// inside the frame so it is never stretched or cropped.
+  final double? aspectRatio;
+
   const InAppVideoPlayer({
     super.key,
     required this.url,
     this.autoPlay = false,
     this.borderRadius,
+    this.aspectRatio,
   });
 
   /// YouTube video id (or null if not a YouTube URL).
@@ -94,6 +101,7 @@ class _InAppVideoPlayerState extends State<InAppVideoPlayer> {
     if (_yt != null) {
       child = YoutubePlayer(
         controller: _yt!,
+        aspectRatio: widget.aspectRatio ?? (16 / 9),
         showVideoProgressIndicator: true,
         progressIndicatorColor: AppColors.neonCyan,
         progressColors: const ProgressBarColors(
@@ -115,15 +123,23 @@ class _InAppVideoPlayerState extends State<InAppVideoPlayer> {
         ),
       );
     } else if (_vp != null && _vpReady) {
-      final ar = _vp!.value.aspectRatio == 0 ? 16 / 9 : _vp!.value.aspectRatio;
+      final videoAr = _vp!.value.aspectRatio == 0 ? 16 / 9 : _vp!.value.aspectRatio;
+      final frameAr = widget.aspectRatio ?? videoAr;
       child = AspectRatio(
-        aspectRatio: ar,
+        aspectRatio: frameAr,
         child: GestureDetector(
           onTap: () => setState(() => _showControls = !_showControls),
           child: Stack(
             alignment: Alignment.center,
             children: [
-              VideoPlayer(_vp!),
+              // Video kept at its true ratio inside the frame so it is never
+              // stretched or cropped — scales to the largest size that fits.
+              Center(
+                child: AspectRatio(
+                  aspectRatio: videoAr,
+                  child: VideoPlayer(_vp!),
+                ),
+              ),
               if (_showControls)
                 Container(color: Colors.black26),
               if (_showControls)

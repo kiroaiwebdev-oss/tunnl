@@ -233,7 +233,7 @@ class _HubScreenState extends State<HubScreen> with TickerProviderStateMixin {
                       child: Column(
                         children: [
                           _HubCard(
-                            title:       _label('label_hub_tunnlity', tr('Test Your Tunnelity')),
+                            title:       _label('label_hub_tunnlity', tr('Test Your Tunnlity')),
                             subtitle:    tr('Take a quick 10-question speed test'),
                             borderColor: AppColors.neonCyan,
                             iconBgColor: AppColors.neonCyan,

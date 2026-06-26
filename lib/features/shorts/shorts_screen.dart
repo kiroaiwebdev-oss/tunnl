@@ -598,11 +598,15 @@ class _ShortPlayerScreen extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: Center(
-                child: InAppVideoPlayer(
-                  url: short.url,
-                  autoPlay: true,
-                  borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Center(
+                  child: InAppVideoPlayer(
+                    url: short.url,
+                    autoPlay: true,
+                    aspectRatio: 9 / 16,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
               ),
             ),

@@ -443,7 +443,7 @@ class _SplashScreenState extends State<SplashScreen>
     return FadeTransition(
       opacity: _fadeAnim,
       child: Text(
-        'T U N N E L',
+        'T U N N L',
         style: TextStyle(
           fontFamily: 'Orbitron',
           fontSize: 40,
@@ -493,7 +493,7 @@ class _SplashScreenState extends State<SplashScreen>
     return FadeTransition(
       opacity: _fadeAnim,
       child: Text(
-        tr('New Way to Math'),
+        tr('Time Saving Tantra'),
         style: const TextStyle(
           fontFamily: 'Poppins',
           fontSize: 15,

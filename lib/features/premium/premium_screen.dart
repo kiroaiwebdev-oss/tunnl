@@ -44,7 +44,7 @@ class _PremiumScreenState extends State<PremiumScreen>
     },
     {
       'icon': Icons.bolt_rounded,
-      'title': tr('Test Your Tunnelity'),
+      'title': tr('Test Your Tunnlity'),
       'subtitle': tr('10 question speed test'),
       'color': AppColors.neonCyan,
       'iconBg': const Color(0xFF0D2233),

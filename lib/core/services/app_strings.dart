@@ -79,7 +79,7 @@ const Map<String, String> _hi = {
   'Could not open link!': 'लिंक नहीं खुल सका!',
 
   // ── Splash ──
-  'New Way to Math': 'गणित का नया तरीका',
+  'Time Saving Tantra': 'समय बचाने का तंत्र',
   'Update Required': 'अपडेट आवश्यक',
   'A new version of Tunnl is available. Please update to continue.':
       'Tunnl का नया संस्करण उपलब्ध है। जारी रखने के लिए अपडेट करें।',
@@ -103,7 +103,7 @@ const Map<String, String> _hi = {
   'ACCURATE': 'सटीक',
   'RESULTS': 'परिणाम',
   'IMPROVE': 'सुधारें',
-  'TUNNELITY': 'टनलिटी',
+  'TUNNLITY': 'टनलिटी',
   'Please enter complete 6-digit OTP': 'कृपया पूरा 6 अंकों का OTP डालें',
   'Invalid OTP. Please try again.': 'अमान्य OTP। कृपया फिर से प्रयास करें।',
   'OTP resent successfully!': 'OTP फिर से भेज दिया गया!',
@@ -135,9 +135,8 @@ const Map<String, String> _hi = {
   'Failed to save. Try again.': 'सहेजने में विफल। फिर से प्रयास करें।',
 
   // ── Hub screen ──
-  'Test Your Tunnelity': 'अपनी टनलिटी जाँचें',
   'Test Your Tunnlity': 'अपनी टनलिटी जाँचें',
-  'TEST YOUR TUNNELITY': 'अपनी टनलिटी जाँचें',
+  'TEST YOUR TUNNLITY': 'अपनी टनलिटी जाँचें',
   'Take a quick 10-question speed test': '10 सवालों का तेज़ टेस्ट दें',
   'A quick 10-question speed test': '10 सवालों का तेज़ स्पीड टेस्ट',
   'Your Dashboard': 'आपका डैशबोर्ड',
@@ -155,10 +154,12 @@ const Map<String, String> _hi = {
   'Your progress will be lost.\nAre you sure?':
       'आपकी प्रगति खो जाएगी।\nक्या आप निश्चित हैं?',
   'PROGRESS': 'प्रगति',
+  'QUESTION': 'सवाल',
+  'TIME': 'समय',
 
   // ── Tunnlity ──
   'How fast can you solve?': 'आप कितनी तेज़ी से हल कर सकते हैं?',
-  '10 timed questions. Answer quickly and accurately to boost your Tunnelity score. Beat your personal best!':
+  '10 timed questions. Answer quickly and accurately to boost your Tunnlity score. Beat your personal best!':
       '10 समयबद्ध सवाल। अपना टनलिटी स्कोर बढ़ाने के लिए जल्दी और सही जवाब दें। अपना सर्वश्रेष्ठ रिकॉर्ड तोड़ें!',
   'Your Personal Best': 'आपका सर्वश्रेष्ठ',
   'attempt': 'प्रयास',
@@ -168,17 +169,17 @@ const Map<String, String> _hi = {
   'START TEST': 'टेस्ट शुरू करें',
   'VIEW SCORE': 'स्कोर देखें',
   'VIEW LEADERBOARD': 'लीडरबोर्ड देखें',
-  'Your Tunnelity Score': 'आपका टनलिटी स्कोर',
+  'Your Tunnlity Score': 'आपका टनलिटी स्कोर',
   'LAST SCORE': 'पिछला स्कोर',
   'PERSONAL BEST': 'सर्वश्रेष्ठ',
   'accuracy': 'सटीकता',
   'Last attempt:': 'पिछला प्रयास:',
   'correct': 'सही',
-  'TUNNELITY LEADERBOARD': 'टनलिटी लीडरबोर्ड',
+  'TUNNLITY LEADERBOARD': 'टनलिटी लीडरबोर्ड',
   'Your rank:': 'आपकी रैंक:',
   'Top speed-test scorers': 'शीर्ष स्पीड-टेस्ट स्कोरर',
   'No scores yet': 'अभी कोई स्कोर नहीं',
-  'Be the first — take the Tunnelity test!': 'पहले बनें — टनलिटी टेस्ट दें!',
+  'Be the first — take the Tunnlity test!': 'पहले बनें — टनलिटी टेस्ट दें!',
   'pts': 'अंक',
 
   // ── Solve & Earn / Weekly challenge ──

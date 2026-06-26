@@ -429,7 +429,7 @@ class _LoginScreenState extends State<LoginScreen>
         _FeatureIcon(icon: Icons.bar_chart_rounded,
           label1: tr('ACCURATE'), label2: tr('RESULTS')),
         _FeatureIcon(icon: Icons.emoji_events_rounded,
-          label1: tr('IMPROVE'), label2: tr('TUNNELITY')),
+          label1: tr('IMPROVE'), label2: tr('TUNNLITY')),
       ],
     );
   }

@@ -96,7 +96,7 @@ class _TunnlityLeaderboardScreenState
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(tr('TUNNELITY LEADERBOARD'),
+              Text(tr('TUNNLITY LEADERBOARD'),
                   style: GoogleFonts.orbitron(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -132,7 +132,7 @@ class _TunnlityLeaderboardScreenState
         ),
         const SizedBox(height: 6),
         Center(
-          child: Text(tr('Be the first — take the Tunnelity test!'),
+          child: Text(tr('Be the first — take the Tunnlity test!'),
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                   fontSize: 13, color: AppColors.textSecondary)),

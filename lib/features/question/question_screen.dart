@@ -63,14 +63,11 @@ class _QuestionScreenState extends State<QuestionScreen>
   final List<int>                  _timeTaken = [];
   final List<Map<String, dynamic>> _answersForApi = [];
 
-  // ── Timer ──────────────────────────────────────────
-  static const int _timerMax = 30;
-  int    _timerSeconds = _timerMax;
+  // ── Timer (counts UP from 0; no auto-timeout) ──────
+  int    _timerSeconds = 0;
   Timer? _questionTimer;
 
   // ── Animations ─────────────────────────────────────
-  late AnimationController        _timerRingCtrl;
-  late Animation<double>          _timerRingAnim;
   late AnimationController        _questionSlideCtrl;
   late Animation<Offset>          _questionSlideAnim;
   late Animation<double>          _questionFadeAnim;
@@ -182,9 +179,9 @@ class _QuestionScreenState extends State<QuestionScreen>
         ),
         content: SingleChildScrollView(
           child: Text(
-            '• Each question is timed — answer before the timer runs out.\n\n'
+            '• A stopwatch counts up — solve each question as fast as you can.\n\n'
             '• Once you confirm an answer you cannot change it.\n\n'
-            '• Skipped or timed-out questions are marked incorrect.\n\n'
+            '• Answer every question to move ahead — your speed is recorded.\n\n'
             '• Do not close or leave the test — your progress will be lost.\n\n'
             '• Scores and XP are added to your profile and leaderboard.\n\n'
             'By tapping "I Agree" you accept these terms and play fairly.',
@@ -300,14 +297,6 @@ class _QuestionScreenState extends State<QuestionScreen>
   // Animations Setup
   // ─────────────────────────────────────────────────
   void _setupAnimations() {
-    _timerRingCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: _timerMax),
-    );
-    _timerRingAnim = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(parent: _timerRingCtrl, curve: Curves.linear),
-    );
-
     _questionSlideCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 400),
@@ -341,33 +330,13 @@ class _QuestionScreenState extends State<QuestionScreen>
   // Timer
   // ─────────────────────────────────────────────────
   void _startTimer() {
-    final q = _questions.isNotEmpty ? _questions[_currentIndex] : null;
-    final maxSeconds = (q?.timeLimit ?? _timerMax).clamp(5, 600);
-    _timerSeconds = maxSeconds;
-    _timerRingCtrl
-      ..duration = Duration(seconds: maxSeconds)
-      ..reset()
-      ..forward();
-
+    // Count UP from 0 — no auto-timeout. The user solves at their own pace and
+    // we record how many seconds each question took (used for speed/score).
+    _timerSeconds = 0;
     _questionTimer?.cancel();
     _questionTimer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (_timerSeconds <= 0) {
-        t.cancel();
-        _timeOut();
-      } else {
-        if (mounted) setState(() => _timerSeconds--);
-      }
+      if (mounted) setState(() => _timerSeconds++);
     });
-  }
-
-  void _timeOut() {
-    if (_isAnswered) return;
-    setState(() {
-      _isAnswered      = true;
-      _confirmedOption = null;
-    });
-    _recordAnswer(-1);
-    Future.delayed(const Duration(milliseconds: 1200), _goNext);
   }
 
   // ─────────────────────────────────────────────────
@@ -382,10 +351,9 @@ class _QuestionScreenState extends State<QuestionScreen>
     if (_isAnswered || _selectedOption == null) return;
 
     _questionTimer?.cancel();
-    _timerRingCtrl.stop();
 
     final q = _questions[_currentIndex];
-    final timeTaken = (q.timeLimit > 0 ? q.timeLimit : _timerMax) - _timerSeconds;
+    final timeTaken = _timerSeconds; // elapsed seconds (count-up stopwatch)
 
     setState(() {
       _isAnswered      = true;
@@ -396,7 +364,7 @@ class _QuestionScreenState extends State<QuestionScreen>
     Future.delayed(const Duration(milliseconds: 1200), _goNext);
   }
 
-  void _recordAnswer(int selected, {int timeTaken = 30}) {
+  void _recordAnswer(int selected, {int timeTaken = 0}) {
     final q = _questions[_currentIndex];
     final isCorrect = selected == q.correctIndex;
 
@@ -532,7 +500,6 @@ class _QuestionScreenState extends State<QuestionScreen>
   @override
   void dispose() {
     _questionTimer?.cancel();
-    _timerRingCtrl.dispose();
     _questionSlideCtrl.dispose();
     _optionCtrl.dispose();
     _answerCtrl.dispose();
@@ -615,7 +582,7 @@ class _QuestionScreenState extends State<QuestionScreen>
     }
 
     final q = _questions[_currentIndex];
-    final stage = 'STAGE ${(_currentIndex + 1).toString().padLeft(2, '0')}';
+    final stage = '${tr('QUESTION')} ${(_currentIndex + 1).toString().padLeft(2, '0')}';
 
     return PopScope(
       canPop: false,
@@ -682,7 +649,7 @@ class _QuestionScreenState extends State<QuestionScreen>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('${_questions.isEmpty ? _timerMax : _questions[_currentIndex].timeLimit}S LIMIT',
+              Text(tr('TIME'),
                 style: GoogleFonts.poppins(
                   fontSize: 10, color: AppColors.textSecondary,
                   letterSpacing: 1.5)),
@@ -751,47 +718,32 @@ class _QuestionScreenState extends State<QuestionScreen>
     );
   }
 
-  // ── TIMER RING ────────────────────────────────────
+  // ── TIMER RING (counts up — green → yellow → red as time grows) ──
   Widget _buildTimerRing() {
-    return AnimatedBuilder(
-      animation: _timerRingAnim,
-      builder: (_, __) {
-        Color ringColor = AppColors.success;
-        if (_timerSeconds <= 20) ringColor = AppColors.yellow;
-        if (_timerSeconds <= 10) ringColor = AppColors.error;
+    Color ringColor = AppColors.success;
+    if (_timerSeconds > 10) ringColor = AppColors.yellow;
+    if (_timerSeconds > 30) ringColor = AppColors.error;
 
-        return SizedBox(
-          width: 56, height: 56,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox(
-                width: 56, height: 56,
-                child: CircularProgressIndicator(
-                  value: 1.0, strokeWidth: 3,
-                  backgroundColor: AppColors.textMuted.withValues(alpha: 0.2),
-                  valueColor:
-                      const AlwaysStoppedAnimation(Colors.transparent),
-                ),
-              ),
-              SizedBox(
-                width: 56, height: 56,
-                child: CircularProgressIndicator(
-                  value: _timerRingAnim.value,
-                  strokeWidth: 3,
-                  backgroundColor: AppColors.textMuted.withValues(alpha: 0.2),
-                  valueColor: AlwaysStoppedAnimation(ringColor),
-                  strokeCap: StrokeCap.round,
-                ),
-              ),
-              Text('${_timerSeconds}s',
-                style: GoogleFonts.orbitron(
-                  fontSize: 13, fontWeight: FontWeight.w700,
-                  color: ringColor)),
-            ],
+    return SizedBox(
+      width: 56, height: 56,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          SizedBox(
+            width: 56, height: 56,
+            child: CircularProgressIndicator(
+              strokeWidth: 3,
+              backgroundColor: AppColors.textMuted.withValues(alpha: 0.2),
+              valueColor: AlwaysStoppedAnimation(ringColor.withValues(alpha: 0.9)),
+              strokeCap: StrokeCap.round,
+            ),
           ),
-        );
-      },
+          Text('${_timerSeconds}s',
+            style: GoogleFonts.orbitron(
+              fontSize: 13, fontWeight: FontWeight.w700,
+              color: ringColor)),
+        ],
+      ),
     );
   }
 

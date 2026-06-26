@@ -87,7 +87,7 @@ class _TunnlityScreenState extends State<TunnlityScreen> {
                 borderRadius: BorderRadius.circular(10)),
             ),
             const SizedBox(height: 18),
-            Text(tr('Your Tunnelity Score'),
+            Text(tr('Your Tunnlity Score'),
               style: GoogleFonts.poppins(
                 fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white)),
             const SizedBox(height: 18),
@@ -190,7 +190,7 @@ class _TunnlityScreenState extends State<TunnlityScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(tr('TEST YOUR TUNNELITY'),
+              Text(tr('TEST YOUR TUNNLITY'),
                 style: GoogleFonts.orbitron(
                   fontSize: 14, fontWeight: FontWeight.w700,
                   color: AppColors.neonCyan, letterSpacing: 2)),
@@ -228,7 +228,7 @@ class _TunnlityScreenState extends State<TunnlityScreen> {
               fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
           const SizedBox(height: 6),
           Text(
-            tr('10 timed questions. Answer quickly and accurately to boost your Tunnelity score. Beat your personal best!'),
+            tr('10 timed questions. Answer quickly and accurately to boost your Tunnlity score. Beat your personal best!'),
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 12, color: AppColors.textSecondary, height: 1.5)),

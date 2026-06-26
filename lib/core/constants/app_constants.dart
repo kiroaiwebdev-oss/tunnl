@@ -1,6 +1,6 @@
 class AppConstants {
   static const String appName    = 'Tunnl';
-  static const String appTagline = 'New Way to Math';
+  static const String appTagline = 'Time Saving Tantra';
   static const String appVersion = 'V1.0.4';
 
   // ✅ Apna server URL — admin panel API
