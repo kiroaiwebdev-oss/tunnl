@@ -86,13 +86,19 @@ response([
     ],
     'sets'    => array_map(function ($s) use ($user) {
         $isPremium = !empty($s['is_premium']);
+        $avail      = intval($s['q_count']);
+        $adminLimit = intval($s['total_questions'] ?? 0);
+        if ($avail > 0) {
+            $served = $adminLimit > 0 ? min($adminLimit, $avail) : $avail;
+        } else {
+            $served = $adminLimit > 0 ? $adminLimit : 10;
+        }
         return [
             'id'              => intval($s['id']),
             'set_number'      => intval($s['set_number']),
             'title'           => $s['title']     ?? '',
             'level'           => $s['level']     ?? 'beginner',
-            'total_questions' => (intval($s['total_questions'] ?? 0) > 0
-                                   ? intval($s['total_questions']) : 10),
+            'total_questions' => $served,
             'question_count'  => intval($s['q_count']),
             'is_premium'      => $isPremium,
             'can_access'      => !$isPremium || ($user && !empty($user['is_premium'])),

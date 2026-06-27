@@ -13,7 +13,7 @@ import '../daily_dose/daily_dose_popup.dart';
 import '../solve_earn/solve_earn_leaderboard_screen.dart';
 import '../solve_earn/solve_earn_screen.dart';
 import '../profile/profile_screen.dart';
-import '../sets/sets_screen.dart';
+import '../question/question_screen.dart';
 import '../mcq/mcq_exams_screen.dart';
 import '../tricks/tricks_screen.dart';
 import '../shorts/shorts_screen.dart';
@@ -242,14 +242,14 @@ class _DashboardScreenState extends State<DashboardScreen>
         ));
         break;
       case 4:
+        // Daily Practice → today's admin-scheduled practice set + its
+        // assigned questions (loaded inside QuestionScreen via
+        // daily_practice.php). 100% admin-driven, no hardcoded content.
         Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => SetsScreen(
-            title: tr('Daily Practice MCQs'),
+          builder: (_) => const QuestionScreen(
+            mode: 'daily',
             category: 'daily',
-            questionsPerSet: 20,
-            totalSets: _isPremium ? 30 : 1,
-            showLeaderboard: false,
-            subtitle: _isPremium ? tr('All daily sets') : tr("Today's set — Free"),
+            headerLabel: 'Daily Practice',
           ),
         ));
         break;

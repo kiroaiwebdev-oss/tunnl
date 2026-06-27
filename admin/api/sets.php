@@ -63,6 +63,19 @@ $result = array_map(function ($s) use ($isPremium) {
                    || (in_array($s['category'], ['mcq', 'simplification'], true)
                        && intval($s['set_number']) <= 2);
     $premium = !empty($s['is_premium']) && !$freePreview;
+
+    // How many questions this set will actually serve in the quiz:
+    //  - never more than the questions actually added to the set
+    //  - capped by the admin-configured `total_questions` when set
+    //  - if no questions added yet, show the planned count (admin limit / 10)
+    $avail      = intval($s['question_count']);
+    $adminLimit = intval($s['total_questions'] ?? 0);
+    if ($avail > 0) {
+        $served = $adminLimit > 0 ? min($adminLimit, $avail) : $avail;
+    } else {
+        $served = $adminLimit > 0 ? $adminLimit : 10;
+    }
+
     return [
         'id'              => intval($s['id']),
         'set_number'      => intval($s['set_number']),
@@ -71,9 +84,8 @@ $result = array_map(function ($s) use ($isPremium) {
         'exam_name'       => $s['exam_name'] ?? '',
         'category'        => $s['category'],
         'level'           => $s['level']     ?? 'beginner',
-        // Admin-controlled question count (defaults to 10).
-        'total_questions' => (intval($s['total_questions'] ?? 0) > 0
-                               ? intval($s['total_questions']) : 10),
+        // Real number of questions served (matches the quiz exactly).
+        'total_questions' => $served,
         'question_count'  => intval($s['question_count']),
         'is_locked'       => !empty($s['is_locked']),
         'is_premium'      => $premium,

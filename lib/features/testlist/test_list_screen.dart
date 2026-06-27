@@ -13,6 +13,8 @@ import '../../core/services/content_service.dart';
 import '../../core/models/set_model.dart';
 import '../question/question_screen.dart';
 import '../result/set_solution_screen.dart';
+import '../result/set_leaderboard_screen.dart';
+import '../../core/widgets/score_dialog.dart';
 import '../premium/premium_screen.dart';
 
 class TestListScreen extends StatefulWidget {
@@ -125,6 +127,17 @@ class _TestListScreenState extends State<TestListScreen>
     );
   }
 
+  void _viewLeaderboard(SetModel s, int i) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SetLeaderboardScreen(
+          setId: s.id,
+          title: s.title.isNotEmpty ? s.title : '${tr('Test')} ${i + 1}',
+        ),
+      ),
+    );
+  }
+
   void _showSetChooser(SetModel s, int i) {
     showModalBottomSheet(
       context: context,
@@ -167,6 +180,29 @@ class _TestListScreenState extends State<TestListScreen>
                 color: AppColors.yellow,
                 filled: false,
                 onTap: () { Navigator.pop(ctx); _viewSolution(s, i); },
+              ),
+              const SizedBox(height: 12),
+              _chooserButton(
+                icon: Icons.emoji_events_rounded,
+                label: tr('View Leaderboard'),
+                color: AppColors.orange,
+                filled: false,
+                onTap: () { Navigator.pop(ctx); _viewLeaderboard(s, i); },
+              ),
+              const SizedBox(height: 12),
+              _chooserButton(
+                icon: Icons.bar_chart_rounded,
+                label: tr('View Score'),
+                color: AppColors.neonCyan,
+                filled: false,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  showSetScoreDialog(context,
+                      setId: s.id,
+                      title: s.title.isNotEmpty
+                          ? s.title
+                          : '${tr('Test')} ${i + 1}');
+                },
               ),
             ],
           ),

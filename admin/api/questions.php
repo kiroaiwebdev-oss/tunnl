@@ -49,6 +49,9 @@ if (!empty($_GET['shuffle'])) {
     shuffle($cats);
 
     $totalAvail = count($rows);
+    // Serve at most the admin-configured count, but NEVER more than the number
+    // of questions actually added to the set. Questions are never duplicated to
+    // pad a set up to `total_questions` — a 10-question set serves 10 questions.
     $target     = min($limit, $totalAvail);
     $picked     = [];
 
@@ -62,16 +65,6 @@ if (!empty($_GET['shuffle'])) {
             }
         }
         if (!$progress) break; // every type exhausted
-    }
-
-    // Pool smaller than requested count → allow question repeats to fill up.
-    if (!empty($picked) && count($picked) < $limit) {
-        $base = $picked;
-        $i = 0;
-        while (count($picked) < $limit) {
-            $picked[] = $base[$i % count($base)];
-            $i++;
-        }
     }
 
     if (empty($picked)) {

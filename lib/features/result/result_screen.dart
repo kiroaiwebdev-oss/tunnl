@@ -1,6 +1,7 @@
 // lib/features/result/result_screen.dart
 
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_colors.dart';
@@ -8,6 +9,7 @@ import '../../core/services/result_service.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/app_strings.dart';
 import '../../core/services/content_service.dart';
+import '../../core/services/language_service.dart';
 import '../question/question_screen.dart';
 import '../leaderboard/leaderboard_screen.dart';
 import '../dashboard/dashboard_screen.dart';
@@ -55,6 +57,9 @@ class _ResultScreenState extends State<ResultScreen>
   // ── Tab ───────────────────────────────────────────
   int _activeTab = 0; // 0 = Result, 1 = Review
 
+  // ── Solution language (Review tab EN ⇄ हिं toggle) ──
+  bool _hindi = LanguageService.instance.isHindi;
+
   // ── Animations ─────────────────────────────────────
   late AnimationController        _entryCtrl;
   late Animation<double>          _fadeAnim;
@@ -101,6 +106,25 @@ class _ResultScreenState extends State<ResultScreen>
     _computeResults();
     _setupAnimations();
     _saveResultAndCheckPremium();
+    _saveSetScore();
+  }
+
+  // Persist this attempt's score locally (per set) so the set list's
+  // "View Score" option can show the user their latest score offline.
+  Future<void> _saveSetScore() async {
+    if (widget.setId <= 0) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('set_score_${widget.setId}', jsonEncode({
+        'score': _scoreOutOf10,
+        'accuracy': _accuracyPct,
+        'correct': widget.correct,
+        'wrong': widget.wrong,
+        'skipped': widget.skipped,
+        'total': widget.totalQuestions,
+        'date': DateTime.now().toIso8601String(),
+      }));
+    } catch (_) {}
   }
 
   // ─────────────────────────────────────────────────
@@ -828,6 +852,30 @@ class _ResultScreenState extends State<ResultScreen>
   // ─────────────────────────────────────────────────
   // REVIEW TAB
   // ─────────────────────────────────────────────────
+
+  // Language-aware text picker for a summary item. Falls back to English when
+  // the Hindi version is missing (and vice-versa) so nothing ever shows blank.
+  String _txt(Map item, String enKey, String hiKey, [String legacyKey = '']) {
+    final hi = (item[hiKey] ?? '').toString().trim();
+    final en = (item[enKey] ?? '').toString().trim();
+    if (_hindi && hi.isNotEmpty) return hi;
+    if (en.isNotEmpty) return en;
+    if (hi.isNotEmpty) return hi;
+    return legacyKey.isNotEmpty ? (item[legacyKey] ?? '').toString() : '';
+  }
+
+  List<String> _opts(Map item) {
+    final en = List<String>.from(item['options_en'] ?? item['options'] ?? []);
+    final hiRaw = item['options_hi'];
+    final hi = hiRaw is List ? List<String>.from(hiRaw) : <String>[];
+    if (_hindi && hi.length == en.length) {
+      return List.generate(en.length,
+          (i) => hi[i].trim().isNotEmpty ? hi[i] : en[i]);
+    }
+    if (en.isNotEmpty) return en;
+    return hi;
+  }
+
   Widget _buildReviewTab() {
     if (widget.summary.isEmpty) {
       return Center(
@@ -837,6 +885,34 @@ class _ResultScreenState extends State<ResultScreen>
       );
     }
 
+    return Column(
+      children: [
+        // EN / हिं toggle so any user can read the solution in either language.
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
+          child: Row(
+            children: [
+              const Icon(Icons.translate_rounded,
+                  color: AppColors.neonCyan, size: 16),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(tr('Solution language'),
+                    style: GoogleFonts.poppins(
+                        fontSize: 12, color: AppColors.textSecondary)),
+              ),
+              _LangPill(
+                hindi: _hindi,
+                onTap: () => setState(() => _hindi = !_hindi),
+              ),
+            ],
+          ),
+        ),
+        Expanded(child: _buildReviewList()),
+      ],
+    );
+  }
+
+  Widget _buildReviewList() {
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       itemCount: widget.summary.length,
@@ -844,9 +920,12 @@ class _ResultScreenState extends State<ResultScreen>
         final item      = widget.summary[i];
         final isCorrect = item['isCorrect'] == true;
         final skipped   = (item['selected'] as int?) == -1;
-        final options   = List<String>.from(item['options'] ?? []);
+        final options   = _opts(item);
         final correct   = (item['correct'] as int?) ?? 0;
         final selected  = (item['selected'] as int?) ?? -1;
+        final questionText = _txt(item, 'question_en', 'question_hi', 'question');
+        final explanation  =
+            _txt(item, 'explanation_en', 'explanation_hi', 'explanation');
 
         Color headerColor = skipped
             ? AppColors.textMuted
@@ -888,7 +967,7 @@ class _ResultScreenState extends State<ResultScreen>
                     ),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(item['question'] ?? '',
+                      child: Text(questionText,
                         style: GoogleFonts.poppins(
                           fontSize: 14, fontWeight: FontWeight.w600,
                           color: Colors.white)),
@@ -961,7 +1040,7 @@ class _ResultScreenState extends State<ResultScreen>
                 ),
 
               // Solution / explanation (from CSV `explanation` column)
-              if ((item['explanation']?.toString() ?? '').trim().isNotEmpty)
+              if (explanation.trim().isNotEmpty)
                 Container(
                   margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
                   padding: const EdgeInsets.all(12),
@@ -986,7 +1065,7 @@ class _ResultScreenState extends State<ResultScreen>
                         ],
                       ),
                       const SizedBox(height: 6),
-                      Text(item['explanation'].toString(),
+                      Text(explanation,
                         style: GoogleFonts.poppins(
                           fontSize: 12, color: AppColors.textSecondary,
                           height: 1.5)),
@@ -1172,6 +1251,42 @@ class _PremiumFeature extends StatelessWidget {
             fontSize: 13, color: Colors.white,
             fontWeight: FontWeight.w400)),
       ],
+    );
+  }
+}
+
+
+// ── EN / हिं toggle pill (Review tab solution language) ──
+class _LangPill extends StatelessWidget {
+  final bool hindi;
+  final VoidCallback onTap;
+  const _LangPill({required this.hindi, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: AppColors.neonCyan.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.translate_rounded,
+                color: AppColors.neonCyan, size: 14),
+            const SizedBox(width: 5),
+            Text(hindi ? 'हिं' : 'EN',
+                style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.neonCyan)),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -72,12 +72,22 @@ $pageTitle = 'Add Question';
 require_once dirname(__DIR__) . '/includes/header.php';
 
 // Sets dropdown — scoped to the section's category when present.
+// For Previous Year we also surface the exam name + year so the admin always
+// knows which exam/year a set belongs to before adding questions to it.
 if ($cat !== '') {
-    $sQ = $pdo->prepare("SELECT id, set_number, title, category FROM sets WHERE category = ? ORDER BY set_number");
+    $sQ = $pdo->prepare("
+        SELECT s.id, s.set_number, s.title, s.category, s.exam_name, pe.exam_year
+        FROM sets s
+        LEFT JOIN py_exams pe ON pe.id = s.exam_id
+        WHERE s.category = ? ORDER BY s.set_number");
     $sQ->execute([$cat]);
     $sets = $sQ->fetchAll();
 } else {
-    $sets = $pdo->query("SELECT id, set_number, title, category FROM sets ORDER BY category, set_number")->fetchAll();
+    $sets = $pdo->query("
+        SELECT s.id, s.set_number, s.title, s.category, s.exam_name, pe.exam_year
+        FROM sets s
+        LEFT JOIN py_exams pe ON pe.id = s.exam_id
+        ORDER BY s.category, s.set_number")->fetchAll();
 }
 
 $selCat = $_POST['category'] ?? $cat;
@@ -136,10 +146,19 @@ $selSet = $_POST['set_id']   ?? $setId;
         <label class="form-label">Set *</label>
         <select name="set_id" class="form-select" required id="setSelect">
           <option value="">Select Set</option>
-          <?php foreach ($sets as $set): ?>
-          <option value="<?= $set['id'] ?>" data-category="<?= $set['category'] ?>"
+          <?php foreach ($sets as $set):
+            $label = '';
+            if (!empty($set['exam_name'])) {
+              $label .= $set['exam_name'];
+              if (!empty($set['exam_year'])) $label .= ' ' . intval($set['exam_year']);
+              $label .= ' • ';
+            }
+            $label .= 'Set ' . $set['set_number'];
+            if (!empty($set['title'])) $label .= ' — ' . $set['title'];
+          ?>
+          <option value="<?= $set['id'] ?>" data-category="<?= htmlspecialchars($set['category']) ?>"
             <?= $selSet==$set['id'] ? 'selected':'' ?>>
-            Set <?= $set['set_number'] ?> — <?= htmlspecialchars($set['title'] ?: 'Untitled') ?>
+            <?= htmlspecialchars($label) ?>
           </option>
           <?php endforeach; ?>
         </select>

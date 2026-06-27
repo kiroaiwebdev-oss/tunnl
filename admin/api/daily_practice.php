@@ -66,8 +66,8 @@ response([
             'c' => $q['option_c'],
             'd' => $q['option_d'],
         ],
-        'correct'    => $completed ? $q['correct_option'] : null, // reveal only after completion
-        'explanation'=> $completed ? $q['explanation']    : null,
+        'correct'    => $q['correct_option'],
+        'explanation'=> $q['explanation'],
         'question_hi'=> $q['question_text_hi'] ?? '',
         'options_hi' => [
             'a' => $q['option_a_hi'] ?? '',
@@ -75,7 +75,7 @@ response([
             'c' => $q['option_c_hi'] ?? '',
             'd' => $q['option_d_hi'] ?? '',
         ],
-        'explanation_hi'=> $completed ? ($q['explanation_hi'] ?? '') : null,
+        'explanation_hi'=> $q['explanation_hi'] ?? '',
         'difficulty' => $q['difficulty'],
     ], $questions),
 ]);

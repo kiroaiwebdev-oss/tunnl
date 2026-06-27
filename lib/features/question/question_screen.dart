@@ -69,6 +69,10 @@ class _QuestionScreenState extends State<QuestionScreen>
   final List<int>                  _timeTaken = [];
   final List<Map<String, dynamic>> _answersForApi = [];
 
+  // Daily Practice (admin-scheduled): set when this quiz is today's practice,
+  // so we can submit the attempt back to the daily-practice endpoint.
+  int _dailyPracticeId = 0;
+
   // ── Timer (counts UP from 0; no auto-timeout) ──────
   int    _timerSeconds = 0;
   Timer? _questionTimer;
@@ -97,6 +101,16 @@ class _QuestionScreenState extends State<QuestionScreen>
     // Pre-loaded questions (e.g. Weekly Challenge day questions) → use directly.
     if (widget.presetQuestions != null && widget.presetQuestions!.isNotEmpty) {
       _applyQuestions(widget.presetQuestions!);
+      return;
+    }
+
+    // Daily Practice → load TODAY's admin-scheduled practice + its questions
+    // (admin/api/daily_practice.php). Everything comes from the admin panel.
+    final isDaily = widget.mode == 'daily' ||
+        widget.category == 'daily' ||
+        widget.category == 'daily_practice';
+    if (isDaily) {
+      await _loadDailyPractice();
       return;
     }
 
@@ -129,6 +143,36 @@ class _QuestionScreenState extends State<QuestionScreen>
 
     try {
       final qs = await ContentService.getQuestions(widget.setId, shuffle: true);
+      _applyQuestions(qs);
+    } catch (e) {
+      _showApiError('Network error. Check your connection.');
+    }
+  }
+
+  // ── Daily Practice loader ─────────────────────────
+  // Pulls TODAY's admin-scheduled practice set and its assigned questions.
+  Future<void> _loadDailyPractice() async {
+    try {
+      final res = await ContentService.getDailyPractice();
+      final ok = res['success'] == true || res['status'] == true;
+      if (!ok) {
+        _showApiError("Could not load today's practice. Please retry.");
+        return;
+      }
+      final practice = res['practice'];
+      if (practice == null) {
+        _showApiError(
+            'No practice scheduled for today.\nCheck back tomorrow!');
+        return;
+      }
+      _dailyPracticeId = (practice['id'] as num?)?.toInt() ?? 0;
+      final rawList = res['questions'];
+      final qs = (rawList is List)
+          ? rawList
+              .whereType<Map>()
+              .map((e) => QuestionModel.fromJson(Map<String, dynamic>.from(e)))
+              .toList()
+          : <QuestionModel>[];
       _applyQuestions(qs);
     } catch (e) {
       _showApiError('Network error. Check your connection.');
@@ -468,13 +512,21 @@ class _QuestionScreenState extends State<QuestionScreen>
 
     _timeTaken.add(timeTaken);
     _summary.add({
+      // Rendered (current language) — kept for backward compatibility.
       'question': q.questionFor(_hindi),
       'options': q.optionsFor(_hindi),
+      'explanation': q.explanationFor(_hindi),
+      // Both languages stored so the Result/Review screen can switch EN ⇄ हिं.
+      'question_en': q.questionText,
+      'question_hi': q.questionTextHi,
+      'options_en': q.options,
+      'options_hi': [q.optionAHi, q.optionBHi, q.optionCHi, q.optionDHi],
+      'explanation_en': q.explanation,
+      'explanation_hi': q.explanationHi,
       'selected': selected,
       'correct': q.correctIndex,
       'isCorrect': isCorrect,
       'timeTaken': timeTaken,
-      'explanation': q.explanationFor(_hindi),
     });
 
     // For submit_result API
@@ -524,6 +576,16 @@ class _QuestionScreenState extends State<QuestionScreen>
     if (widget.mode == 'solve_earn' && widget.challengeId > 0) {
       UserService.submitWeeklyChallenge(
         challengeId: widget.challengeId,
+        correct: _correctCount,
+        wrong: _wrongCount,
+        timeTaken: totalTime,
+      );
+    }
+
+    // Daily Practice: record completion + XP against the admin's daily set.
+    if (_dailyPracticeId > 0) {
+      ContentService.submitDailyPractice(
+        practiceId: _dailyPracticeId,
         correct: _correctCount,
         wrong: _wrongCount,
         timeTaken: totalTime,
@@ -808,30 +870,32 @@ class _QuestionScreenState extends State<QuestionScreen>
     );
   }
 
-  // ── TIMER RING (counts up — green → yellow → red as time grows) ──
+  // ── TIMER (professional stopwatch chip — counts up mm:ss) ──
+  // No spinning ring: a clean static pill that shifts green → amber → red as
+  // time grows so the user has a clear, professional sense of their pace.
   Widget _buildTimerRing() {
-    Color ringColor = AppColors.success;
-    if (_timerSeconds > 10) ringColor = AppColors.yellow;
-    if (_timerSeconds > 30) ringColor = AppColors.error;
+    Color c = AppColors.success;
+    if (_timerSeconds > 30) c = AppColors.yellow;
+    if (_timerSeconds > 60) c = AppColors.error;
 
-    return SizedBox(
-      width: 56, height: 56,
-      child: Stack(
-        alignment: Alignment.center,
+    final mm = (_timerSeconds ~/ 60).toString().padLeft(2, '0');
+    final ss = (_timerSeconds % 60).toString().padLeft(2, '0');
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: c.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: c.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: 56, height: 56,
-            child: CircularProgressIndicator(
-              strokeWidth: 3,
-              backgroundColor: AppColors.textMuted.withValues(alpha: 0.2),
-              valueColor: AlwaysStoppedAnimation(ringColor.withValues(alpha: 0.9)),
-              strokeCap: StrokeCap.round,
-            ),
-          ),
-          Text('${_timerSeconds}s',
-            style: GoogleFonts.orbitron(
-              fontSize: 13, fontWeight: FontWeight.w700,
-              color: ringColor)),
+          Icon(Icons.timer_outlined, color: c, size: 16),
+          const SizedBox(width: 6),
+          Text('$mm:$ss',
+              style: GoogleFonts.orbitron(
+                  fontSize: 14, fontWeight: FontWeight.w700, color: c)),
         ],
       ),
     );

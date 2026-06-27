@@ -25,11 +25,11 @@ $imported = 0;
 
 // Sets dropdown — scoped to the section's category when present.
 if ($cat !== '') {
-    $sQ = $pdo->prepare("SELECT id, set_number, category, title, exam_name FROM sets WHERE category = ? ORDER BY set_number");
+    $sQ = $pdo->prepare("SELECT s.id, s.set_number, s.category, s.title, s.exam_name, pe.exam_year FROM sets s LEFT JOIN py_exams pe ON pe.id = s.exam_id WHERE s.category = ? ORDER BY s.set_number");
     $sQ->execute([$cat]);
     $sets = $sQ->fetchAll();
 } else {
-    $sets = $pdo->query("SELECT id, set_number, category, title, exam_name FROM sets ORDER BY category, set_number")->fetchAll();
+    $sets = $pdo->query("SELECT s.id, s.set_number, s.category, s.title, s.exam_name, pe.exam_year FROM sets s LEFT JOIN py_exams pe ON pe.id = s.exam_id ORDER BY s.category, s.set_number")->fetchAll();
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
@@ -150,7 +150,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
           <?php foreach ($sets as $set):
             $label = '';
             if ($cat === '') $label .= '[' . strtoupper($set['category']) . '] ';
-            if (!empty($set['exam_name'])) $label .= $set['exam_name'] . ' • ';
+            if (!empty($set['exam_name'])) {
+              $label .= $set['exam_name'];
+              if (!empty($set['exam_year'])) $label .= ' ' . intval($set['exam_year']);
+              $label .= ' • ';
+            }
             $label .= 'Set ' . $set['set_number'];
             if (!empty($set['title'])) $label .= ' — ' . $set['title'];
           ?>

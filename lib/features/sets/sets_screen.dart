@@ -15,6 +15,7 @@ import '../question/question_screen.dart';
 import '../premium/premium_screen.dart';
 import '../result/set_solution_screen.dart';
 import '../result/set_leaderboard_screen.dart';
+import '../../core/widgets/score_dialog.dart';
 
 class SetsScreen extends StatefulWidget {
   final String title;
@@ -251,6 +252,21 @@ class _SetsScreenState extends State<SetsScreen>
                   onTap: () { Navigator.pop(ctx); _viewSetLeaderboard(s, i); },
                 ),
               ],
+              const SizedBox(height: 12),
+              _chooserButton(
+                icon: Icons.bar_chart_rounded,
+                label: tr('View Score'),
+                color: AppColors.neonCyan,
+                filled: false,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  showSetScoreDialog(context,
+                      setId: s.id,
+                      title: s.title.isNotEmpty
+                          ? s.title
+                          : '${tr('SET')} ${(s.setNumber > 0 ? s.setNumber : i + 1).toString().padLeft(2, '0')}');
+                },
+              ),
             ],
           ),
         ),
@@ -359,7 +375,10 @@ class _SetsScreenState extends State<SetsScreen>
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(widget.category.toUpperCase(),
+            child: Text(
+                (widget.headerLabel ?? '').isNotEmpty
+                    ? widget.headerLabel!.toUpperCase()
+                    : widget.category.toUpperCase(),
                 style: GoogleFonts.orbitron(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
