@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#0D2233</color>
+    <!-- Launcher adaptive-icon background. White so the icon shows a clean
+         white fill behind the logo (round on masking launchers, white corners
+         when a launcher draws it in a square/rectangle). -->
+    <color name="ic_launcher_background">#FFFFFF</color>
 </resources>
