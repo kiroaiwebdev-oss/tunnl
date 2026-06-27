@@ -207,6 +207,26 @@ function renderTrickForm(array $cfg) {
     </div>
   </div>
 
+  <!-- Rich Content Blocks (text / image / video, any order) -->
+  <div class="card mb-16">
+    <div class="card-header">
+      <div class="card-title-text"><i class="fas fa-layer-group" style="color:var(--cyan)"></i> Rich Content Blocks
+        <span style="color:var(--muted);font-weight:400">(text · image · video, in any order)</span></div>
+    </div>
+    <p class="text-muted" style="font-size:12px;margin:0 0 12px">
+      Build the article by stacking blocks — heading, text, image or video — in <strong>any order</strong>.
+      The app shows them exactly as arranged here. Leave empty to use the plain "Article Content" above instead.
+    </p>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+      <button type="button" class="btn btn-secondary btn-sm" onclick="addBlock('heading')"><i class="fas fa-heading"></i> Heading</button>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="addBlock('text')"><i class="fas fa-paragraph"></i> Text</button>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="addBlock('image')"><i class="fas fa-image"></i> Image</button>
+      <button type="button" class="btn btn-secondary btn-sm" onclick="addBlock('video')"><i class="fas fa-video"></i> Video</button>
+    </div>
+    <div id="blockList"></div>
+    <textarea name="article_blocks" id="blocksJson" style="display:none"><?= $h($t['article_blocks'] ?? '') ?></textarea>
+  </div>
+
   <div style="display:flex;gap:12px;flex-wrap:wrap">
     <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> <?= $isEdit ? 'Update Trick' : 'Save Trick' ?></button>
     <a href="<?= $adminUrl ?>/tricks/index.php" class="btn btn-secondary"><i class="fas fa-times"></i> Cancel</a>
@@ -282,6 +302,98 @@ function previewTrickImage(input) {
   };
   reader.readAsDataURL(file);
 }
+
+// ── Rich Content Blocks editor ─────────────────────────────────────────────
+var TBLOCKS = [];
+var TUPLOAD_URL = '<?= $adminUrl ?>/tricks/upload_media.php';
+
+function tbEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function tbLoad() {
+  var raw = (document.getElementById('blocksJson').value || '').trim();
+  if (raw) { try { TBLOCKS = JSON.parse(raw) || []; } catch(e) { TBLOCKS = []; } }
+  if (!Array.isArray(TBLOCKS)) TBLOCKS = [];
+  tbRender();
+}
+function addBlock(type) {
+  TBLOCKS.push({ type: type, text: '', url: '' });
+  tbRender(); tbSync();
+}
+function tbRemove(i){ TBLOCKS.splice(i,1); tbRender(); tbSync(); }
+function tbMove(i,d){ var j=i+d; if(j<0||j>=TBLOCKS.length) return; var t=TBLOCKS[i]; TBLOCKS[i]=TBLOCKS[j]; TBLOCKS[j]=t; tbRender(); tbSync(); }
+function tbSetText(i,v){ TBLOCKS[i].text=v; tbSync(); }
+function tbSetUrl(i,v){ TBLOCKS[i].url=v; tbSync(); var p=document.getElementById('tbprev'+i); if(p) p.innerHTML=tbPreview(TBLOCKS[i]); }
+function tbSync(){ document.getElementById('blocksJson').value = JSON.stringify(TBLOCKS); }
+
+function tbUpload(i, input) {
+  var file = input.files && input.files[0];
+  if (!file) return;
+  var status = document.getElementById('tbstatus'+i);
+  if (status) status.textContent = 'Uploading…';
+  var fd = new FormData(); fd.append('file', file);
+  fetch(TUPLOAD_URL, { method:'POST', body: fd })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d && d.success && d.url) {
+        TBLOCKS[i].url = d.url; tbSync();
+        var urlInput = document.getElementById('tburl'+i); if (urlInput) urlInput.value = d.url;
+        var p = document.getElementById('tbprev'+i); if (p) p.innerHTML = tbPreview(TBLOCKS[i]);
+        if (status) status.textContent = 'Uploaded ✓';
+      } else {
+        if (status) status.textContent = (d && d.message) ? d.message : 'Upload failed';
+      }
+    })
+    .catch(function(){ if (status) status.textContent = 'Upload error'; });
+}
+
+function tbPreview(b) {
+  if (b.type === 'image' && b.url) {
+    return '<img src="'+tbEsc(b.url)+'" style="max-width:200px;max-height:130px;border-radius:10px;border:1px solid var(--border);margin-top:8px">';
+  }
+  if (b.type === 'video' && b.url) {
+    var m = b.url.match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/);
+    if (m) return '<iframe width="100%" height="200" style="border-radius:10px;border:1px solid var(--border);margin-top:8px" src="https://www.youtube.com/embed/'+m[1]+'" frameborder="0" allowfullscreen></iframe>';
+    return '<video src="'+tbEsc(b.url)+'" controls style="max-width:100%;max-height:200px;border-radius:10px;margin-top:8px"></video>';
+  }
+  return '';
+}
+
+function tbRender() {
+  var host = document.getElementById('blockList');
+  if (!host) return;
+  if (!TBLOCKS.length) {
+    host.innerHTML = '<div style="color:#5b6b7c;font-size:12px;padding:10px;border:1px dashed var(--border);border-radius:10px;text-align:center">No blocks yet — add Heading / Text / Image / Video above.</div>';
+    return;
+  }
+  var labels = { heading:'Heading', text:'Text', image:'Image', video:'Video' };
+  var icons  = { heading:'fa-heading', text:'fa-paragraph', image:'fa-image', video:'fa-video' };
+  var html = '';
+  for (var i=0;i<TBLOCKS.length;i++){
+    var b = TBLOCKS[i];
+    html += '<div style="border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;background:#0b1220">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
+    html += '<span style="font-size:12px;font-weight:700;color:var(--cyan)"><i class="fas '+icons[b.type]+'"></i> '+labels[b.type]+' #'+(i+1)+'</span>';
+    html += '<span style="display:flex;gap:6px">'
+         + '<button type="button" class="btn btn-secondary btn-sm" onclick="tbMove('+i+',-1)" title="Move up"><i class="fas fa-arrow-up"></i></button>'
+         + '<button type="button" class="btn btn-secondary btn-sm" onclick="tbMove('+i+',1)" title="Move down"><i class="fas fa-arrow-down"></i></button>'
+         + '<button type="button" class="btn btn-secondary btn-sm" onclick="tbRemove('+i+')" title="Delete" style="color:#FCA5A5"><i class="fas fa-trash"></i></button>'
+         + '</span></div>';
+    if (b.type === 'heading' || b.type === 'text') {
+      html += '<textarea class="form-textarea" rows="'+(b.type==='heading'?1:4)+'" oninput="tbSetText('+i+',this.value)" placeholder="'+(b.type==='heading'?'Section heading…':'Write text…')+'">'+tbEsc(b.text)+'</textarea>';
+    } else {
+      var accept = b.type==='image' ? 'image/*' : 'video/mp4,video/quicktime,video/webm';
+      html += '<input type="file" accept="'+accept+'" class="form-input" style="padding:8px" onchange="tbUpload('+i+',this)">';
+      html += '<input type="url" id="tburl'+i+'" class="form-input" style="margin-top:8px" value="'+tbEsc(b.url)+'" oninput="tbSetUrl('+i+',this.value)" placeholder="…or paste '+(b.type==='image'?'image':'YouTube / .mp4')+' URL">';
+      html += '<div style="font-size:11px;color:var(--muted);margin-top:4px" id="tbstatus'+i+'"></div>';
+      html += '<div id="tbprev'+i+'">'+tbPreview(b)+'</div>';
+    }
+    html += '</div>';
+  }
+  host.innerHTML = html;
+}
+
+document.addEventListener('DOMContentLoaded', tbLoad);
+
 </script>
 
 <?php } ?>

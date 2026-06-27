@@ -16,6 +16,7 @@ class TrickModel {
   final bool isNew;
   final bool isPremium;
   final String imageUrl;
+  final List<Map<String, dynamic>> articleBlocks;
 
   TrickModel({
     required this.id,
@@ -33,6 +34,7 @@ class TrickModel {
     required this.isNew,
     this.isPremium = false,
     this.imageUrl = '',
+    this.articleBlocks = const [],
   });
 
   String get durationLabel {
@@ -63,5 +65,11 @@ class TrickModel {
         isNew: j['is_new'] == 1 || j['is_new'] == true,
         isPremium: j['is_premium'] == 1 || j['is_premium'] == true,
         imageUrl: (j['image_url'] ?? '').toString(),
+        articleBlocks: (j['article_blocks'] is List)
+            ? (j['article_blocks'] as List)
+                .whereType<Map>()
+                .map((e) => Map<String, dynamic>.from(e))
+                .toList()
+            : const [],
       );
 }

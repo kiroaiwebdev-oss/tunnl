@@ -33,6 +33,18 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
 
   String get _videoDuration => (widget.data['duration'] ?? '').toString();
 
+  // Rich content blocks (text / heading / image / video) — admin-built order.
+  List<Map<String, dynamic>> get _articleBlocks {
+    final b = widget.data['articleBlocks'];
+    if (b is List) {
+      return b
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+    }
+    return const [];
+  }
+
   @override
   void initState() {
     super.initState();
@@ -63,7 +75,8 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
     final hasVideo = widget.data['hasVideo'] == true && _videoUrl.isNotEmpty;
     final hasArticle =
         (widget.data['hasArticle'] == true && _articleContent.trim().isNotEmpty)
-            || _imageUrl.isNotEmpty;
+            || _imageUrl.isNotEmpty
+            || _articleBlocks.isNotEmpty;
 
     return Scaffold(
       backgroundColor: AppColors.darkBg,
@@ -362,28 +375,117 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
             ),
           ],
           const SizedBox(height: 16),
-          ...paragraphs.map((para) {
-            final isHeading = para.length <= 60 &&
-                !para.endsWith('.') &&
-                !para.contains('\n');
-            return Padding(
-              padding: EdgeInsets.only(top: isHeading ? 14 : 0, bottom: 10),
-              child: Text(
-                para,
-                style: GoogleFonts.poppins(
-                  fontSize: isHeading ? 16 : 13,
-                  fontWeight:
-                      isHeading ? FontWeight.w700 : FontWeight.w400,
-                  color: isHeading ? Colors.white : AppColors.textSecondary,
-                  height: 1.6,
+          if (_articleBlocks.isNotEmpty)
+            ..._buildBlockWidgets()
+          else
+            ...paragraphs.map((para) {
+              final isHeading = para.length <= 60 &&
+                  !para.endsWith('.') &&
+                  !para.contains('\n');
+              return Padding(
+                padding: EdgeInsets.only(top: isHeading ? 14 : 0, bottom: 10),
+                child: Text(
+                  para,
+                  style: GoogleFonts.poppins(
+                    fontSize: isHeading ? 16 : 13,
+                    fontWeight:
+                        isHeading ? FontWeight.w700 : FontWeight.w400,
+                    color: isHeading ? Colors.white : AppColors.textSecondary,
+                    height: 1.6,
+                  ),
                 ),
-              ),
-            );
-          }),
+              );
+            }),
           const SizedBox(height: 30),
         ],
       ),
     );
+  }
+
+  // ── Render admin-built rich content blocks in order ──
+  List<Widget> _buildBlockWidgets() {
+    final widgets = <Widget>[];
+    for (final b in _articleBlocks) {
+      final type = (b['type'] ?? '').toString();
+      final text = (b['text'] ?? '').toString();
+      final url = (b['url'] ?? '').toString();
+
+      if (type == 'heading' && text.trim().isNotEmpty) {
+        widgets.add(Padding(
+          padding: const EdgeInsets.only(top: 16, bottom: 8),
+          child: Text(text,
+              style: GoogleFonts.poppins(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  height: 1.4)),
+        ));
+      } else if (type == 'text' && text.trim().isNotEmpty) {
+        widgets.add(Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Text(text,
+              style: GoogleFonts.poppins(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.textSecondary,
+                  height: 1.7)),
+        ));
+      } else if (type == 'image' && url.isNotEmpty) {
+        widgets.add(Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: Image.network(
+              url,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              loadingBuilder: (c, child, progress) => progress == null
+                  ? child
+                  : Container(
+                      height: 160,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: AppColors.darkCard,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const CircularProgressIndicator(
+                          color: AppColors.neonCyan),
+                    ),
+            ),
+          ),
+        ));
+      } else if (type == 'video' && url.isNotEmpty) {
+        widgets.add(Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: InAppVideoPlayer.canPlayInline(url)
+              ? InAppVideoPlayer(url: url, autoPlay: false)
+              : Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.darkCard,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                        color: AppColors.textMuted.withValues(alpha: 0.15)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.videocam_off_rounded,
+                          color: AppColors.textMuted, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(tr('Video unavailable'),
+                            style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: AppColors.textSecondary)),
+                      ),
+                    ],
+                  ),
+                ),
+        ));
+      }
+    }
+    return widgets;
   }
 
   // ── VIDEO SECTION (admin-driven, plays IN-APP) ───

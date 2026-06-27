@@ -252,6 +252,17 @@ try {
         if ((int)$ti->fetchColumn() === 0) {
             $pdo->exec("ALTER TABLE `tricks` ADD COLUMN `image_url` VARCHAR(255) DEFAULT ''");
         }
+        // article_blocks — JSON array of rich content blocks (text / heading /
+        // image / video) so an article can interleave media anywhere. The app
+        // renders these in order; falls back to article_content when empty.
+        $tab = $pdo->prepare(
+            "SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'tricks' AND COLUMN_NAME = 'article_blocks'"
+        );
+        $tab->execute();
+        if ((int)$tab->fetchColumn() === 0) {
+            $pdo->exec("ALTER TABLE `tricks` ADD COLUMN `article_blocks` LONGTEXT NULL");
+        }
     } catch (Throwable $e) { /* ignore */ }
 
     // ── sets/questions: allow the 'tricks' practice category ──────────

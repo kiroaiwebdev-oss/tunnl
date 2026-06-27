@@ -25,6 +25,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $videoUrl = tunnl_trick_video_url($_POST['video_url'] ?? '', $error);
     $imageUrl = tunnl_trick_image_url($_POST['image_url'] ?? '', $error);
     $hasVideo = ($videoUrl !== '') ? 1 : (isset($_POST['has_video']) ? 1 : 0);
+    $blocksJson = trim($_POST['article_blocks'] ?? '');
+    $hasBlocks  = ($blocksJson !== '' && $blocksJson !== '[]');
+    $hasArticle = (isset($_POST['has_article']) || $hasBlocks || trim($_POST['article_content'] ?? '') !== '') ? 1 : 0;
     if ($error === '') {
       try {
         $pdo->prepare("
@@ -32,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               chapter_number=?, title=?, subtitle=?, category=?, difficulty=?,
               image_url=?,
               has_video=?, video_url=?, video_duration=?,
-              has_article=?, article_content=?, read_duration=?,
+              has_article=?, article_content=?, read_duration=?, article_blocks=?,
               is_new=?, is_premium=?, is_active=?
             WHERE id=?
         ")->execute([
@@ -45,9 +48,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $hasVideo,
             $videoUrl,
             intval($_POST['video_duration'] ?? 0),
-            isset($_POST['has_article']) ? 1 : 0,
+            $hasArticle,
             trim($_POST['article_content'] ?? ''),
             intval($_POST['read_duration']  ?? 5),
+            $blocksJson,
             isset($_POST['is_new'])      ? 1 : 0,
             isset($_POST['is_premium'])  ? 1 : 0,
             isset($_POST['is_active'])   ? 1 : 0,

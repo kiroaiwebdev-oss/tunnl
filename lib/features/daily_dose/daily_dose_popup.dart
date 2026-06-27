@@ -128,6 +128,10 @@ class _DailyDoseSheetState extends State<_DailyDoseSheet>
                   children: [
                     _buildHeader(d),
                     const SizedBox(height: 16),
+                    if (d.imageUrl.isNotEmpty) ...[
+                      _buildImage(d),
+                      const SizedBox(height: 12),
+                    ],
                     _buildContentCard(d),
                     if (d.example.isNotEmpty) ...[
                       const SizedBox(height: 12),
@@ -228,6 +232,31 @@ class _DailyDoseSheetState extends State<_DailyDoseSheet>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildImage(DailyDoseModel d) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Image.network(
+        d.imageUrl,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+        loadingBuilder: (c, child, progress) => progress == null
+            ? child
+            : Container(
+                height: 160,
+                decoration: BoxDecoration(
+                  color: AppColors.darkCard,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Center(
+                  child: CircularProgressIndicator(
+                      color: AppColors.neonCyan, strokeWidth: 2),
+                ),
+              ),
+      ),
     );
   }
 
