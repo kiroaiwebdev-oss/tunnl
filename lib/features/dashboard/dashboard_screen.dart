@@ -48,6 +48,9 @@ class _DashboardScreenState extends State<DashboardScreen>
   bool _bannersLoading = true;
   int  _currentBanner  = 0;
 
+  // ── Challenge winner announcement (shown above Daily Practice) ──
+  Map<String, dynamic>? _challengeWinner;
+
   late AnimationController _entryCtrl;
   late Animation<double>   _fadeAnim;
 
@@ -151,7 +154,20 @@ class _DashboardScreenState extends State<DashboardScreen>
     await Future.wait([
       _loadUserProfile(),
       _loadBanners(),
+      _loadWinner(),
     ]);
+  }
+
+  // ── Latest challenge winner (admin-declared) ──────
+  Future<void> _loadWinner() async {
+    try {
+      final res = await UserService.getWeeklyChallenge();
+      final w = res['winner_announcement'];
+      if (mounted) {
+        setState(() =>
+            _challengeWinner = (w is Map) ? w.cast<String, dynamic>() : null);
+      }
+    } catch (_) {}
   }
 
   // ── User profile from API ─────────────────────────
@@ -313,11 +329,17 @@ class _DashboardScreenState extends State<DashboardScreen>
                           const SizedBox(height: 24),
 
                           // ── Dashboard items ───────────
-                          ..._coreItems.asMap().entries.map((entry) {
-                            return _DashboardItem(
-                              data:  entry.value,
-                              onTap: () => _onItemTap(entry.key),
-                            );
+                          ..._coreItems.asMap().entries.expand((entry) {
+                            return [
+                              // Challenge winner announcement sits right above
+                              // the "Daily Practice MCQs" item (index 4).
+                              if (entry.key == 4 && _challengeWinner != null)
+                                _buildWinnerBanner(),
+                              _DashboardItem(
+                                data: entry.value,
+                                onTap: () => _onItemTap(entry.key),
+                              ),
+                            ];
                           }),
 
                           const SizedBox(height: 20),
@@ -742,6 +764,87 @@ class _DashboardScreenState extends State<DashboardScreen>
       ),
       onTap: onTap,
       horizontalTitleGap: 8,
+    );
+  }
+
+  // ── CHALLENGE WINNER BANNER ───────────────────────
+  Widget _buildWinnerBanner() {
+    final w = _challengeWinner!;
+    final winners = (w['winners'] as List?) ?? const [];
+    if (winners.isEmpty) return const SizedBox.shrink();
+    final first = (winners.first as Map).cast<String, dynamic>();
+    final name = (first['name'] ?? '').toString();
+    final prize = (first['prize'] as num?)?.toDouble() ?? 0;
+    final title = (w['challenge_title'] ?? tr('Challenge')).toString();
+    final more = winners.length - 1;
+
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => const SolveEarnLeaderboardScreen(),
+      )),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppColors.yellow.withValues(alpha: 0.18),
+              AppColors.orange.withValues(alpha: 0.08),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.yellow.withValues(alpha: 0.5)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.yellow.withValues(alpha: 0.18),
+                border:
+                    Border.all(color: AppColors.yellow.withValues(alpha: 0.5)),
+              ),
+              child: const Icon(Icons.emoji_events_rounded,
+                  color: AppColors.yellow, size: 24),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('🏆 ${tr('Challenge Winner')}',
+                      style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.yellow,
+                          letterSpacing: 0.5)),
+                  const SizedBox(height: 2),
+                  Text(
+                    prize > 0
+                        ? '$name ${tr('won')} ₹${prize.toStringAsFixed(0)}${more > 0 ? ' +$more ${tr('more')}' : ''}'
+                        : '$name${more > 0 ? ' +$more ${tr('more')}' : ''}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white),
+                  ),
+                  Text(title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.poppins(
+                          fontSize: 11, color: AppColors.textSecondary)),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded,
+                color: AppColors.yellow, size: 14),
+          ],
+        ),
+      ),
     );
   }
 

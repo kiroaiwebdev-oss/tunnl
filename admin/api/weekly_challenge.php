@@ -37,6 +37,40 @@ function wc_day_info(PDO $pdo, array $challenge): array {
 // GET — Active challenge (today's questions + aggregate leaderboard)
 // ══════════════════════════════════════════════════════
 if ($method === 'GET') {
+    // Latest challenge that has admin-declared winners → dashboard announcement.
+    $winnerAnnounce = null;
+    $wc = $pdo->query("
+        SELECT w.id, w.title, w.prize_amount
+        FROM weekly_challenges w
+        WHERE EXISTS (SELECT 1 FROM challenge_entries e
+                      WHERE e.challenge_id = w.id AND e.is_winner = 1)
+        ORDER BY COALESCE(w.end_date, w.created_at) DESC, w.id DESC
+        LIMIT 1
+    ")->fetch();
+    if ($wc) {
+        $ws = $pdo->prepare("
+            SELECT u.name, MAX(e.prize_won) AS prize_won
+            FROM challenge_entries e
+            JOIN users u ON e.user_id = u.id
+            WHERE e.challenge_id = ? AND e.is_winner = 1
+            GROUP BY e.user_id, u.name
+            ORDER BY prize_won DESC, u.name ASC
+            LIMIT 5
+        ");
+        $ws->execute([$wc['id']]);
+        $winners = array_map(fn($r) => [
+            'name'  => $r['name'] ?: 'Anonymous',
+            'prize' => floatval($r['prize_won'] ?? 0),
+        ], $ws->fetchAll());
+        if ($winners) {
+            $winnerAnnounce = [
+                'challenge_id'    => intval($wc['id']),
+                'challenge_title' => $wc['title'],
+                'winners'         => $winners,
+            ];
+        }
+    }
+
     $challenge = $pdo->query("
         SELECT * FROM weekly_challenges
         WHERE status='active'
@@ -45,7 +79,7 @@ if ($method === 'GET') {
     ")->fetch();
 
     if (!$challenge) {
-        response(['success'=>true,'challenge'=>null,'message'=>'No active challenge']);
+        response(['success'=>true,'challenge'=>null,'winner_announcement'=>$winnerAnnounce,'message'=>'No active challenge']);
     }
 
     [$day, $sevenDay, $totalAssigned] = wc_day_info($pdo, $challenge);
@@ -125,6 +159,7 @@ if ($method === 'GET') {
 
     response([
         'success'     => true,
+        'winner_announcement' => $winnerAnnounce,
         'challenge'   => [
             'id'             => intval($challenge['id']),
             'title'          => $challenge['title'],
