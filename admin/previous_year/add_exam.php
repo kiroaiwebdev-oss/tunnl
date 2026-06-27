@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_POST['exam_category']  ?? 'OTHER',
             $_POST['icon']           ?? 'school',
             $iconUrl,
-            intval($_POST['exam_year']),
+            0,
             !empty($_POST['exam_date']) ? $_POST['exam_date'] : null,
             intval($_POST['total_sets']     ?? 1),
             intval($_POST['total_questions']?? 25),
@@ -180,16 +180,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <div class="form-row">
     <div class="form-group">
-      <label class="form-label">Year *</label>
-      <select name="exam_year" class="form-select" required>
-        <?php for ($y = date('Y'); $y >= 2015; $y--): ?>
-        <option value="<?= $y ?>"><?= $y ?></option>
-        <?php endfor; ?>
-      </select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Exam Date</label>
+      <label class="form-label">Exam Date <span style="color:var(--muted);font-weight:400">(optional)</span></label>
       <input type="date" name="exam_date" class="form-input">
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Year is no longer set here — add it on each question (manual add / CSV) so it shows above the question in the app.</div>
     </div>
   </div>
 

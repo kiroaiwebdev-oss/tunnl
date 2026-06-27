@@ -36,6 +36,11 @@ class QuestionModel {
   final String optionDHi;
   final String explanationHi;
 
+  // Previous-Year tagging (entered at question add / CSV import time). Shown
+  // above the question in the app. Empty for non-PYQ questions.
+  final String examName;
+  final String examYear;
+
   QuestionModel({
     required this.id,
     required this.questionText,
@@ -54,6 +59,8 @@ class QuestionModel {
     this.optionCHi = '',
     this.optionDHi = '',
     this.explanationHi = '',
+    this.examName = '',
+    this.examYear = '',
   });
 
   String get correctLetter {
@@ -155,6 +162,8 @@ class QuestionModel {
       optionCHi: (optHi is Map ? (optHi['c'] ?? '') : '').toString(),
       optionDHi: (optHi is Map ? (optHi['d'] ?? '') : '').toString(),
       explanationHi: (j['explanation_hi'] ?? '').toString(),
+      examName: (j['exam_name'] ?? '').toString(),
+      examYear: (j['exam_year'] ?? '').toString(),
     );
   }
 }

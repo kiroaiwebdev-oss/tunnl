@@ -186,6 +186,10 @@ try {
         'option_c_hi'      => "TEXT",
         'option_d_hi'      => "TEXT",
         'explanation_hi'   => "TEXT",
+        // Previous-Year tagging entered at question add / CSV import time.
+        // The app shows "<exam_name> · <exam_year>" above each PYQ question.
+        'exam_name'        => "VARCHAR(120) DEFAULT ''",
+        'exam_year'        => "VARCHAR(20) DEFAULT ''",
     ] as $col => $type) {
         try {
             $chk = $pdo->prepare(

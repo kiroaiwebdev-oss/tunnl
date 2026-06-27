@@ -186,7 +186,7 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
       return;
     }
     final examId = (exam['id'] as num?)?.toInt() ?? 0;
-    final name = '${exam['exam_name']} ${exam['exam_year'] ?? ''}'.trim();
+    final name = '${exam['exam_name'] ?? ''}'.trim();
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => SetsScreen(
@@ -412,13 +412,12 @@ class _PreviousYearScreenState extends State<PreviousYearScreen>
         itemBuilder: (_, i) {
           final exam = flat[i];
           final name = (exam['exam_name'] ?? '').toString();
-          final year = (exam['exam_year'] as num?)?.toInt() ?? 0;
           final color = _examColor(name);
           final icon = _resolveIcon(exam['icon']?.toString(), name);
           final locked = exam['can_access'] != true;
           final setCount = (exam['set_count'] as num?)?.toInt() ?? 0;
           return _ExamSquare(
-            name: year > 0 ? '$name $year' : name,
+            name: name,
             icon: icon,
             iconUrl: (exam['icon_url'] ?? '').toString(),
             color: color,

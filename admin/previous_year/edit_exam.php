@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_POST['exam_category'] ?? 'OTHER',
             $_POST['icon']          ?? 'school',
             $iconUrl,
-            intval($_POST['exam_year']),
+            intval($exam['exam_year'] ?? 0),
             !empty($_POST['exam_date']) ? $_POST['exam_date'] : null,
             intval($_POST['total_sets'] ?? 1),
             intval($_POST['total_questions'] ?? 25),
@@ -164,20 +164,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
            placeholder="https://example.com/icon.png"
            value="<?= htmlspecialchars($exam['icon_url'] ?? '') ?>">
     <p style="font-size:11px;color:var(--muted);margin-top:4px">Upload takes priority if both given.</p>
+  </div>
 
   <div class="form-row">
     <div class="form-group">
-      <label class="form-label">Year *</label>
-      <select name="exam_year" class="form-select" required>
-        <?php for ($y=date('Y'); $y>=2015; $y--): ?>
-        <option value="<?= $y ?>" <?= ($exam['exam_year'] ?? '') == $y ? 'selected' : '' ?>><?= $y ?></option>
-        <?php endfor; ?>
-      </select>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Exam Date</label>
+      <label class="form-label">Exam Date <span style="color:var(--muted);font-weight:400">(optional)</span></label>
       <input type="date" name="exam_date" class="form-input"
         value="<?= htmlspecialchars($exam['exam_date'] ?? '') ?>">
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">Year is now set per question (manual add / CSV) and shows above the question in the app.</div>
     </div>
   </div>
 

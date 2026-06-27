@@ -37,6 +37,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
         $category = $_POST['category'] ?: $cat;
         $set_id   = intval($_POST['set_id']);
         $file     = $_FILES['csv_file']['tmp_name'];
+        // Exam + Year for Previous Year imports (applied to every row, unless the
+        // CSV itself provides exam_name / exam_year columns per row).
+        $examNameForm = trim($_POST['exam_name'] ?? '');
+        $examYearForm = trim($_POST['exam_year'] ?? '');
 
         if (!$set_id) throw new Exception('Please choose a target set.');
         if (!$file)   throw new Exception('No file uploaded');
@@ -48,17 +52,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
             INSERT INTO questions
               (set_id, category, question_text, option_a, option_b, option_c, option_d,
                correct_option, explanation, difficulty, is_active,
-               question_text_hi, option_a_hi, option_b_hi, option_c_hi, option_d_hi, explanation_hi)
-            VALUES (?,?,?,?,?,?,?,?,?,?,1,?,?,?,?,?,?)
+               question_text_hi, option_a_hi, option_b_hi, option_c_hi, option_d_hi, explanation_hi,
+               exam_name, exam_year)
+            VALUES (?,?,?,?,?,?,?,?,?,?,1,?,?,?,?,?,?,?,?)
         ");
 
         while (($row = fgetcsv($handle)) !== false) {
             if (count($row) < 6) continue;
             [$question_text, $option_a, $option_b, $option_c, $option_d,
              $correct_option, $explanation, $difficulty,
-             $q_hi, $a_hi, $b_hi, $c_hi, $d_hi, $e_hi] = array_pad($row, 14, '');
+             $q_hi, $a_hi, $b_hi, $c_hi, $d_hi, $e_hi,
+             $row_exam, $row_year] = array_pad($row, 16, '');
 
             if (empty(trim($question_text))) continue;
+
+            $examName = trim($row_exam) !== '' ? trim($row_exam) : $examNameForm;
+            $examYear = trim($row_year) !== '' ? trim($row_year) : $examYearForm;
 
             $stmt->execute([
                 $set_id, $category,
@@ -69,6 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                 trim($explanation),
                 in_array(strtolower(trim($difficulty)), ['easy','hard']) ? strtolower(trim($difficulty)) : 'medium',
                 trim($q_hi), trim($a_hi), trim($b_hi), trim($c_hi), trim($d_hi), trim($e_hi),
+                $examName, $examYear,
             ]);
             $imported++;
         }
@@ -118,6 +128,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
     <br><br>
     <span style="color:var(--muted)">Optional Hindi columns (append after difficulty, in order):</span><br>
     question_text_hi, option_a_hi, option_b_hi, option_c_hi, option_d_hi, explanation_hi
+    <br><br>
+    <span style="color:var(--muted)">Optional Previous-Year columns (append last):</span><br>
+    exam_name, exam_year &nbsp; <span style="color:var(--muted)">— or just fill the Exam Name &amp; Year boxes above.</span>
   </div>
   <div style="margin-top:12px;display:flex;gap:16px;flex-wrap:wrap">
     <span style="font-size:12px;color:var(--muted)"><i class="fas fa-check" style="color:var(--success)"></i> correct_option: A / B / C / D</span>
@@ -167,6 +180,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
         <div style="font-size:11px;color:var(--muted);margin-top:4px">
           Questions will be imported into this set.
         </div>
+      </div>
+    </div>
+
+    <div class="form-row" style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:12px;margin-bottom:4px">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label"><i class="fas fa-history" style="color:var(--warning)"></i> Exam Name <span style="color:var(--muted);font-weight:400">(Previous Year)</span></label>
+        <input type="text" name="exam_name" class="form-input" placeholder="e.g. SSC CGL" value="<?= htmlspecialchars($_POST['exam_name'] ?? '') ?>">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Year</label>
+        <input type="text" name="exam_year" class="form-input" placeholder="e.g. 2023" value="<?= htmlspecialchars($_POST['exam_year'] ?? '') ?>">
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Applied to every imported question (shown above the question in the app). Optional CSV columns <code>exam_name, exam_year</code> override this per row.</div>
       </div>
     </div>
 

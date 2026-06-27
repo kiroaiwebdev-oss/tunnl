@@ -118,6 +118,8 @@ class _QuestionScreenState extends State<QuestionScreen>
       // No set_id provided (e.g. the "Tunnelity" speed test from hub) →
       // load the first available set of THIS screen's category. Falls back to
       // mcq only if the requested category has no sets yet.
+      final isTunnlity =
+          widget.mode == 'tunnelity' || widget.category == 'tunnlity';
       try {
         var sets = await ContentService.getSets(
           widget.category.isEmpty ? 'mcq' : widget.category,
@@ -133,7 +135,10 @@ class _QuestionScreenState extends State<QuestionScreen>
           return;
         }
         final setId = sets.first.id;
-        final qs = await ContentService.getQuestions(setId, shuffle: true);
+        // Tunnlity: pull the FULL bank so we can guarantee a different TYPE of
+        // question for every slot (and a fresh mix on every attempt).
+        final qs = await ContentService.getQuestions(setId,
+            shuffle: true, pool: isTunnlity);
         _applyQuestions(_maybeVariety(qs));
       } catch (e) {
         _showApiError('Failed to load. Check connection.');
@@ -901,8 +906,21 @@ class _QuestionScreenState extends State<QuestionScreen>
     );
   }
 
+  // Exam · Year badge shown above each question. Uses the question's own
+  // exam/year (entered at add/CSV time); falls back to the screen headerLabel.
+  String _examBadge(QuestionModel q) {
+    final name = q.examName.trim().isNotEmpty
+        ? q.examName.trim()
+        : widget.headerLabel.trim();
+    final parts = <String>[];
+    if (name.isNotEmpty) parts.add(name);
+    if (q.examYear.trim().isNotEmpty) parts.add(q.examYear.trim());
+    return parts.join(' · ');
+  }
+
   // ── QUESTION CARD ─────────────────────────────────
   Widget _buildQuestionCard(QuestionModel q, String stage) {
+    final badge = _examBadge(q);
     return SlideTransition(
       position: _questionSlideAnim,
       child: FadeTransition(
@@ -918,7 +936,7 @@ class _QuestionScreenState extends State<QuestionScreen>
           ),
           child: Column(
             children: [
-              if (widget.headerLabel.isNotEmpty) ...[
+              if (badge.isNotEmpty) ...[
                 Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 12, vertical: 5),
@@ -934,7 +952,7 @@ class _QuestionScreenState extends State<QuestionScreen>
                       const Icon(Icons.history_edu_rounded,
                           color: AppColors.yellow, size: 13),
                       const SizedBox(width: 6),
-                      Text(widget.headerLabel,
+                      Text(badge,
                           style: GoogleFonts.poppins(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,

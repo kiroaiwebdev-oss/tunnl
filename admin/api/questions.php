@@ -22,12 +22,17 @@ if ($set['is_premium'] && !$user['is_premium']) {
 // Questions per set is admin-controlled via the set's `total_questions`
 // column (defaults to 10). With shuffle on, this also gives a random subset
 // from a larger pool (e.g. Tunnlity's 200-question bank → 10 random each time).
+// With pool=1 we return the FULL active question bank (no cap) so the app can
+// pick a type-diverse subset itself (used by Test Your Tunnlity).
+$pool  = !empty($_GET['pool']);
 $limit = intval($set['total_questions'] ?? 0);
 if ($limit <= 0) $limit = 10;
+if ($pool) $limit = 1000000;
 
 $cols = "id, question_text, option_a, option_b, option_c, option_d,
          correct_option, explanation, difficulty, time_limit,
-         question_text_hi, option_a_hi, option_b_hi, option_c_hi, option_d_hi, explanation_hi";
+         question_text_hi, option_a_hi, option_b_hi, option_c_hi, option_d_hi, explanation_hi,
+         exam_name, exam_year";
 
 if (!empty($_GET['shuffle'])) {
     // ── Type-diverse random pick ──────────────────────────────────────────
@@ -91,9 +96,12 @@ if (!empty($_GET['shuffle'])) {
     $questions = $stmt->fetchAll();
 }
 // Auto-translate any questions missing Hindi (via Groq) and cache into the DB,
-// so the in-quiz language toggle shows real Hindi for ANY set.
-require_once __DIR__ . '/_translate_lib.php';
-tunnl_fill_hindi($pdo, $questions);
+// so the in-quiz language toggle shows real Hindi for ANY set. Skipped for
+// pool requests (large banks, e.g. Tunnlity) to keep the response fast.
+if (!$pool) {
+    require_once __DIR__ . '/_translate_lib.php';
+    tunnl_fill_hindi($pdo, $questions);
+}
 
 response([
     'success'   => true,
@@ -124,6 +132,8 @@ response([
             'd' => $q['option_d_hi'] ?? '',
         ],
         'explanation_hi' => $q['explanation_hi'] ?? '',
+        'exam_name'      => $q['exam_name'] ?? '',
+        'exam_year'      => $q['exam_year'] ?? '',
         'difficulty'     => $q['difficulty'],
         'time_limit'     => intval($q['time_limit'] ?? 30),
     ], $questions),

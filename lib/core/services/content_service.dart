@@ -110,10 +110,12 @@ class ContentService {
   static Future<List<QuestionModel>> getQuestions(
     int setId, {
     bool shuffle = false,
+    bool pool = false,
   }) async {
     try {
       final params = <String, String>{'set_id': '$setId'};
       if (shuffle) params['shuffle'] = '1';
+      if (pool) params['pool'] = '1';
 
       final res = await ApiClient.get(
         ApiEndpoints.questions,

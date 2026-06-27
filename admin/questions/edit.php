@@ -22,7 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               set_id=?, category=?, question_text=?,
               option_a=?, option_b=?, option_c=?, option_d=?,
               correct_option=?, explanation=?, difficulty=?,
-              question_text_hi=?, option_a_hi=?, option_b_hi=?, option_c_hi=?, option_d_hi=?, explanation_hi=?
+              question_text_hi=?, option_a_hi=?, option_b_hi=?, option_c_hi=?, option_d_hi=?, explanation_hi=?,
+              exam_name=?, exam_year=?
             WHERE id=?
         ")->execute([
             $_POST['set_id'], $_POST['category'],
@@ -38,6 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             trim($_POST['option_c_hi'] ?? ''),
             trim($_POST['option_d_hi'] ?? ''),
             trim($_POST['explanation_hi'] ?? ''),
+            trim($_POST['exam_name'] ?? ''),
+            trim($_POST['exam_year'] ?? ''),
             $id
         ]);
         $success = 'Question updated successfully!';
@@ -165,6 +168,17 @@ require_once dirname(__DIR__) . '/includes/header.php';
     <div class="form-group">
       <label class="form-label">Explanation (Hindi)</label>
       <textarea name="explanation_hi" class="form-textarea" rows="2" placeholder="व्याख्या..."><?= htmlspecialchars($question['explanation_hi'] ?? '') ?></textarea>
+    </div>
+  </div>
+
+  <div class="card mb-16">
+    <div class="card-header">
+      <div class="card-title-text"><i class="fas fa-history" style="color:var(--warning)"></i> Previous Year Tag (Exam &amp; Year)</div>
+    </div>
+    <p class="text-muted" style="font-size:12px;margin:0 0 10px">Shown above the question in the app (e.g. "SSC CGL · 2023"). Leave blank for non-PYQ.</p>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Exam Name</label><input type="text" name="exam_name" class="form-input" placeholder="e.g. SSC CGL" value="<?= htmlspecialchars($question['exam_name'] ?? '') ?>"></div>
+      <div class="form-group"><label class="form-label">Year</label><input type="text" name="exam_year" class="form-input" placeholder="e.g. 2023" value="<?= htmlspecialchars($question['exam_year'] ?? '') ?>"></div>
     </div>
   </div>
 
