@@ -17,6 +17,7 @@ class TrickModel {
   final bool isPremium;
   final String imageUrl;
   final List<Map<String, dynamic>> articleBlocks;
+  final String articleHtml;
   final int practiceSetId;
 
   TrickModel({
@@ -36,6 +37,7 @@ class TrickModel {
     this.isPremium = false,
     this.imageUrl = '',
     this.articleBlocks = const [],
+    this.articleHtml = '',
     this.practiceSetId = 0,
   });
 
@@ -73,6 +75,7 @@ class TrickModel {
                 .map((e) => Map<String, dynamic>.from(e))
                 .toList()
             : const [],
+        articleHtml: (j['article_html'] ?? '').toString(),
         practiceSetId: (j['practice_set_id'] as num?)?.toInt() ?? 0,
       );
 }

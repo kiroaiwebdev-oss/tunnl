@@ -57,6 +57,7 @@ function formatTrick(array $t): array {
         'video_duration' => intval($t['video_duration']),
         'has_article'    => (bool)$t['has_article'],
         'article_content'=> $t['has_article'] ? $t['article_content'] : null,
+        'article_html'   => $t['article_html'] ?? '',
         'article_blocks' => (!empty($t['article_blocks'])
                               ? (json_decode($t['article_blocks'], true) ?: [])
                               : []),

@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_html/flutter_html.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/app_strings.dart';
 import '../../core/widgets/in_app_video_player.dart';
+import '../../core/widgets/score_dialog.dart';
 import '../question/question_screen.dart';
+import '../result/set_solution_screen.dart';
+import '../result/set_leaderboard_screen.dart';
 
 class TricksDetailScreen extends StatefulWidget {
   final Map<String, dynamic> data;
@@ -50,6 +56,43 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
   int get _practiceSetId =>
       (widget.data['practiceSetId'] as num?)?.toInt() ?? 0;
 
+  // Rich article as HTML (from the admin WYSIWYG editor). Preferred renderer.
+  String get _articleHtml => (widget.data['articleHtml'] ?? '').toString();
+
+  // Whether the user already completed this trick's practice set.
+  bool _practiceDone = false;
+
+  Future<void> _loadPracticeDone() async {
+    if (_practiceSetId <= 0) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString('completed_sets_tricks');
+      if (raw != null) {
+        final list = (jsonDecode(raw) as List).map((e) => (e as num).toInt());
+        if (mounted) {
+          setState(() => _practiceDone = list.contains(_practiceSetId));
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _markPracticeDone() async {
+    if (_practiceSetId <= 0) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString('completed_sets_tricks');
+      final set = <int>{};
+      if (raw != null) {
+        for (final e in (jsonDecode(raw) as List)) {
+          set.add((e as num).toInt());
+        }
+      }
+      set.add(_practiceSetId);
+      await prefs.setString('completed_sets_tricks', jsonEncode(set.toList()));
+      if (mounted) setState(() => _practiceDone = true);
+    } catch (_) {}
+  }
+
   @override
   void initState() {
     super.initState();
@@ -67,6 +110,7 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
     _fadeAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _entryCtrl, curve: Curves.easeOut),
     );
+    _loadPracticeDone();
   }
 
   @override
@@ -81,7 +125,8 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
     final hasArticle =
         (widget.data['hasArticle'] == true && _articleContent.trim().isNotEmpty)
             || _imageUrl.isNotEmpty
-            || _articleBlocks.isNotEmpty;
+            || _articleBlocks.isNotEmpty
+            || _articleHtml.trim().isNotEmpty;
 
     return Scaffold(
       backgroundColor: AppColors.darkBg,
@@ -380,7 +425,9 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
             ),
           ],
           const SizedBox(height: 16),
-          if (_articleBlocks.isNotEmpty)
+          if (_articleHtml.trim().isNotEmpty)
+            ..._buildHtmlContent()
+          else if (_articleBlocks.isNotEmpty)
             ..._buildBlockWidgets()
           else
             ...paragraphs.map((para) {
@@ -444,16 +491,7 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
                   fontSize: 12, color: AppColors.textSecondary, height: 1.5)),
           const SizedBox(height: 14),
           GestureDetector(
-            onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => QuestionScreen(
-                  mode: 'mcq',
-                  category: 'tricks',
-                  setId: _practiceSetId,
-                  headerLabel: (widget.data['title'] ?? '').toString(),
-                ),
-              ));
-            },
+            onTap: _onPracticeTap,
             child: Container(
               height: 52,
               width: double.infinity,
@@ -472,10 +510,10 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.quiz_rounded,
+                  Icon(_practiceDone ? Icons.more_horiz_rounded : Icons.quiz_rounded,
                       color: AppColors.darkBg, size: 20),
                   const SizedBox(width: 8),
-                  Text(tr('TAKE PRACTICE TEST'),
+                  Text(_practiceDone ? tr('PRACTICE OPTIONS') : tr('TAKE PRACTICE TEST'),
                       style: GoogleFonts.poppins(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -487,6 +525,174 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
           ),
         ],
       ),
+    );
+  }
+
+  String get _practiceTitle =>
+      (widget.data['title'] ?? '').toString();
+
+  // First time → start the test. Already attempted → show the same options as
+  // every other set: Reattempt · View Solution · View Leaderboard · View Score.
+  void _onPracticeTap() {
+    if (_practiceDone && _practiceSetId > 0) {
+      _showPracticeChooser();
+    } else {
+      _startPractice();
+    }
+  }
+
+  Future<void> _startPractice() async {
+    await Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => QuestionScreen(
+        mode: 'mcq',
+        category: 'tricks',
+        setId: _practiceSetId,
+        headerLabel: _practiceTitle,
+        onSetCompleted: _markPracticeDone,
+      ),
+    ));
+    if (mounted) _loadPracticeDone();
+  }
+
+  void _showPracticeChooser() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.darkCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.textMuted.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(_practiceTitle.isNotEmpty ? _practiceTitle : tr('Practice'),
+                  style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white)),
+              const SizedBox(height: 16),
+              _chooserBtn(Icons.replay_rounded, tr('Reattempt'),
+                  AppColors.neonCyan, true, () {
+                Navigator.pop(ctx);
+                _startPractice();
+              }),
+              const SizedBox(height: 12),
+              _chooserBtn(Icons.lightbulb_rounded, tr('View Solution'),
+                  AppColors.yellow, false, () {
+                Navigator.pop(ctx);
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => SetSolutionScreen(
+                      setId: _practiceSetId, title: _practiceTitle),
+                ));
+              }),
+              const SizedBox(height: 12),
+              _chooserBtn(Icons.emoji_events_rounded, tr('View Leaderboard'),
+                  AppColors.orange, false, () {
+                Navigator.pop(ctx);
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => SetLeaderboardScreen(
+                      setId: _practiceSetId, title: _practiceTitle),
+                ));
+              }),
+              const SizedBox(height: 12),
+              _chooserBtn(Icons.bar_chart_rounded, tr('View Score'),
+                  AppColors.neonCyan, false, () {
+                Navigator.pop(ctx);
+                showSetScoreDialog(context,
+                    setId: _practiceSetId, title: _practiceTitle);
+              }),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _chooserBtn(IconData icon, String label, Color color, bool filled,
+      VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 54,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: filled ? color : color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withValues(alpha: filled ? 1 : 0.4)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 20, color: filled ? AppColors.darkBg : color),
+            const SizedBox(width: 10),
+            Text(label,
+                style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: filled ? AppColors.darkBg : color)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Render the rich article HTML (admin WYSIWYG) — text, inline images,
+  //    and any inline videos (split out to play in-app). ──
+  List<Widget> _buildHtmlContent() {
+    final widgets = <Widget>[];
+    final html = _articleHtml;
+    final re = RegExp(
+      r'<div[^>]*class="[^"]*tunnl-video[^"]*"[^>]*data-url="([^"]*)"[^>]*>.*?<\/div>',
+      dotAll: true,
+      caseSensitive: false,
+    );
+    int last = 0;
+    for (final m in re.allMatches(html)) {
+      final before = html.substring(last, m.start);
+      if (before.trim().isNotEmpty) widgets.add(_htmlChunk(before));
+      final url = (m.group(1) ?? '').replaceAll('&quot;', '').trim();
+      if (url.isNotEmpty && InAppVideoPlayer.canPlayInline(url)) {
+        widgets.add(Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: InAppVideoPlayer(url: url, autoPlay: false),
+        ));
+      }
+      last = m.end;
+    }
+    final tail = html.substring(last);
+    if (tail.trim().isNotEmpty) widgets.add(_htmlChunk(tail));
+    if (widgets.isEmpty) widgets.add(_htmlChunk(html));
+    return widgets;
+  }
+
+  Widget _htmlChunk(String html) {
+    return Html(
+      data: html,
+      style: {
+        'body': Style(
+            margin: Margins.zero,
+            color: AppColors.textSecondary,
+            fontSize: FontSize(14),
+            lineHeight: LineHeight(1.7)),
+        'h1': Style(color: Colors.white, fontSize: FontSize(20), fontWeight: FontWeight.w700),
+        'h2': Style(color: Colors.white, fontSize: FontSize(18), fontWeight: FontWeight.w700),
+        'h3': Style(color: Colors.white, fontSize: FontSize(15), fontWeight: FontWeight.w700),
+        'p': Style(color: AppColors.textSecondary, fontSize: FontSize(14), lineHeight: LineHeight(1.7)),
+        'li': Style(color: AppColors.textSecondary, fontSize: FontSize(14)),
+        'a': Style(color: AppColors.neonCyan),
+        'strong': Style(color: Colors.white),
+        'b': Style(color: Colors.white),
+      },
     );
   }
 
