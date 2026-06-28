@@ -263,6 +263,25 @@ try {
         if ((int)$tab->fetchColumn() === 0) {
             $pdo->exec("ALTER TABLE `tricks` ADD COLUMN `article_blocks` LONGTEXT NULL");
         }
+        // article_html — rich WYSIWYG article (text formatting + inline images).
+        // Preferred over article_content/article_blocks when present.
+        $tah = $pdo->prepare(
+            "SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'tricks' AND COLUMN_NAME = 'article_html'"
+        );
+        $tah->execute();
+        if ((int)$tah->fetchColumn() === 0) {
+            $pdo->exec("ALTER TABLE `tricks` ADD COLUMN `article_html` LONGTEXT NULL");
+        }
+        // practice_set_id — the MCQ set a user attempts AFTER reading the trick.
+        $tps = $pdo->prepare(
+            "SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'tricks' AND COLUMN_NAME = 'practice_set_id'"
+        );
+        $tps->execute();
+        if ((int)$tps->fetchColumn() === 0) {
+            $pdo->exec("ALTER TABLE `tricks` ADD COLUMN `practice_set_id` INT DEFAULT 0");
+        }
     } catch (Throwable $e) { /* ignore */ }
 
     // ── sets/questions: allow the 'tricks' practice category ──────────

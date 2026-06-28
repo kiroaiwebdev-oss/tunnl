@@ -17,6 +17,7 @@ class TrickModel {
   final bool isPremium;
   final String imageUrl;
   final List<Map<String, dynamic>> articleBlocks;
+  final int practiceSetId;
 
   TrickModel({
     required this.id,
@@ -35,6 +36,7 @@ class TrickModel {
     this.isPremium = false,
     this.imageUrl = '',
     this.articleBlocks = const [],
+    this.practiceSetId = 0,
   });
 
   String get durationLabel {
@@ -71,5 +73,6 @@ class TrickModel {
                 .map((e) => Map<String, dynamic>.from(e))
                 .toList()
             : const [],
+        practiceSetId: (j['practice_set_id'] as num?)?.toInt() ?? 0,
       );
 }

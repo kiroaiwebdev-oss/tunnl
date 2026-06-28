@@ -113,6 +113,7 @@ class _TricksScreenState extends State<TricksScreen>
         'imageUrl': t.imageUrl,
         'articleContent': t.articleContent,
         'articleBlocks': t.articleBlocks,
+        'practiceSetId': t.practiceSetId,
         'duration': t.durationLabel,
         'difficulty': t.difficulty,
         'diffColor': _difficultyColor(t.difficulty),

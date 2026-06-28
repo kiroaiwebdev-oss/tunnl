@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/services/app_strings.dart';
 import '../../core/widgets/in_app_video_player.dart';
+import '../question/question_screen.dart';
 
 class TricksDetailScreen extends StatefulWidget {
   final Map<String, dynamic> data;
@@ -44,6 +45,10 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
     }
     return const [];
   }
+
+  // Practice MCQ set the user takes AFTER reading the article (0 = general).
+  int get _practiceSetId =>
+      (widget.data['practiceSetId'] as num?)?.toInt() ?? 0;
 
   @override
   void initState() {
@@ -396,7 +401,90 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
                 ),
               );
             }),
+          const SizedBox(height: 20),
+          _buildPracticeButton(),
           const SizedBox(height: 30),
+        ],
+      ),
+    );
+  }
+
+  // ── Practice MCQ (taken after reading the article) ──
+  Widget _buildPracticeButton() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [
+          AppColors.neonCyan.withValues(alpha: 0.10),
+          AppColors.neonCyan.withValues(alpha: 0.02),
+        ]),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.neonCyan.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.school_rounded,
+                  color: AppColors.neonCyan, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(tr('Ready? Test what you learnt'),
+                    style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(tr('Take a quick practice MCQ — you get a score, full solution and a Hindi/English toggle.'),
+              style: GoogleFonts.poppins(
+                  fontSize: 12, color: AppColors.textSecondary, height: 1.5)),
+          const SizedBox(height: 14),
+          GestureDetector(
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => QuestionScreen(
+                  mode: 'mcq',
+                  category: 'tricks',
+                  setId: _practiceSetId,
+                  headerLabel: (widget.data['title'] ?? '').toString(),
+                ),
+              ));
+            },
+            child: Container(
+              height: 52,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF00E5FF), Color(0xFF00ACC1)],
+                ),
+                borderRadius: BorderRadius.circular(26),
+                boxShadow: [
+                  BoxShadow(
+                      color: AppColors.neonCyan.withValues(alpha: 0.35),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4)),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.quiz_rounded,
+                      color: AppColors.darkBg, size: 20),
+                  const SizedBox(width: 8),
+                  Text(tr('TAKE PRACTICE TEST'),
+                      style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.darkBg,
+                          letterSpacing: 1)),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

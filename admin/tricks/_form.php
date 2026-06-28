@@ -1,7 +1,8 @@
 <?php
 // Shared, high-level Trick editor used by add.php and edit.php.
-// Renders: basic info, a rich article editor (formatting toolbar + live
-// preview that mirrors the app), and a video block with YouTube live preview.
+// Renders: basic info, a video block, a WYSIWYG rich-text article editor
+// (single box + live preview, with inline image upload), and a "practice set"
+// the user attempts after reading the article.
 
 function renderTrickForm(array $cfg) {
     $mode    = $cfg['mode'];                 // 'add' | 'edit'
@@ -9,6 +10,7 @@ function renderTrickForm(array $cfg) {
     $error   = $cfg['error']   ?? '';
     $success = $cfg['success'] ?? '';
     $cats    = $cfg['cats']    ?? [];
+    $pracSets= $cfg['practice_sets'] ?? [];
     $t       = $cfg['trick'];
     $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES);
     $isEdit  = $mode === 'edit';
@@ -32,7 +34,7 @@ function renderTrickForm(array $cfg) {
     <h2 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700">
       <?= $isEdit ? 'Edit Trick' : 'Add New Trick' ?>
     </h2>
-    <p class="text-muted"><?= $isEdit ? ('Chapter #' . $h($t['chapter_number'])) : 'Create a high-quality trick with article + video' ?></p>
+    <p class="text-muted"><?= $isEdit ? ('Chapter #' . $h($t['chapter_number'])) : 'Create a high-quality trick: article + image + video + practice MCQs' ?></p>
   </div>
   <a href="<?= $adminUrl ?>/tricks/index.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
 </div>
@@ -84,7 +86,7 @@ function renderTrickForm(array $cfg) {
     </div>
     <?php $imgUrl = (string)($t['image_url'] ?? ''); ?>
     <div class="form-group">
-      <label class="form-label"><i class="fas fa-image" style="color:var(--cyan)"></i> Trick Image <span style="color:var(--muted);font-weight:400">(shown at the top of the article in the app)</span></label>
+      <label class="form-label"><i class="fas fa-image" style="color:var(--cyan)"></i> Cover Image <span style="color:var(--muted);font-weight:400">(shown at the top of the article)</span></label>
       <input type="file" name="image_file" accept="image/png,image/jpeg,image/webp,image/gif" class="form-input" onchange="previewTrickImage(this)">
       <input type="url" name="image_url" class="form-input" style="margin-top:8px" value="<?= $h($imgUrl) ?>" placeholder="…or paste an image URL (https://…)">
       <p style="font-size:11px;color:var(--muted);margin-top:4px">Uploading a file replaces the URL above. jpg / png / webp / gif, max 8MB.</p>
@@ -135,23 +137,16 @@ function renderTrickForm(array $cfg) {
           <input type="number" name="video_duration" class="form-input" value="<?= $h($t['video_duration'] ?: 5) ?>" min="1">
         </div>
       </div>
-
       <div style="display:flex;align-items:center;gap:10px;margin:6px 0 12px">
         <div style="flex:1;height:1px;background:var(--border)"></div>
         <span style="font-size:11px;color:var(--muted)">OR UPLOAD A LOCAL VIDEO</span>
         <div style="flex:1;height:1px;background:var(--border)"></div>
       </div>
-
       <div class="form-group">
         <label class="form-label"><i class="fas fa-upload" style="color:var(--cyan)"></i> Upload Video File (mp4 / mov / webm, max 60MB)</label>
         <input type="file" name="video_file" accept="video/mp4,video/quicktime,video/webm,video/x-m4v" class="form-input">
-        <p style="font-size:11px;color:var(--muted);margin-top:4px">
-          If you upload a file it <strong>replaces the URL above</strong> and plays right inside the app.
-        </p>
-        <?php
-          $vu = (string)($t['video_url'] ?? '');
-          $isUploaded = strpos($vu, '/uploads/videos/') !== false;
-        ?>
+        <p style="font-size:11px;color:var(--muted);margin-top:4px">If you upload a file it <strong>replaces the URL above</strong> and plays right inside the app.</p>
+        <?php $vu = (string)($t['video_url'] ?? ''); $isUploaded = strpos($vu, '/uploads/videos/') !== false; ?>
         <?php if ($isUploaded): ?>
         <div style="margin-top:8px;font-size:12px;color:var(--success)">
           <i class="fas fa-check-circle"></i> Current uploaded video:
@@ -159,15 +154,14 @@ function renderTrickForm(array $cfg) {
         </div>
         <?php endif; ?>
       </div>
-
       <div id="videoPreview" style="margin-top:8px"></div>
     </div>
   </div>
 
-  <!-- Article -->
+  <!-- Article — WYSIWYG rich editor -->
   <div class="card mb-16">
     <div class="card-header">
-      <div class="card-title-text"><i class="fas fa-file-alt" style="color:var(--cyan)"></i> Article Content</div>
+      <div class="card-title-text"><i class="fas fa-file-alt" style="color:var(--cyan)"></i> Article (Rich Editor)</div>
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
         <input type="checkbox" name="has_article" id="hasArticle" style="accent-color:var(--cyan);width:16px;height:16px"
           <?= $t['has_article']?'checked':'' ?> onchange="document.getElementById('articleFields').style.display=this.checked?'block':'none'">
@@ -175,56 +169,70 @@ function renderTrickForm(array $cfg) {
       </label>
     </div>
     <div id="articleFields" style="display:<?= $t['has_article']?'block':'none' ?>">
-      <div class="form-group" style="max-width:200px">
-        <label class="form-label">Read Duration (minutes)</label>
-        <input type="number" name="read_duration" class="form-input" value="<?= $h($t['read_duration'] ?: 5) ?>" min="1">
-      </div>
-
-      <!-- Formatting toolbar -->
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-        <button type="button" class="btn btn-secondary btn-sm" onclick="fmt('heading')"><i class="fas fa-heading"></i> Heading</button>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="fmt('step')"><i class="fas fa-shoe-prints"></i> Step</button>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="fmt('bullet')"><i class="fas fa-list-ul"></i> Bullet</button>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="fmt('example')"><i class="fas fa-lightbulb"></i> Example</button>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="fmt('para')"><i class="fas fa-paragraph"></i> New Para</button>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px" id="editorGrid">
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Write (plain text)</label>
-          <textarea name="article_content" id="articleBox" class="form-textarea" rows="16"
-            oninput="renderPreview()"
-            placeholder="Tip: a SHORT line on its own (no full-stop) becomes a heading in the app.&#10;&#10;Multiply by 11&#10;&#10;Step 1: Write the two digits apart.&#10;Step 2: Add them and place in the middle.&#10;&#10;Example&#10;25 x 11 = 2 (2+5) 5 = 275"><?= $h($t['article_content']) ?></textarea>
-        </div>
-        <div class="form-group" style="margin:0">
-          <label class="form-label">Live Preview (how the app shows it)</label>
-          <div id="articlePreview" style="background:#0b1220;border:1px solid var(--border);border-radius:12px;padding:16px;min-height:360px;max-height:420px;overflow:auto"></div>
+      <div class="form-row">
+        <div class="form-group" style="max-width:200px">
+          <label class="form-label">Read Duration (minutes)</label>
+          <input type="number" name="read_duration" class="form-input" value="<?= $h($t['read_duration'] ?: 5) ?>" min="1">
         </div>
       </div>
+
+      <!-- Toolbar -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;padding:8px;background:#0b1220;border:1px solid var(--border);border-radius:10px 10px 0 0">
+        <button type="button" class="btn btn-secondary btn-sm" onmousedown="event.preventDefault()" onclick="rtCmd('formatBlock','H2')" title="Heading"><i class="fas fa-heading"></i></button>
+        <button type="button" class="btn btn-secondary btn-sm" onmousedown="event.preventDefault()" onclick="rtCmd('formatBlock','H3')" title="Sub-heading">H3</button>
+        <button type="button" class="btn btn-secondary btn-sm" onmousedown="event.preventDefault()" onclick="rtCmd('bold')" title="Bold"><i class="fas fa-bold"></i></button>
+        <button type="button" class="btn btn-secondary btn-sm" onmousedown="event.preventDefault()" onclick="rtCmd('italic')" title="Italic"><i class="fas fa-italic"></i></button>
+        <button type="button" class="btn btn-secondary btn-sm" onmousedown="event.preventDefault()" onclick="rtCmd('insertUnorderedList')" title="Bullet list"><i class="fas fa-list-ul"></i></button>
+        <button type="button" class="btn btn-secondary btn-sm" onmousedown="event.preventDefault()" onclick="rtCmd('insertOrderedList')" title="Numbered list"><i class="fas fa-list-ol"></i></button>
+        <button type="button" class="btn btn-secondary btn-sm" onmousedown="event.preventDefault()" onclick="rtCmd('formatBlock','P')" title="Normal text"><i class="fas fa-paragraph"></i></button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="rtImage()" title="Insert image"><i class="fas fa-image"></i> Image</button>
+        <button type="button" class="btn btn-primary btn-sm" onclick="rtVideoUpload()" title="Upload &amp; insert a video"><i class="fas fa-video"></i> Video</button>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="rtVideoUrl()" title="Insert a YouTube / mp4 URL"><i class="fab fa-youtube"></i> Video URL</button>
+        <span id="rtStatus" style="align-self:center;font-size:11px;color:var(--muted)"></span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px" id="rtGrid">
+        <div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Write here (formatting + images)</div>
+          <div id="rtEditor" contenteditable="true"
+            style="background:#0b1220;border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:16px;min-height:340px;max-height:460px;overflow:auto;color:#dCE6F0;font-size:14px;line-height:1.7"
+            oninput="rtSync()"></div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Live Preview (how the app shows it)</div>
+          <div id="rtPreview" class="rt-render" style="background:#0F1923;border:1px solid var(--border);border-radius:12px;padding:16px;min-height:360px;max-height:486px;overflow:auto"></div>
+        </div>
+      </div>
+      <input type="file" id="rtImageInput" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none" onchange="rtImageUpload(this)">
+      <input type="file" id="rtVideoInput" accept="video/mp4,video/quicktime,video/webm,video/x-m4v" style="display:none" onchange="rtVideoFile(this)">
+      <textarea name="article_html" id="rtHtml" style="display:none"><?= $h($t['article_html'] ?? '') ?></textarea>
+      <textarea name="article_blocks" id="rtBlocks" style="display:none"><?= $h($t['article_blocks'] ?? '') ?></textarea>
       <div style="font-size:11px;color:var(--muted);margin-top:6px">
-        <i class="fas fa-info-circle"></i> Separate blocks with a blank line. Short heading-style lines render bold &amp; bigger automatically.
+        <i class="fas fa-info-circle"></i> Write the article naturally — headings, bold, lists and inline images all show in the app exactly as here.
       </div>
     </div>
   </div>
 
-  <!-- Rich Content Blocks (text / image / video, any order) -->
+  <!-- Practice MCQs (after the article) -->
   <div class="card mb-16">
     <div class="card-header">
-      <div class="card-title-text"><i class="fas fa-layer-group" style="color:var(--cyan)"></i> Rich Content Blocks
-        <span style="color:var(--muted);font-weight:400">(text · image · video, in any order)</span></div>
+      <div class="card-title-text"><i class="fas fa-pen-to-square" style="color:var(--success)"></i> Practice MCQs <span style="color:var(--muted);font-weight:400">(user takes this test AFTER reading the article)</span></div>
     </div>
-    <p class="text-muted" style="font-size:12px;margin:0 0 12px">
-      Build the article by stacking blocks — heading, text, image or video — in <strong>any order</strong>.
-      The app shows them exactly as arranged here. Leave empty to use the plain "Article Content" above instead.
-    </p>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-      <button type="button" class="btn btn-secondary btn-sm" onclick="addBlock('heading')"><i class="fas fa-heading"></i> Heading</button>
-      <button type="button" class="btn btn-secondary btn-sm" onclick="addBlock('text')"><i class="fas fa-paragraph"></i> Text</button>
-      <button type="button" class="btn btn-secondary btn-sm" onclick="addBlock('image')"><i class="fas fa-image"></i> Image</button>
-      <button type="button" class="btn btn-secondary btn-sm" onclick="addBlock('video')"><i class="fas fa-video"></i> Video</button>
+    <div class="form-group">
+      <label class="form-label">Practice Set</label>
+      <select name="practice_set_id" class="form-select">
+        <option value="0">— None (use the general Tricks practice) —</option>
+        <?php foreach ($pracSets as $s):
+          $lbl = 'Set ' . $s['set_number'] . (!empty($s['title']) ? ' — ' . $s['title'] : '');
+        ?>
+        <option value="<?= (int)$s['id'] ?>" <?= ((int)($t['practice_set_id'] ?? 0) === (int)$s['id']) ? 'selected' : '' ?>><?= $h($lbl) ?></option>
+        <?php endforeach; ?>
+      </select>
+      <p style="font-size:11px;color:var(--muted);margin-top:6px">
+        Pick a <strong>Tricks</strong> practice set. After the article, a "Take Practice Test" button opens it — the user gets a result, full solution and a Hindi/English toggle.
+        <a href="<?= $adminUrl ?>/sets/index.php?category=tricks" style="color:var(--cyan)">Manage Tricks sets →</a>
+      </p>
     </div>
-    <div id="blockList"></div>
-    <textarea name="article_blocks" id="blocksJson" style="display:none"><?= $h($t['article_blocks'] ?? '') ?></textarea>
   </div>
 
   <div style="display:flex;gap:12px;flex-wrap:wrap">
@@ -235,165 +243,142 @@ function renderTrickForm(array $cfg) {
 </div>
 
 <style>
-@media (max-width: 820px){ #editorGrid{ grid-template-columns:1fr !important; } }
-#articlePreview .ap-h{ color:#fff;font-weight:700;font-size:16px;margin:14px 0 6px; }
-#articlePreview .ap-p{ color:#9fb3c8;font-size:13px;line-height:1.7;margin:0 0 10px;white-space:pre-wrap; }
+@media (max-width: 820px){ #rtGrid{ grid-template-columns:1fr !important; } }
+#rtEditor:focus{ outline:none;border-color:var(--cyan) }
+#rtEditor img, .rt-render img{ max-width:100%;border-radius:10px;margin:8px 0;display:block }
+#rtEditor h2, .rt-render h2{ color:#fff;font-size:18px;font-weight:700;margin:14px 0 8px }
+#rtEditor h3, .rt-render h3{ color:#fff;font-size:15px;font-weight:700;margin:12px 0 6px }
+#rtEditor p, .rt-render p{ color:#9fb3c8;font-size:14px;line-height:1.7;margin:0 0 10px }
+#rtEditor ul, #rtEditor ol, .rt-render ul, .rt-render ol{ color:#9fb3c8;font-size:14px;line-height:1.7;margin:0 0 10px;padding-left:22px }
+.rt-render:empty:before{ content:'Preview will appear here…';color:#5b6b7c;font-size:12px }
+#rtEditor .tunnl-video{ background:rgba(239,68,68,0.1);border:1px dashed rgba(239,68,68,0.5);border-radius:10px;padding:12px;margin:8px 0;color:#FCA5A5;font-size:13px;word-break:break-all }
+#rtEditor .tunnl-video small{ color:#9fb3c8 }
 </style>
 
 <script>
-// Insert formatting snippets at the cursor in the article textarea.
-function fmt(kind) {
-  const box = document.getElementById('articleBox');
-  const start = box.selectionStart, end = box.selectionEnd;
-  const val = box.value;
-  let ins = '';
-  if (kind === 'heading')  ins = (start>0?'\n\n':'') + 'Heading Title' + '\n\n';
-  else if (kind === 'step') ins = (start>0?'\n':'') + 'Step 1: ';
-  else if (kind === 'bullet') ins = (start>0?'\n':'') + '\u2022 ';
-  else if (kind === 'example') ins = (start>0?'\n\n':'') + 'Example' + '\n\n';
-  else if (kind === 'para') ins = '\n\n';
-  box.value = val.slice(0, start) + ins + val.slice(end);
-  const pos = start + ins.length;
-  box.setSelectionRange(pos, pos);
-  box.focus();
-  renderPreview();
-}
-
-// Mirror the app's renderer: split on blank lines; a short line with no
-// trailing period and no inner newline is a heading.
-function renderPreview() {
-  const txt = (document.getElementById('articleBox').value || '').replace(/\r\n/g, '\n');
-  const blocks = txt.split(/\n{2,}/).map(s => s.trim()).filter(Boolean);
-  const html = blocks.map(b => {
-    const isHeading = b.length <= 60 && !b.endsWith('.') && !b.includes('\n');
-    const safe = b.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    return isHeading ? `<div class="ap-h">${safe}</div>` : `<div class="ap-p">${safe}</div>`;
-  }).join('');
-  document.getElementById('articlePreview').innerHTML =
-    html || '<div style="color:#5b6b7c;font-size:12px">Preview will appear here…</div>';
-}
-
-function ytId(url) {
-  if (!url) return '';
-  const m = url.match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/);
-  return m ? m[1] : '';
-}
-function renderVideoPreview() {
-  const url = document.getElementById('videoUrl').value.trim();
-  const id = ytId(url);
-  const box = document.getElementById('videoPreview');
-  if (!box) return;
+function ytId(url){ if(!url) return ''; var m=url.match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/); return m?m[1]:''; }
+function renderVideoPreview(){
+  var el=document.getElementById('videoUrl'); if(!el) return;
+  var url=el.value.trim(); var id=ytId(url); var box=document.getElementById('videoPreview'); if(!box) return;
   box.innerHTML = id
-    ? `<iframe width="100%" height="220" style="border-radius:12px;border:1px solid var(--border)" src="https://www.youtube.com/embed/${id}" frameborder="0" allowfullscreen></iframe>`
-    : (url ? '<div style="color:var(--warning);font-size:12px"><i class="fas fa-exclamation-triangle"></i> Could not detect a YouTube video id from this URL.</div>' : '');
+    ? '<iframe width="100%" height="220" style="border-radius:12px;border:1px solid var(--border)" src="https://www.youtube.com/embed/'+id+'" frameborder="0" allowfullscreen></iframe>'
+    : (url ? '<div style="color:var(--warning);font-size:12px"><i class="fas fa-exclamation-triangle"></i> Could not detect a YouTube id (a direct .mp4 still works in the app).</div>' : '');
+}
+function previewTrickImage(input){
+  var box=document.getElementById('trickImagePreview'); if(!box) return;
+  var file=input.files&&input.files[0]; if(!file) return;
+  var r=new FileReader(); r.onload=function(e){ box.innerHTML='<img src="'+e.target.result+'" alt="trick" style="max-width:220px;max-height:140px;border-radius:12px;border:1px solid var(--border)">'; }; r.readAsDataURL(file);
 }
 
-document.addEventListener('DOMContentLoaded', function(){ renderPreview(); renderVideoPreview(); });
-
-// Live preview for the uploaded trick image.
-function previewTrickImage(input) {
-  const box = document.getElementById('trickImagePreview');
-  if (!box) return;
-  const file = input.files && input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    box.innerHTML = '<img src="' + e.target.result + '" alt="trick" style="max-width:220px;max-height:140px;border-radius:12px;border:1px solid var(--border)">';
-  };
-  reader.readAsDataURL(file);
+// ── WYSIWYG rich editor ────────────────────────────────────────────────────
+var RT_UPLOAD = '<?= $adminUrl ?>/tricks/upload_media.php';
+function rtSync(){
+  var ed=document.getElementById('rtEditor');
+  document.getElementById('rtHtml').value = ed.innerHTML;
+  document.getElementById('rtBlocks').value = JSON.stringify(rtBuildBlocks(ed));
+  rtRenderPreview();
 }
-
-// ── Rich Content Blocks editor ─────────────────────────────────────────────
-var TBLOCKS = [];
-var TUPLOAD_URL = '<?= $adminUrl ?>/tricks/upload_media.php';
-
-function tbEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-function tbLoad() {
-  var raw = (document.getElementById('blocksJson').value || '').trim();
-  if (raw) { try { TBLOCKS = JSON.parse(raw) || []; } catch(e) { TBLOCKS = []; } }
-  if (!Array.isArray(TBLOCKS)) TBLOCKS = [];
-  tbRender();
+function rtRenderPreview(){
+  var ed=document.getElementById('rtEditor');
+  var prev=document.getElementById('rtPreview');
+  prev.innerHTML = ed.innerHTML;
+  // Turn video markers into real players in the preview.
+  prev.querySelectorAll('.tunnl-video').forEach(function(node){
+    var url=node.getAttribute('data-url')||'';
+    var m=url.match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/);
+    var html = m
+      ? '<iframe width="100%" height="200" style="border-radius:10px;border:1px solid var(--border)" src="https://www.youtube.com/embed/'+m[1]+'" frameborder="0" allowfullscreen></iframe>'
+      : '<video src="'+url+'" controls style="max-width:100%;border-radius:10px"></video>';
+    var wrap=document.createElement('div'); wrap.innerHTML=html; node.replaceWith(wrap);
+  });
 }
-function addBlock(type) {
-  TBLOCKS.push({ type: type, text: '', url: '' });
-  tbRender(); tbSync();
-}
-function tbRemove(i){ TBLOCKS.splice(i,1); tbRender(); tbSync(); }
-function tbMove(i,d){ var j=i+d; if(j<0||j>=TBLOCKS.length) return; var t=TBLOCKS[i]; TBLOCKS[i]=TBLOCKS[j]; TBLOCKS[j]=t; tbRender(); tbSync(); }
-function tbSetText(i,v){ TBLOCKS[i].text=v; tbSync(); }
-function tbSetUrl(i,v){ TBLOCKS[i].url=v; tbSync(); var p=document.getElementById('tbprev'+i); if(p) p.innerHTML=tbPreview(TBLOCKS[i]); }
-function tbSync(){ document.getElementById('blocksJson').value = JSON.stringify(TBLOCKS); }
-
-function tbUpload(i, input) {
-  var file = input.files && input.files[0];
-  if (!file) return;
-  var status = document.getElementById('tbstatus'+i);
-  if (status) status.textContent = 'Uploading…';
-  var fd = new FormData(); fd.append('file', file);
-  fetch(TUPLOAD_URL, { method:'POST', body: fd })
-    .then(function(r){ return r.json(); })
-    .then(function(d){
-      if (d && d.success && d.url) {
-        TBLOCKS[i].url = d.url; tbSync();
-        var urlInput = document.getElementById('tburl'+i); if (urlInput) urlInput.value = d.url;
-        var p = document.getElementById('tbprev'+i); if (p) p.innerHTML = tbPreview(TBLOCKS[i]);
-        if (status) status.textContent = 'Uploaded ✓';
-      } else {
-        if (status) status.textContent = (d && d.message) ? d.message : 'Upload failed';
-      }
-    })
-    .catch(function(){ if (status) status.textContent = 'Upload error'; });
-}
-
-function tbPreview(b) {
-  if (b.type === 'image' && b.url) {
-    return '<img src="'+tbEsc(b.url)+'" style="max-width:200px;max-height:130px;border-radius:10px;border:1px solid var(--border);margin-top:8px">';
-  }
-  if (b.type === 'video' && b.url) {
-    var m = b.url.match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/)([A-Za-z0-9_-]{11})/);
-    if (m) return '<iframe width="100%" height="200" style="border-radius:10px;border:1px solid var(--border);margin-top:8px" src="https://www.youtube.com/embed/'+m[1]+'" frameborder="0" allowfullscreen></iframe>';
-    return '<video src="'+tbEsc(b.url)+'" controls style="max-width:100%;max-height:200px;border-radius:10px;margin-top:8px"></video>';
-  }
-  return '';
-}
-
-function tbRender() {
-  var host = document.getElementById('blockList');
-  if (!host) return;
-  if (!TBLOCKS.length) {
-    host.innerHTML = '<div style="color:#5b6b7c;font-size:12px;padding:10px;border:1px dashed var(--border);border-radius:10px;text-align:center">No blocks yet — add Heading / Text / Image / Video above.</div>';
-    return;
-  }
-  var labels = { heading:'Heading', text:'Text', image:'Image', video:'Video' };
-  var icons  = { heading:'fa-heading', text:'fa-paragraph', image:'fa-image', video:'fa-video' };
-  var html = '';
-  for (var i=0;i<TBLOCKS.length;i++){
-    var b = TBLOCKS[i];
-    html += '<div style="border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;background:#0b1220">';
-    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
-    html += '<span style="font-size:12px;font-weight:700;color:var(--cyan)"><i class="fas '+icons[b.type]+'"></i> '+labels[b.type]+' #'+(i+1)+'</span>';
-    html += '<span style="display:flex;gap:6px">'
-         + '<button type="button" class="btn btn-secondary btn-sm" onclick="tbMove('+i+',-1)" title="Move up"><i class="fas fa-arrow-up"></i></button>'
-         + '<button type="button" class="btn btn-secondary btn-sm" onclick="tbMove('+i+',1)" title="Move down"><i class="fas fa-arrow-down"></i></button>'
-         + '<button type="button" class="btn btn-secondary btn-sm" onclick="tbRemove('+i+')" title="Delete" style="color:#FCA5A5"><i class="fas fa-trash"></i></button>'
-         + '</span></div>';
-    if (b.type === 'heading' || b.type === 'text') {
-      html += '<textarea class="form-textarea" rows="'+(b.type==='heading'?1:4)+'" oninput="tbSetText('+i+',this.value)" placeholder="'+(b.type==='heading'?'Section heading…':'Write text…')+'">'+tbEsc(b.text)+'</textarea>';
-    } else {
-      var accept = b.type==='image' ? 'image/*' : 'video/mp4,video/quicktime,video/webm';
-      html += '<input type="file" accept="'+accept+'" class="form-input" style="padding:8px" onchange="tbUpload('+i+',this)">';
-      html += '<input type="url" id="tburl'+i+'" class="form-input" style="margin-top:8px" value="'+tbEsc(b.url)+'" oninput="tbSetUrl('+i+',this.value)" placeholder="…or paste '+(b.type==='image'?'image':'YouTube / .mp4')+' URL">';
-      html += '<div style="font-size:11px;color:var(--muted);margin-top:4px" id="tbstatus'+i+'"></div>';
-      html += '<div id="tbprev'+i+'">'+tbPreview(b)+'</div>';
+// Walk the editor DOM → ordered content blocks the APP renders
+// (heading / text / image / video) — no extra app package needed.
+function rtBuildBlocks(ed){
+  var blocks=[];
+  function pushText(t){ t=(t||'').replace(/\u00a0/g,' ').trim(); if(t) blocks.push({type:'text',text:t}); }
+  function pushHeading(t){ t=(t||'').trim(); if(t) blocks.push({type:'heading',text:t}); }
+  Array.prototype.forEach.call(ed.childNodes, function(node){
+    if(node.nodeType===3){ pushText(node.textContent); return; }
+    if(node.nodeType!==1) return;
+    if(node.classList && node.classList.contains('tunnl-video')){
+      var u=node.getAttribute('data-url')||''; if(u) blocks.push({type:'video',url:u}); return;
     }
-    html += '</div>';
-  }
-  host.innerHTML = html;
+    var tag=node.tagName.toLowerCase();
+    if(tag==='h2'||tag==='h3'){ pushHeading(node.textContent); return; }
+    if(tag==='img'){ var s=node.getAttribute('src'); if(s) blocks.push({type:'image',url:s}); return; }
+    if(tag==='ul'||tag==='ol'){
+      var items=[]; Array.prototype.forEach.call(node.querySelectorAll('li'), function(li){ var x=li.textContent.trim(); if(x) items.push('• '+x); });
+      pushText(items.join('\n')); return;
+    }
+    // p / div / other: pull inline images out as their own blocks, keep text.
+    var imgs=node.querySelectorAll ? node.querySelectorAll('img') : [];
+    if(imgs && imgs.length){
+      var txt=node.textContent.trim(); if(txt) pushText(txt);
+      Array.prototype.forEach.call(imgs, function(im){ var s=im.getAttribute('src'); if(s) blocks.push({type:'image',url:s}); });
+    } else {
+      pushText(node.textContent);
+    }
+  });
+  return blocks;
 }
-
-document.addEventListener('DOMContentLoaded', tbLoad);
-
+function rtCmd(cmd, val){
+  document.getElementById('rtEditor').focus();
+  try { document.execCommand(cmd, false, val || null); } catch(e){}
+  rtSync();
+}
+function rtImage(){ document.getElementById('rtImageInput').click(); }
+function rtVideoUpload(){ document.getElementById('rtVideoInput').click(); }
+function rtVideoUrl(){
+  var u=prompt('Paste a YouTube or .mp4 video URL:');
+  if(u && u.trim()) rtInsertVideo(u.trim());
+}
+function rtInsertVideo(url){
+  document.getElementById('rtEditor').focus();
+  var safe=url.replace(/"/g,'&quot;');
+  var html='<div class="tunnl-video" data-url="'+safe+'" contenteditable="false">▶ Video — <small>'+safe+'</small></div><p><br></p>';
+  try { document.execCommand('insertHTML', false, html); } catch(e){}
+  rtSync();
+}
+function rtVideoFile(input){
+  var file=input.files&&input.files[0]; if(!file) return;
+  var st=document.getElementById('rtStatus'); if(st) st.textContent='Uploading video…';
+  var fd=new FormData(); fd.append('file', file);
+  fetch(RT_UPLOAD,{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(d){
+    if(d&&d.success&&d.url){ rtInsertVideo(d.url); if(st) st.textContent='Video added ✓'; }
+    else { if(st) st.textContent=(d&&d.message)?d.message:'Upload failed'; }
+    input.value='';
+  }).catch(function(){ if(st) st.textContent='Upload error'; input.value=''; });
+}
+function rtImageUpload(input){
+  var file=input.files&&input.files[0]; if(!file) return;
+  var st=document.getElementById('rtStatus'); if(st) st.textContent='Uploading image…';
+  var fd=new FormData(); fd.append('file', file);
+  fetch(RT_UPLOAD,{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(d){
+    if(d&&d.success&&d.url){
+      document.getElementById('rtEditor').focus();
+      try { document.execCommand('insertHTML', false, '<img src="'+d.url+'">'); } catch(e){}
+      rtSync();
+      if(st) st.textContent='Image added ✓';
+    } else { if(st) st.textContent=(d&&d.message)?d.message:'Upload failed'; }
+    input.value='';
+  }).catch(function(){ if(st) st.textContent='Upload error'; input.value=''; });
+}
+document.addEventListener('DOMContentLoaded', function(){
+  renderVideoPreview();
+  // Seed the editor from saved HTML (or wrap legacy plain text in paragraphs).
+  var saved = document.getElementById('rtHtml').value || '';
+  if (saved.trim() === '') {
+    var legacy = <?= json_encode((string)($t['article_content'] ?? '')) ?>;
+    if (legacy && legacy.trim() !== '') {
+      saved = legacy.split(/\n{2,}/).map(function(p){
+        return '<p>'+p.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')+'</p>';
+      }).join('');
+    }
+  }
+  document.getElementById('rtEditor').innerHTML = saved;
+  rtSync();
+});
 </script>
 
 <?php } ?>

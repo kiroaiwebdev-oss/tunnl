@@ -61,5 +61,6 @@ function formatTrick(array $t): array {
                               ? (json_decode($t['article_blocks'], true) ?: [])
                               : []),
         'read_duration'  => intval($t['read_duration']),
+        'practice_set_id'=> intval($t['practice_set_id'] ?? 0),
     ];
 }

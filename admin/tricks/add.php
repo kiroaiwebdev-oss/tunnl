@@ -18,9 +18,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $videoUrl = tunnl_trick_video_url($_POST['video_url'] ?? '', $error);
     $imageUrl = tunnl_trick_image_url($_POST['image_url'] ?? '', $error);
     $hasVideo = ($videoUrl !== '') ? 1 : (isset($_POST['has_video']) ? 1 : 0);
-    $blocksJson = trim($_POST['article_blocks'] ?? '');
-    $hasBlocks  = ($blocksJson !== '' && $blocksJson !== '[]');
-    $hasArticle = (isset($_POST['has_article']) || $hasBlocks || trim($_POST['article_content'] ?? '') !== '') ? 1 : 0;
+    $articleHtml   = trim($_POST['article_html'] ?? '');
+    $blocksJson    = trim($_POST['article_blocks'] ?? '');
+    $articleText   = trim(strip_tags(str_replace(['<br>','<br/>','<br />','</p>','</div>','</li>'], "\n", $articleHtml)));
+    $hasBlocks     = ($blocksJson !== '' && $blocksJson !== '[]');
+    $hasArticle    = (isset($_POST['has_article']) || $hasBlocks || $articleHtml !== '') ? 1 : 0;
+    $practiceSetId = intval($_POST['practice_set_id'] ?? 0);
     if ($error === '') {
       try {
         $pdo->prepare("
@@ -28,9 +31,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               (chapter_number, title, subtitle, category, difficulty,
                image_url,
                has_video, video_url, video_duration,
-               has_article, article_content, read_duration, article_blocks,
+               has_article, article_content, read_duration, article_blocks, article_html, practice_set_id,
                is_new, is_premium, is_active)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)
         ")->execute([
             intval($_POST['chapter_number']),
             trim($_POST['title']),
@@ -42,9 +45,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $videoUrl,
             intval($_POST['video_duration'] ?? 0),
             $hasArticle,
-            trim($_POST['article_content'] ?? ''),
+            $articleText,
             intval($_POST['read_duration']  ?? 5),
             $blocksJson,
+            $articleHtml,
+            $practiceSetId,
             isset($_POST['is_new'])      ? 1 : 0,
             isset($_POST['is_premium'])  ? 1 : 0,
         ]);
@@ -63,12 +68,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $pageTitle = 'Add Trick';
 require_once dirname(__DIR__) . '/includes/header.php';
 require __DIR__ . '/_form.php';
+$pracSets = $pdo->query("SELECT id, set_number, title FROM sets WHERE category='tricks' ORDER BY set_number")->fetchAll();
 renderTrickForm([
     'mode'     => 'add',
     'action'   => ADMIN_URL . '/tricks/add.php',
     'error'    => $error,
     'success'  => '',
     'cats'     => $existingCats,
+    'practice_sets' => $pracSets,
     'trick'    => [
         'chapter_number' => $_POST['chapter_number'] ?? '',
         'title'          => $_POST['title'] ?? '',
@@ -83,6 +90,8 @@ renderTrickForm([
         'article_content'=> $_POST['article_content'] ?? '',
         'read_duration'  => $_POST['read_duration'] ?? 5,
         'article_blocks' => $_POST['article_blocks'] ?? '',
+        'article_html'   => $_POST['article_html'] ?? '',
+        'practice_set_id'=> $_POST['practice_set_id'] ?? 0,
         'is_new'         => isset($_POST['is_new']) ? 1 : 0,
         'is_premium'     => isset($_POST['is_premium']) ? 1 : 0,
         'is_active'      => 1,
