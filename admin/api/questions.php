@@ -96,9 +96,10 @@ if (!empty($_GET['shuffle'])) {
     $questions = $stmt->fetchAll();
 }
 // Auto-translate any questions missing Hindi (via Groq) and cache into the DB,
-// so the in-quiz language toggle shows real Hindi for ANY set. Skipped for
-// pool requests (large banks, e.g. Tunnlity) to keep the response fast.
-if (!$pool) {
+// so the in-quiz language toggle shows real Hindi for ANY set. For pool
+// requests we skip ONLY very large banks (e.g. Tunnlity) to keep it fast;
+// normal-sized sets (e.g. a 50-question Tricks set) still get Hindi.
+if (!$pool || count($questions) <= 60) {
     require_once __DIR__ . '/_translate_lib.php';
     tunnl_fill_hindi($pdo, $questions);
 }

@@ -147,7 +147,11 @@ class _QuestionScreenState extends State<QuestionScreen>
     }
 
     try {
-      final qs = await ContentService.getQuestions(widget.setId, shuffle: true);
+      // Tunnl Tricks practice shows EVERY question in the set (50/48/47 — as
+      // uploaded), in order. Other categories keep the admin-capped shuffle.
+      final isTricks = widget.category == 'tricks';
+      final qs = await ContentService.getQuestions(widget.setId,
+          shuffle: !isTricks, pool: isTricks);
       _applyQuestions(qs);
     } catch (e) {
       _showApiError('Network error. Check your connection.');

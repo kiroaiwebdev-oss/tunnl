@@ -70,7 +70,10 @@ $result = array_map(function ($s) use ($isPremium) {
     //  - if no questions added yet, show the planned count (admin limit / 10)
     $avail      = intval($s['question_count']);
     $adminLimit = intval($s['total_questions'] ?? 0);
-    if ($avail > 0) {
+    if ($s['category'] === 'tricks') {
+        // Tunnl Tricks practice serves EVERY question added to the set.
+        $served = $avail > 0 ? $avail : ($adminLimit > 0 ? $adminLimit : 10);
+    } elseif ($avail > 0) {
         $served = $adminLimit > 0 ? min($adminLimit, $avail) : $avail;
     } else {
         $served = $adminLimit > 0 ? $adminLimit : 10;
