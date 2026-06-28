@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_html/flutter_html.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../../core/theme/app_colors.dart';
@@ -647,7 +646,8 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
   }
 
   // ── Render the rich article HTML (admin WYSIWYG) — text, inline images,
-  //    and any inline videos (split out to play in-app). ──
+  //    and any inline videos (split out to play in-app). No external package:
+  //    a lightweight parser handles the limited tag set the editor produces. ──
   List<Widget> _buildHtmlContent() {
     final widgets = <Widget>[];
     final html = _articleHtml;
@@ -659,7 +659,7 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
     int last = 0;
     for (final m in re.allMatches(html)) {
       final before = html.substring(last, m.start);
-      if (before.trim().isNotEmpty) widgets.add(_htmlChunk(before));
+      if (before.trim().isNotEmpty) widgets.addAll(_htmlToWidgets(before));
       final url = (m.group(1) ?? '').replaceAll('&quot;', '').trim();
       if (url.isNotEmpty && InAppVideoPlayer.canPlayInline(url)) {
         widgets.add(Padding(
@@ -670,30 +670,119 @@ class _TricksDetailScreenState extends State<TricksDetailScreen>
       last = m.end;
     }
     final tail = html.substring(last);
-    if (tail.trim().isNotEmpty) widgets.add(_htmlChunk(tail));
-    if (widgets.isEmpty) widgets.add(_htmlChunk(html));
+    if (tail.trim().isNotEmpty) widgets.addAll(_htmlToWidgets(tail));
+    if (widgets.isEmpty) widgets.addAll(_htmlToWidgets(html));
     return widgets;
   }
 
-  Widget _htmlChunk(String html) {
-    return Html(
-      data: html,
-      style: {
-        'body': Style(
-            margin: Margins.zero,
-            color: AppColors.textSecondary,
-            fontSize: FontSize(14),
-            lineHeight: LineHeight(1.7)),
-        'h1': Style(color: Colors.white, fontSize: FontSize(20), fontWeight: FontWeight.w700),
-        'h2': Style(color: Colors.white, fontSize: FontSize(18), fontWeight: FontWeight.w700),
-        'h3': Style(color: Colors.white, fontSize: FontSize(15), fontWeight: FontWeight.w700),
-        'p': Style(color: AppColors.textSecondary, fontSize: FontSize(14), lineHeight: LineHeight(1.7)),
-        'li': Style(color: AppColors.textSecondary, fontSize: FontSize(14)),
-        'a': Style(color: AppColors.neonCyan),
-        'strong': Style(color: Colors.white),
-        'b': Style(color: Colors.white),
-      },
+  // Minimal HTML → widgets for the editor's tag set: h1-h3, p, li, img, br.
+  List<Widget> _htmlToWidgets(String input) {
+    final widgets = <Widget>[];
+    final s = input.replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n');
+    final token = RegExp(
+      r'<h([1-3])[^>]*>(.*?)<\/h\1>|<li[^>]*>(.*?)<\/li>|<img[^>]*src="([^"]*)"[^>]*>|<p[^>]*>(.*?)<\/p>',
+      dotAll: true,
+      caseSensitive: false,
     );
+
+    void addText(String raw) {
+      final t = _stripTags(raw);
+      if (t.trim().isNotEmpty) {
+        widgets.add(Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Text(t,
+              style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                  height: 1.7)),
+        ));
+      }
+    }
+
+    int last = 0;
+    for (final m in token.allMatches(s)) {
+      addText(s.substring(last, m.start));
+      if (m.group(2) != null) {
+        // heading
+        final level = int.tryParse(m.group(1) ?? '2') ?? 2;
+        widgets.add(Padding(
+          padding: const EdgeInsets.only(top: 14, bottom: 8),
+          child: Text(_stripTags(m.group(2)!),
+              style: GoogleFonts.poppins(
+                  fontSize: level == 1 ? 20 : (level == 2 ? 17 : 15),
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  height: 1.4)),
+        ));
+      } else if (m.group(3) != null) {
+        // list item
+        widgets.add(Padding(
+          padding: const EdgeInsets.only(bottom: 6, left: 4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('•  ',
+                  style: TextStyle(color: AppColors.neonCyan, fontSize: 14)),
+              Expanded(
+                child: Text(_stripTags(m.group(3)!),
+                    style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                        height: 1.6)),
+              ),
+            ],
+          ),
+        ));
+      } else if (m.group(4) != null) {
+        // image
+        final src = (m.group(4) ?? '').trim();
+        if (src.isNotEmpty) {
+          widgets.add(Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                src,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                loadingBuilder: (c, child, progress) => progress == null
+                    ? child
+                    : Container(
+                        height: 150,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: AppColors.darkCard,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const CircularProgressIndicator(
+                            color: AppColors.neonCyan),
+                      ),
+              ),
+            ),
+          ));
+        }
+      } else if (m.group(5) != null) {
+        // paragraph
+        addText(m.group(5)!);
+      }
+      last = m.end;
+    }
+    addText(s.substring(last));
+    return widgets;
+  }
+
+  // Strip remaining HTML tags + decode the few entities the editor emits.
+  String _stripTags(String html) {
+    var t = html.replaceAll(RegExp(r'<[^>]+>'), '');
+    t = t
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll('&amp;', '&')
+        .replaceAll('&lt;', '<')
+        .replaceAll('&gt;', '>')
+        .replaceAll('&quot;', '"')
+        .replaceAll('&#39;', "'");
+    return t.trim();
   }
 
   // ── Render admin-built rich content blocks in order ──

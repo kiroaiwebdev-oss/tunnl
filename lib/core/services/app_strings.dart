@@ -473,7 +473,6 @@ const Map<String, String> _hi = {
   'Be the first to top this set!': 'इस सेट में टॉप करने वाले पहले बनें!',
 
   // ── Premium content (reordered list) ──
-  'Tunnl Tricks': 'टनल ट्रिक्स',
   '5000 Practice MCQs': '5000 अभ्यास MCQ',
   '5000+ Previous Year MCQs': '5000+ पिछले वर्ष MCQ',
   'Daily Practice Set': 'दैनिक अभ्यास सेट',
