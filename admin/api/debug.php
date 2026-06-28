@@ -13,7 +13,7 @@ header("Content-Type: text/html; charset=UTF-8");
 <!DOCTYPE html>
 <html>
 <head>
-<title>Tunnel API Debug</title>
+<title>Tunnl API Debug</title>
 <style>
   body { font-family: monospace; background: #0d1117; color: #c9d1d9; padding: 20px; }
   h2   { color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 8px; }
@@ -29,7 +29,7 @@ header("Content-Type: text/html; charset=UTF-8");
 </head>
 <body>
 
-<h2>🔍 Tunnel API Debug Panel</h2>
+<h2>🔍 Tunnl API Debug Panel</h2>
 <p style="color:#8b949e">Run once to find the 500 error. <b style="color:#f85149">Delete after fixing!</b></p>
 
 <?php

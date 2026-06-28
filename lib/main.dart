@@ -44,7 +44,7 @@ void main() {
     runApp(
       ChangeNotifierProvider(
         create: (_) => ThemeController(),
-        child: const TunnelApp(),
+        child: const TunnlApp(),
       ),
     );
   }, (error, stack) {
@@ -53,14 +53,14 @@ void main() {
   });
 }
 
-class TunnelApp extends StatefulWidget {
-  const TunnelApp({super.key});
+class TunnlApp extends StatefulWidget {
+  const TunnlApp({super.key});
 
   @override
-  State<TunnelApp> createState() => _TunnelAppState();
+  State<TunnlApp> createState() => _TunnlAppState();
 }
 
-class _TunnelAppState extends State<TunnelApp> with WidgetsBindingObserver {
+class _TunnlAppState extends State<TunnlApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();

@@ -115,7 +115,7 @@ class _QuestionScreenState extends State<QuestionScreen>
     }
 
     if (widget.setId == 0) {
-      // No set_id provided (e.g. the "Tunnelity" speed test from hub) →
+      // No set_id provided (e.g. the "Tunnlity" speed test from hub) →
       // load the first available set of THIS screen's category. Falls back to
       // mcq only if the requested category has no sets yet.
       final isTunnlity =

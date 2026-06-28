@@ -18,7 +18,7 @@ $actions = [
     'mcq'           => 'MCQ / Test List',
     'leaderboard'   => 'Leaderboard',
     'shorts'        => 'Shorts',
-    'tricks'        => 'Tunnel Tricks',
+    'tricks'        => 'Tunnl Tricks',
     'solve_earn'    => 'Solve & Earn',
 ];
 

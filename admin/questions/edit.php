@@ -99,6 +99,7 @@ require_once dirname(__DIR__) . '/includes/header.php';
           <option value="previous_year"  <?= $question['category']==='previous_year'  ?'selected':'' ?>>Previous Year</option>
           <option value="tunnlity"        <?= $question['category']==='tunnlity'        ?'selected':'' ?>>Test Your Tunnlity</option>
           <option value="daily_practice" <?= $question['category']==='daily_practice' ?'selected':'' ?>>Daily Practice</option>
+          <option value="tricks"          <?= $question['category']==='tricks'          ?'selected':'' ?>>Tunnl Tricks Practice</option>
         </select>
       </div>
       <div class="form-group">

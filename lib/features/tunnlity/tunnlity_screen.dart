@@ -1,6 +1,6 @@
 // lib/features/tunnlity/tunnlity_screen.dart
 //
-// Landing screen for the "Test Your Tunnelity" speed test.
+// Landing screen for the "Test Your Tunnlity" speed test.
 // - First time  → START TEST
 // - After a try → REATTEMPT + VIEW SCORE, plus a personal-best card
 //   (acts as the Tunnlity mini-leaderboard, stored locally).

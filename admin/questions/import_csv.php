@@ -8,6 +8,7 @@ $catLabels = [
     'tunnlity'       => 'Test Your Tunnlity',
     'previous_year'  => 'Previous Year',
     'daily_practice' => 'Daily Practice',
+    'tricks'         => 'Tunnl Tricks Practice',
 ];
 $cat   = $_GET['cat'] ?? ($_GET['category'] ?? '');
 if ($cat !== '' && !isset($catLabels[$cat])) $cat = '';

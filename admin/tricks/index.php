@@ -1,5 +1,5 @@
 <?php
-$pageTitle = 'Tunnel Tricks';
+$pageTitle = 'Tunnl Tricks';
 require_once dirname(__DIR__) . '/includes/header.php';
 
 $category = $_GET['category'] ?? '';
@@ -20,7 +20,7 @@ $cats = ['MULTIPLICATION','DIVISION','SQUARES','FRACTIONS','SHORTCUTS'];
 
 <div class="flex-between mb-24">
   <div>
-    <h2 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700">Tunnel Tricks</h2>
+    <h2 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700">Tunnl Tricks</h2>
     <p class="text-muted"><?= count($tricks) ?> tricks</p>
   </div>
   <a href="<?= ADMIN_URL ?>/tricks/add.php" class="btn btn-primary">

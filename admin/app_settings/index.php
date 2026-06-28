@@ -404,7 +404,7 @@ foreach ($settingsRaw as $row) {
     </p>
     <?php
       $hubLabelDefs = [
-        'label_hub_tunnlity'  => ['Test Your Tunnlity card', 'Test Your Tunnelity'],
+        'label_hub_tunnlity'  => ['Test Your Tunnlity card', 'Test Your Tunnlity'],
         'label_hub_ticket'    => ['Premium upgrade card',    'Ticket to Tunnl'],
         'label_hub_dashboard' => ['Premium dashboard card',  'Your Dashboard'],
         'label_hub_practice'  => ['Free practice card',      '500 Free Practice MCQs'],

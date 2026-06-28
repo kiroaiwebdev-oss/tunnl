@@ -1,6 +1,6 @@
 // lib/features/tunnlity/tunnlity_leaderboard_screen.dart
 //
-// Leaderboard for the "Test Your Tunnelity" speed test. Best score per user,
+// Leaderboard for the "Test Your Tunnlity" speed test. Best score per user,
 // loaded from admin/api/tunnlity_leaderboard.php.
 
 import 'package:flutter/material.dart';
